@@ -158,7 +158,9 @@ details.how[open] summary::after{content:"−"}
 .edge{position:absolute;inset:2%;border-radius:50%;background:var(--yellow-edge);transform:translateZ(var(--z))}
 .gloss{position:absolute;inset:2%;border-radius:50%;pointer-events:none;transform:translateZ(2px);
   background:radial-gradient(55% 38% at 32% 18%, rgba(255,255,255,.5), transparent 70%),radial-gradient(40% 30% at 75% 85%, rgba(0,0,0,.12), transparent 70%)}
-.table{position:absolute;inset:2%;border-radius:50%;transform:translateZ(0);
+.crimp{position:absolute;inset:0;border-radius:50%;transform:translateZ(-1px);background:repeating-conic-gradient(#ffd84a 0 4deg, var(--yellow-edge) 4deg 8deg);box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.edge{inset:0!important}
+.table{position:absolute;inset:4.5%;border-radius:50%;transform:translateZ(0);
   background:radial-gradient(circle at 38% 30%, var(--yellow-hi) 0, var(--yellow) 42%, var(--yellow-dk) 100%);
   box-shadow:inset 0 0 0 6px rgba(255,255,255,.18), inset 0 -10px 24px rgba(0,0,0,.25)}
 .table::after{content:"";position:absolute;inset:16%;border-radius:50%;border:2px solid rgba(120,85,0,.25)}
@@ -233,6 +235,22 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
 ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
 ::view-transition-new(root){z-index:9999}
 .themewipe{position:fixed;inset:0;z-index:30;pointer-events:none}
+.opening{position:fixed;inset:0;z-index:26;overflow:hidden;background-color:var(--wall);background-image:linear-gradient(var(--wall-wash),var(--wall-wash)),var(--tile);background-size:auto,72px 72px}
+.opening .bottle{position:absolute;left:0;bottom:0;width:100%;height:400vw;will-change:transform}
+.opening .capg,.opening .foam{transform-box:fill-box;transform-origin:50% 100%}
+.opening .foam{opacity:0}
+.fallcap{position:fixed;display:none;border-radius:50%;will-change:transform;box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.fallcap::before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(#ffd84a 0 4deg, var(--yellow-edge) 4deg 8deg)}
+.fallcap::after{content:"";position:absolute;inset:4.5%;border-radius:50%;background:radial-gradient(circle at 38% 30%, var(--yellow-hi) 0, var(--yellow) 42%, var(--yellow-dk) 100%);box-shadow:inset 0 0 0 6px rgba(255,255,255,.18)}
+.introskip{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);left:0;right:0;text-align:center;color:#fff;font-weight:700;font-size:.85rem;opacity:.75;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+/* telas de preparo: o fundo é o vidro da garrafa, com bolhas subindo */
+body.bottled{background-color:#145c34;background-attachment:fixed;background-size:100% 100%,100% 100%;
+  background-image:radial-gradient(circle at 18% 70%,rgba(255,255,255,.35) 0 2px,transparent 3px),linear-gradient(90deg,#06321b 0,#11552f 16%,#5cc98c 27%,#1f7a45 33%,#145c34 72%,#06321b 100%)}
+body.bottled::before{content:"";position:fixed;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,255,255,.4) 0 2px,transparent 2.5px),radial-gradient(circle,rgba(255,255,255,.3) 0 1.5px,transparent 2px),radial-gradient(circle,rgba(255,255,255,.35) 0 3px,transparent 3.5px);
+  background-size:90px 140px,60px 110px,130px 200px;background-position:20px 0,70px 40px,10px 80px;animation:bubbles 9s linear infinite}
+@keyframes bubbles{to{background-position:20px -140px,70px -70px,10px -120px}}
+body.bottled .top .lbl{background:var(--surface)}
 .shake{animation:shake .45s}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
@@ -348,6 +366,7 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
     <div class="tilt" id="tilt">
     <div class="spinner" id="spinner">
       <div class="edge" style="--z:-14px" aria-hidden="true"></div><div class="edge" style="--z:-10px" aria-hidden="true"></div><div class="edge" style="--z:-6px" aria-hidden="true"></div><div class="edge" style="--z:-3px" aria-hidden="true"></div>
+      <div class="crimp" aria-hidden="true"></div>
       <div class="table" aria-hidden="true"></div>
       <div class="ring" id="ring"></div>
     </div>
@@ -367,6 +386,7 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
 </div>
 
 <button class="themebtn" id="themeBtn" type="button" aria-label="Mudar para modo escuro"></button>
+<div class="opening" id="intro" hidden></div>
 <div class="net" id="net" role="status" hidden></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
 <div class="ov" id="addov" hidden><form class="ovbox" id="addMid"><span class="lbl">Chegou alguém?</span><div class="big win mid">Pôr na roda</div><p>A pessoa entra na rodada que está rolando.</p><input type="text" id="addMidIn" placeholder="Nome" maxlength="16" autocomplete="off" aria-label="Nome do novo jogador"><button class="btn" type="submit">Adicionar</button><button class="btn ghost small" type="button" id="addCancel">Cancelar</button></form></div>
@@ -389,7 +409,8 @@ const save=()=>{try{localStorage.setItem("tecla-stop",JSON.stringify(S))}catch(e
 save();
 
 /* ---------- screens ---------- */
-function show(id){["home","local","lobby","game"].forEach(s=>$(s).hidden=s!==id)}
+let curScreen="home";
+function show(id){const from=curScreen;curScreen=id;["home","local","lobby","game"].forEach(s=>$(s).hidden=s!==id);document.body.classList.toggle("bottled",id==="local"||id==="lobby");if(id==="game"&&from!=="game"&&(from==="local"||from==="lobby"))playIntro()}
 function homeErr(msg){$("homeErr").textContent=msg||"";$("homeErr").hidden=!msg}
 $("myName").value=S.name;
 $("myName").oninput=e=>{S.name=e.target.value.trim();save()};
@@ -567,7 +588,7 @@ function buildKeys(letters){
 /* round intro: the table spins and the comanda flips through themes, then lands on the real one */
 let spinning=false,spunRound=-1,shownCat=null,spinTimer=null,justSpun=false;
 function maybeSpin(){
-  if(!V)return;
+  if(!V||introPlaying)return;
   if(V.state!=="idle"||V.ov){if(!spinning&&shownCat!==V.cat){setCat(V.cat);shownCat=V.cat}return}
   if(spinning)return;
   if(V.round!==spunRound){spunRound=V.round;spin(true)}
@@ -611,7 +632,7 @@ function render(prev){
   const hi=$("hubin");$("hub").classList.remove("danger");
   if(V.state==="idle"){
     $("prog").setAttribute("stroke-dashoffset",0);
-    if(spinning&&!V.ov)hi.innerHTML=`<span class="wait">Sorteando…</span>`;
+    if((spinning||introPlaying)&&!V.ov)hi.innerHTML=`<span class="wait">Sorteando…</span>`;
     else if(hostish&&!V.ov){hi.innerHTML=`<button class="hubbtn" id="hubgo">Valendo</button>`;$("hubgo").onclick=()=>{unlockAudio();dispatch({t:"start"})};if(justSpun){$("hubgo").classList.add("pop");justSpun=false}}
     else hi.innerHTML=`<span class="wait">Esperando quem abriu a mesa dar o valendo</span>`;
   }else if(V.state==="pause"){
@@ -702,6 +723,79 @@ function renderSheet(){
   else body=`<span class="lbl">Placar até a rodada ${V.round}${V.maxRounds?" de "+V.maxRounds:""}</span>${rankList(false).html}${V.maxRounds>3?`<p class="note">Nas últimas 3 rodadas a lousa fica coberta até o fim.</p>`:""}`;
   $("rkbox").innerHTML=body+`<button class="btn ghost" id="rkclose">Voltar pro jogo</button>`;
   $("rkclose").onclick=()=>{$("rkov").hidden=true};
+}
+
+/* ---------- abertura: a câmera sobe pela garrafa, a tampa estoura e cai virando a mesa ---------- */
+let introPlaying=false,introTimers=[];
+const BOTTLE_SVG=`<svg class="bottle" viewBox="0 0 400 1600" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+<defs>
+ <linearGradient id="glass" gradientUnits="userSpaceOnUse" x1="0" x2="400" y1="0" y2="0">
+  <stop offset="0" stop-color="#06321b"/><stop offset=".16" stop-color="#11552f"/><stop offset=".27" stop-color="#5cc98c"/><stop offset=".33" stop-color="#1f7a45"/><stop offset=".72" stop-color="#145c34"/><stop offset="1" stop-color="#06321b"/>
+ </linearGradient>
+ <linearGradient id="neckhi" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+ <linearGradient id="capside" x1="0" x2="1"><stop offset="0" stop-color="#c99a05"/><stop offset=".35" stop-color="#ffd84a"/><stop offset=".6" stop-color="#f6c21c"/><stop offset="1" stop-color="#a77f00"/></linearGradient>
+</defs>
+<path d="M156 268V540C156 640 0 700 0 900V1600H400V900C400 700 244 640 244 540V268Z" fill="url(#glass)"/>
+<path d="M176 280V540C176 610 90 660 70 760" fill="none" stroke="url(#neckhi)" stroke-width="10" stroke-linecap="round"/>
+<rect x="0" y="1060" width="400" height="300" fill="#fdfdfb"/>
+<rect x="0" y="1072" width="400" height="6" fill="#d7262e"/><rect x="0" y="1342" width="400" height="6" fill="#d7262e"/>
+<text x="200" y="1205" text-anchor="middle" font-family="Alfa Slab One, Rockwell, Georgia, serif" font-size="64" fill="#d7262e">Tecla Stop</text>
+<text x="200" y="1260" text-anchor="middle" font-family="Permanent Marker, cursive" font-size="26" fill="#1f4fa3">gelada, de mesa, pra roda toda</text>
+<rect x="146" y="240" width="108" height="30" rx="8" fill="#0b4426"/>
+<g class="foam">
+ <circle cx="200" cy="238" r="26" fill="#fff"/><circle cx="176" cy="226" r="18" fill="#fff"/><circle cx="226" cy="224" r="20" fill="#fff"/><circle cx="196" cy="206" r="16" fill="#fff"/><circle cx="214" cy="198" r="10" fill="#fff"/><circle cx="182" cy="196" r="8" fill="#fff"/>
+</g>
+<g class="capg">
+ <path d="M138 202H262V238L256 246L250 238L244 246L238 238L232 246L226 238L220 246L214 238L208 246L202 238L196 246L190 238L184 246L178 238L172 246L166 238L160 246L154 238L148 246L142 238L138 242Z" fill="url(#capside)"/>
+ <rect x="138" y="198" width="124" height="10" rx="4" fill="#ffd84a"/>
+</g>
+</svg>`;
+function introSound(){
+  if(!S.sound||!ac)return;
+  try{
+    const len=ac.sampleRate*.5,buf=ac.createBuffer(1,len,ac.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+    const src=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();
+    f.type="bandpass";f.frequency.value=3200;f.Q.value=.7;g.gain.value=.35;
+    src.buffer=buf;src.connect(f);f.connect(g);g.connect(ac.destination);src.start();
+    setTimeout(()=>beep(1250,.12,"triangle",.08),120);
+  }catch(e){}
+}
+function playIntro(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  introPlaying=true;
+  const ov=$("intro");ov.innerHTML=BOTTLE_SVG+`<div class="fallcap" id="fallcap"></div><span class="introskip">toque pra pular</span>`;ov.hidden=false;
+  const svg=ov.querySelector(".bottle"),cap=ov.querySelector(".capg"),foam=ov.querySelector(".foam"),fall=$("fallcap");
+  $("tilt").style.opacity="0";$("floor").style.opacity="0";
+  const H=svg.getBoundingClientRect().height,vh=innerHeight,endY=0.875*H-0.62*vh;
+  const T=(ms,fn)=>introTimers.push(setTimeout(fn,ms));
+  /* 1. a câmera sobe do rótulo até o gargalo */
+  svg.animate([{transform:"translateY(0)"},{transform:`translateY(${endY}px)`}],{duration:1200,easing:"cubic-bezier(.5,0,.2,1)",fill:"forwards"});
+  /* 2. a tampa treme e estoura com espuma */
+  T(1250,()=>cap.animate([{transform:"translate(0,0)"},{transform:"translate(-3px,-2px) rotate(-3deg)"},{transform:"translate(3px,-3px) rotate(3deg)"},{transform:"translate(0,-2px)"}],{duration:260,iterations:1}));
+  T(1520,()=>{
+    introSound();
+    cap.animate([{transform:"translate(0,0) rotate(0)"},{transform:"translate(40px,-700px) rotate(-560deg)"}],{duration:700,easing:"cubic-bezier(.2,.7,.4,1)",fill:"forwards"});
+    foam.animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1.3)",opacity:1,offset:.4},{transform:"scale(1.6) translateY(-30px)",opacity:0}],{duration:1100,easing:"ease-out",fill:"forwards"});
+  });
+  /* 3. a tampa cai do alto e vira a mesa; a garrafa some */
+  T(2050,()=>{
+    const r=$("board").getBoundingClientRect();
+    Object.assign(fall.style,{left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px"});
+    fall.style.display="block";
+    svg.animate([{opacity:1},{opacity:0}],{duration:450,fill:"forwards"});
+    fall.animate([{transform:"translateY(-110vh) rotate(-540deg) scale(.45)"},{transform:"translateY(0) rotate(0) scale(1.06)",offset:.8},{transform:"translateY(0) rotate(0) scale(1)"}],{duration:900,easing:"cubic-bezier(.35,0,.25,1)",fill:"forwards"});
+  });
+  T(2980,()=>endIntro());
+  ov.onclick=()=>endIntro();
+}
+function endIntro(){
+  if(!introPlaying)return;
+  introTimers.forEach(clearTimeout);introTimers=[];introPlaying=false;
+  $("tilt").style.opacity="";$("floor").style.opacity="";
+  const ov=$("intro");ov.animate([{opacity:1},{opacity:0}],{duration:200}).onfinish=()=>{ov.hidden=true;ov.innerHTML=""};
+  beep(160,.18,"sine",.12);
+  render();
 }
 
 /* ---------- frame loop ---------- */
@@ -949,6 +1043,7 @@ function teardown(){
   try{peer&&peer.destroy()}catch(e){}
   peer=null;hostConn=null;G=null;V=null;lastOvKey=null;wasMyTurn=false;
   spinning=false;clearTimeout(spinTimer);spunRound=-1;shownCat=null;$("reel").classList.remove("spinning");
+  if(introPlaying){introTimers.forEach(clearTimeout);introTimers=[];introPlaying=false;$("intro").hidden=true;$("intro").innerHTML="";$("tilt").style.opacity="";$("floor").style.opacity=""}
   $("ov").hidden=true;$("rkov").hidden=true;$("addov").hidden=true;$("catov").hidden=true;netBar("");
   try{wake&&wake.release()}catch(e){}
   try{noSleep&&noSleep.isEnabled&&noSleep.disable()}catch(e){}
