@@ -249,16 +249,13 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
 .scene::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(3,11,36,.35),rgba(3,11,36,.5))}
 body.bottled .scene{display:block}
 body.bottled{background:#030b24;--surface:var(--glass-surface);--surface-2:var(--glass-surface-2)}
-.wrap.turning{position:absolute;left:0;right:0;top:0;will-change:transform,opacity}
 .scene .glass{position:absolute;inset:0;background:linear-gradient(90deg,#030b24 0,#0a2463 16%,#3e6fe0 25%,#1a3f9c 33%,#0f2c74 72%,#030b24 100%)}
-.scene .label{position:absolute;left:0;right:0;top:50%;height:34%;overflow:hidden;background:#fbf7ec;box-shadow:0 0 0 1px rgba(0,0,0,.2)}
-.scene .strip{position:absolute;top:0;bottom:0;left:0;display:flex;will-change:transform;transform:translateX(-100vw)}
-.scene .face{width:240vw;height:100%;flex:none;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;
-  border-top:10px solid #d7262e;border-bottom:10px solid #d7262e;box-shadow:inset 0 14px 0 #f6c21c,inset 0 -14px 0 #f6c21c}
-.scene .face span{display:grid;place-items:center;text-align:center;line-height:1}
-.scene .brand{font-family:var(--sign);color:#d7262e;font-size:clamp(2.2rem,12vw,3.6rem)}
-.scene .seal{width:min(26vw,120px);aspect-ratio:1;border-radius:50%;margin:auto;border:3px solid #1f4fa3;color:#1f4fa3;font-family:var(--sign);font-size:.9rem;padding:8px}
-.scene .note2{font-family:var(--hand);color:#1f4fa3;font-size:clamp(1rem,5vw,1.4rem)}
+.scene .label{position:absolute;left:0;right:0;top:50%;height:34%;overflow:hidden}
+.lslice{position:absolute;top:0;bottom:0;overflow:hidden}
+.lsliceIn{position:absolute;top:0;left:0;height:100%;background-repeat:repeat-x;transform-origin:0 0}
+.cylbox{position:fixed;inset:0;z-index:5;pointer-events:none;overflow:hidden}
+.cslice{position:absolute;top:0;bottom:0;overflow:hidden;transform-origin:50% 50%}
+.cylclone{position:absolute!important;margin:0!important}
 .scene .label::after{content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(90deg,rgba(3,11,36,.8) 0,rgba(3,11,36,.2) 16%,transparent 28%,transparent 62%,rgba(3,11,36,.3) 80%,rgba(3,11,36,.85) 100%)}
 .scene .shine{position:absolute;inset:0;pointer-events:none;
@@ -405,7 +402,7 @@ body.bottled .top .lbl{background:var(--surface)}
 </div>
 
 <button class="themebtn" id="themeBtn" type="button" aria-label="Mudar para modo escuro"></button>
-<div class="scene" id="scene" aria-hidden="true"><div class="blurred"><div class="glass"></div><div class="bubbles"></div><div class="label"><div class="strip" id="labelStrip"><div class="face"><span class="brand">Tecla Stop</span><span class="note2">gelada, de mesa,<br>pra roda toda</span><span class="brand">Tecla Stop</span><span><span class="seal">desde a primeira rodada</span></span></div><div class="face"><span class="brand">Tecla Stop</span><span class="note2">gelada, de mesa,<br>pra roda toda</span><span class="brand">Tecla Stop</span><span><span class="seal">desde a primeira rodada</span></span></div></div></div><div class="shine"></div></div></div>
+<div class="scene" id="scene" aria-hidden="true"><div class="blurred"><div class="glass"></div><div class="bubbles"></div><div class="label" id="bottleLabel"></div><div class="shine"></div></div></div>
 <div class="opening" id="intro" hidden></div>
 <div class="net" id="net" role="status" hidden></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
@@ -437,25 +434,6 @@ function show(id){
   document.body.classList.toggle("bottled",id!=="game");
   if(id in TURN&&from in TURN&&TURN[from]!==TURN[id])turnBottle(TURN[from],TURN[id],id,from);
   if(id==="game"&&from!=="game"&&(from==="local"||from==="lobby"))playIntro();
-}
-function turnBottle(a,b,id,fromId){
-  const st=$("labelStrip"),off=n=>`translateX(${-100-120*n}vw)`;
-  st.style.transform=off(b);
-  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
-  const fwd=b>a;
-  st.animate([{transform:off(a)},{transform:off(b)}],{duration:1100,easing:"cubic-bezier(.6,0,.25,1)"});
-  /* the screens sit on the bottle's curve: each point moves along a circle (x = R·sinθ) and
-     gets narrower as it turns away (cosθ), so it wraps around the glass instead of tilting like a flat card */
-  const R=innerWidth*.62,dir=fwd?-1:1,N=16;
-  const frames=(t0,t1)=>Array.from({length:N+1},(_,k)=>{const th=(t0+(t1-t0)*k/N)*Math.PI/180,c=Math.max(Math.cos(th),.02);
-    return {transform:`translateX(${(R*Math.sin(th)).toFixed(1)}px) scaleX(${c.toFixed(3)})`,opacity:Math.pow(c,1.5).toFixed(3)}});
-  const outEl=$(fromId),inEl=$(id),y=scrollY;
-  outEl.hidden=false;outEl.classList.add("turning");inEl.classList.add("turning");outEl.style.top=(-y)+"px";
-  const opt={duration:1100,easing:"cubic-bezier(.6,0,.25,1)",fill:"both"};
-  const aOut=outEl.animate(frames(0,90*dir),opt);
-  const aIn=inEl.animate(frames(-90*dir,0),opt);
-  scrollTo(0,0);
-  aIn.onfinish=()=>{aOut.cancel();aIn.cancel();outEl.hidden=curScreen!==fromId;outEl.classList.remove("turning");inEl.classList.remove("turning");outEl.style.top=""};
 }
 function homeErr(msg){$("homeErr").textContent=msg||"";$("homeErr").hidden=!msg}
 $("myName").value=S.name;
@@ -843,6 +821,116 @@ function endIntro(){
   beep(160,.18,"sine",.12);
   render();
 }
+
+/* ---------- the bottle is a real cylinder ----------
+   The label is painted once on a canvas as the whole circumference. The screen is cut into thin
+   vertical slices; each slice looks at the point of the glass in front of it (x = R·sinφ) and
+   squeezes the label by cosφ, so the label wraps around instead of sliding like a flat strip.
+   θ is how far the bottle is turned: 0 = front label, π = back label. */
+const CYL={K:30,theta:0,C:0,url:"",slices:[]};
+const botR=()=>innerWidth*.78;
+function paintLabel(){
+  const box=$("bottleLabel");if(!box)return;
+  const R=botR(),C=Math.round(2*Math.PI*R),H=Math.max(120,Math.round(box.clientHeight||innerHeight*.34));
+  const cv=document.createElement("canvas");cv.width=C;cv.height=H;const g=cv.getContext("2d");
+  const sign=getComputedStyle(document.documentElement).getPropertyValue("--sign")||"Georgia,serif";
+  const hand=getComputedStyle(document.documentElement).getPropertyValue("--hand")||"cursive";
+  /* front label: 160° wide, centred at the middle of the canvas */
+  const Lw=R*2.8,x0=C/2-Lw/2;
+  g.fillStyle="#fbf7ec";g.fillRect(x0,0,Lw,H);
+  g.fillStyle="#d7262e";g.fillRect(x0,0,Lw,H*.07);g.fillRect(x0,H*.93,Lw,H*.07);
+  g.fillStyle="#f6c21c";g.fillRect(x0,H*.07,Lw,H*.04);g.fillRect(x0,H*.89,Lw,H*.04);
+  g.textAlign="center";g.textBaseline="middle";
+  g.fillStyle="#d7262e";g.font=`${Math.round(H*.3)}px ${sign}`;g.fillText("Tecla Stop",C/2,H*.47);
+  g.fillStyle="#1f4fa3";g.font=`${Math.round(H*.12)}px ${hand}`;g.fillText("gelada, de mesa, pra roda toda",C/2,H*.72);
+  for(const sx of [x0+Lw*.1,x0+Lw*.9]){
+    g.strokeStyle="#1f4fa3";g.lineWidth=3;g.beginPath();g.arc(sx,H*.5,H*.24,0,Math.PI*2);g.stroke();
+    g.fillStyle="#1f4fa3";g.font=`${Math.round(H*.07)}px ${sign}`;g.fillText("desde a",sx,H*.44);g.fillText("1ª rodada",sx,H*.56);
+  }
+  /* back label: 70° wide, centred on the seam (drawn at both ends of the canvas) */
+  const Bw=R*1.55,bh=H*.62,by=(H-bh)/2;
+  for(const cx of [0,C]){
+    const bx=cx-Bw/2;
+    g.fillStyle="#fbf7ec";g.fillRect(bx,by,Bw,bh);
+    g.strokeStyle="#d7262e";g.lineWidth=4;g.strokeRect(bx+8,by+8,Bw-16,bh-16);
+    g.fillStyle="#1f4fa3";g.textAlign="center";
+    g.font=`${Math.round(H*.085)}px ${sign}`;g.fillText("Tecla Stop",cx,by+bh*.2);
+    g.font=`600 ${Math.round(Math.min(H*.052,Bw/26))}px Barlow, system-ui, sans-serif`;
+    ["Ingredientes: água, malte, lúpulo e resenha.","Modo de usar: sente na roda e toque a tampinha.","Validade: até a última rodada."].forEach((t,i)=>g.fillText(t,cx,by+bh*(.45+i*.17)));
+  }
+  CYL.C=C;CYL.url=cv.toDataURL("image/png");
+  buildLabelSlices();
+}
+function buildLabelSlices(){
+  const box=$("bottleLabel");box.innerHTML="";CYL.slices=[];
+  const W=innerWidth,R=botR(),w=W/CYL.K;
+  for(let i=0;i<CYL.K;i++){
+    const cx=(i+.5)*w,phi=Math.asin(Math.max(-.999,Math.min(.999,(cx-W/2)/R)));
+    const sl=document.createElement("div");sl.className="lslice";sl.style.left=(i*w)+"px";sl.style.width=(w+1)+"px";
+    const inner=document.createElement("div");inner.className="lsliceIn";
+    inner.style.width=(CYL.C*3)+"px";inner.style.backgroundImage=`url(${CYL.url})`;inner.style.backgroundSize=`${CYL.C}px 100%`;
+    sl.appendChild(inner);box.appendChild(sl);
+    CYL.slices.push({inner,phi,c:Math.cos(phi),w});
+  }
+  drawLabel(CYL.theta);
+}
+function drawLabel(theta){
+  CYL.theta=theta;const R=botR(),C=CYL.C;if(!C)return;
+  for(const s of CYL.slices){
+    let X=R*(theta+s.phi)+C/2;X=((X%C)+C)%C+C;
+    s.inner.style.transform=`translateX(${(s.w/2).toFixed(1)}px) scaleX(${s.c.toFixed(4)}) translateX(${(-X).toFixed(1)}px)`;
+  }
+}
+/* the screen being left and the one arriving are printed on the same glass, on opposite sides */
+function sliceScreen(el){
+  const W=innerWidth,N=14,w=W/N,r=el.getBoundingClientRect();
+  const box=document.createElement("div");box.className="cylbox";
+  const parts=[];
+  for(let i=0;i<N;i++){
+    const sl=document.createElement("div");sl.className="cslice";sl.style.left=(i*w)+"px";sl.style.width=(w+.6)+"px";
+    const cl=el.cloneNode(true);cl.removeAttribute("id");cl.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));
+    cl.hidden=false;cl.classList.add("cylclone");Object.assign(cl.style,{left:(r.left-i*w)+"px",top:r.top+"px",width:r.width+"px"});
+    sl.appendChild(cl);box.appendChild(sl);parts.push({sl,u:(i+.5)*w-W/2});
+  }
+  document.body.appendChild(box);
+  return {box,parts};
+}
+function placeSlices(set,theta,side,k){
+  const R=botR();
+  for(const p of set.parts){
+    let a=p.u/R-theta+side;a=Math.atan2(Math.sin(a),Math.cos(a));
+    const ca=Math.cos(a),xc=R*Math.sin(a)-p.u;
+    const dx=xc*k,sc=1+(ca-1)*k,op=k>0?(ca<=0?0:Math.min(1,ca*1.6)):1;
+    p.sl.style.transform=`translateX(${dx.toFixed(1)}px) scaleX(${Math.max(sc,.001).toFixed(3)})`;
+    p.sl.style.opacity=(1+(op-1)*Math.min(1,k*1.5)).toFixed(3);
+    p.sl.style.visibility=(k>0&&ca<=0)?"hidden":"visible";
+  }
+}
+let turning=null;
+function turnBottle(a,b,id,fromId){
+  const t0=a*Math.PI,t1=b*Math.PI;
+  if(turning){turning.finish();}
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches||!CYL.C){drawLabel(t1);return}
+  const outEl=$(fromId),inEl=$(id);
+  /* freeze the outgoing screen as slices where it is now, then bring the new one to the top */
+  outEl.hidden=false;const outSet=sliceScreen(outEl);outEl.hidden=true;
+  scrollTo(0,0);
+  const inSet=sliceScreen(inEl);inEl.style.visibility="hidden";
+  const D=1300,start=performance.now(),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  let raf=0;
+  const finish=()=>{cancelAnimationFrame(raf);drawLabel(t1);outSet.box.remove();inSet.box.remove();inEl.style.visibility="";turning=null};
+  const step=now=>{
+    const t=Math.min(1,(now-start)/D),e=ease(t),th=t0+(t1-t0)*e;
+    drawLabel(th);
+    placeSlices(outSet,th,a*Math.PI,Math.min(1,t/.15));
+    placeSlices(inSet,th,b*Math.PI,Math.min(1,(1-t)/.15));
+    if(t<1)raf=requestAnimationFrame(step);else finish();
+  };
+  turning={finish};
+  raf=requestAnimationFrame(step);
+}
+addEventListener("resize",()=>{clearTimeout(CYL.rt);CYL.rt=setTimeout(paintLabel,200)});
+(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>paintLabel());
 
 /* ---------- frame loop ---------- */
 function frame(){
