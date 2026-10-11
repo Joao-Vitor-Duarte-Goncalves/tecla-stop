@@ -252,7 +252,7 @@ body.bottled{background:#030b24;--surface:var(--glass-surface);--surface-2:var(-
 .wrap.turning{position:absolute;left:0;right:0;top:0;will-change:transform,opacity}
 .scene .glass{position:absolute;inset:0;background:linear-gradient(90deg,#030b24 0,#0a2463 16%,#3e6fe0 25%,#1a3f9c 33%,#0f2c74 72%,#030b24 100%)}
 .scene .label{position:absolute;left:0;right:0;top:50%;height:34%;overflow:hidden;background:#fbf7ec;box-shadow:0 0 0 1px rgba(0,0,0,.2)}
-.scene .strip{position:absolute;top:0;bottom:0;left:0;display:flex;will-change:transform;transform:translateX(-220vw)}
+.scene .strip{position:absolute;top:0;bottom:0;left:0;display:flex;will-change:transform;transform:translateX(-100vw)}
 .scene .face{width:240vw;height:100%;flex:none;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;
   border-top:10px solid #d7262e;border-bottom:10px solid #d7262e;box-shadow:inset 0 14px 0 #f6c21c,inset 0 -14px 0 #f6c21c}
 .scene .face span{display:grid;place-items:center;text-align:center;line-height:1}
@@ -439,14 +439,14 @@ function show(id){
   if(id==="game"&&from!=="game"&&(from==="local"||from==="lobby"))playIntro();
 }
 function turnBottle(a,b,id,fromId){
-  const st=$("labelStrip"),off=n=>`translateX(${-220+120*n}vw)`;
+  const st=$("labelStrip"),off=n=>`translateX(${-100-120*n}vw)`;
   st.style.transform=off(b);
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const fwd=b>a;
   st.animate([{transform:off(a)},{transform:off(b)}],{duration:1100,easing:"cubic-bezier(.6,0,.25,1)"});
   /* the screens sit on the bottle's curve: each point moves along a circle (x = R·sinθ) and
      gets narrower as it turns away (cosθ), so it wraps around the glass instead of tilting like a flat card */
-  const R=innerWidth*.62,dir=fwd?1:-1,N=16;
+  const R=innerWidth*.62,dir=fwd?-1:1,N=16;
   const frames=(t0,t1)=>Array.from({length:N+1},(_,k)=>{const th=(t0+(t1-t0)*k/N)*Math.PI/180,c=Math.max(Math.cos(th),.02);
     return {transform:`translateX(${(R*Math.sin(th)).toFixed(1)}px) scaleX(${c.toFixed(3)})`,opacity:Math.pow(c,1.5).toFixed(3)}});
   const outEl=$(fromId),inEl=$(id),y=scrollY;
