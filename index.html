@@ -82,8 +82,16 @@ input.code{text-transform:uppercase;letter-spacing:.35em;font-family:var(--displ
 .secondary strong{display:block;font-weight:800}
 .secondary span{color:var(--muted);font-size:.9rem}
 .secondary .arrow{font-family:var(--display);color:var(--accent-text);font-size:1.3rem}
-.seg3{grid-template-columns:repeat(3,auto);gap:4px}
-.seg3 button{padding:7px 12px;font-size:.85rem}
+.themebtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;z-index:25;width:42px;height:42px;border-radius:50%;
+  background:var(--night-2);border:1px solid var(--line);color:var(--ink);display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.themebtn svg{width:22px;height:22px;transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
+.themebtn:active svg{transform:rotate(40deg) scale(.85)}
+.themebtn .sun{color:#f6a91c}.themebtn .moon{color:#8fa3c4}
+.top,.gbar{padding-right:52px}
+.brand{padding-right:52px}
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-new(root){z-index:9999}
+.themewipe{position:fixed;inset:0;z-index:30;pointer-events:none}
 .toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:.95rem}
 details.how{border-top:1px solid var(--line);padding-top:12px}
 details.how summary{cursor:pointer;font-weight:800;list-style:none;display:flex;justify-content:space-between}
@@ -231,7 +239,6 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
   <button class="secondary" id="mLocal"><span><strong>Um celular só</strong><span>Passa de mão em mão. Sem internet.</span></span><span class="arrow" aria-hidden="true">→</span></button>
   <p class="err" id="homeErr" hidden></p>
   <div class="toggle"><span>Bipe nos últimos 3 segundos</span><input type="checkbox" id="sound" checked></div>
-  <div class="toggle"><span>Aparência</span><div class="seg seg3" id="themeSeg"><button type="button" data-t="auto">Auto</button><button type="button" data-t="light">Claro</button><button type="button" data-t="dark">Escuro</button></div></div>
   <details class="how">
     <summary>Como funciona</summary>
     <ol class="rules">
@@ -333,6 +340,7 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
   </nav>
 </div>
 
+<button class="themebtn" id="themeBtn" type="button" aria-label="Mudar para modo escuro"></button>
 <div class="net" id="net" role="status" hidden></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
 <div class="ov" id="rkov" hidden><div class="ovbox" id="rkbox" role="dialog" aria-label="Ranking"></div></div>
@@ -358,8 +366,33 @@ function homeErr(msg){$("homeErr").textContent=msg||"";$("homeErr").hidden=!msg}
 $("myName").value=S.name;
 $("myName").oninput=e=>{S.name=e.target.value.trim();save()};
 $("sound").checked=S.sound;$("sound").onchange=e=>{S.sound=e.target.checked;save()};
-function applyTheme(){const r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",S.theme);$("themeSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===S.theme))}
-$("themeSeg").onclick=e=>{const b=e.target.closest("button");if(b){S.theme=b.dataset.t;save();applyTheme()}};
+/* theme: one sun/moon button; the new theme spreads out from the button as a growing circle */
+const SUN='<svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>';
+const MOON='<svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1z"/></svg>';
+function isDark(){return S.theme==="dark"||(S.theme!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches)}
+function applyTheme(){
+  const r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",S.theme);
+  const d=isDark();$("themeBtn").innerHTML=d?SUN:MOON;$("themeBtn").setAttribute("aria-label",d?"Mudar para modo claro":"Mudar para modo escuro");
+}
+function toggleTheme(){
+  const next=isDark()?"light":"dark";
+  const b=$("themeBtn").getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2;
+  const R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+  const set=()=>{S.theme=next;save();applyTheme()};
+  const from=`circle(0px at ${x}px ${y}px)`,to=`circle(${R}px at ${x}px ${y}px)`;
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){set();return}
+  if(document.startViewTransition){
+    const t=document.startViewTransition(set);
+    t.ready.then(()=>{document.documentElement.animate({clipPath:[from,to]},{duration:650,easing:"cubic-bezier(.65,0,.35,1)",pseudoElement:"::view-transition-new(root)"})}).catch(()=>{});
+    return;
+  }
+  /* older browsers: a circle of the new background grows from the button, then the theme switches under it */
+  const w=document.createElement("div");w.className="themewipe";w.style.background=next==="dark"?"#0f1216":"#eef1f5";document.body.appendChild(w);
+  const a=w.animate({clipPath:[from,to]},{duration:550,easing:"cubic-bezier(.65,0,.35,1)",fill:"forwards"});
+  a.onfinish=()=>{set();w.animate({opacity:[1,0]},{duration:220}).onfinish=()=>w.remove()};
+}
+$("themeBtn").onclick=toggleTheme;
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(S.theme==="auto")applyTheme()});
 applyTheme();
 $("molec").checked=S.molec;$("molec").onchange=e=>{S.molec=e.target.checked;save()};
 $("hard").checked=S.hard;$("hard").onchange=e=>{S.hard=e.target.checked;save()};
