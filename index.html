@@ -290,7 +290,9 @@ function newRound(){
   if(G.pl.filter(p=>p.alive).length<2){G.state="idle";G.ov={kind:"few"};pickCat();return}
   G.starter=nextAliveFrom(G.starter);G.cur=G.starter;G.state="idle";pickCat();
 }
-function nextAliveFrom(i){const n=G.pl.length;for(let k=1;k<=n;k++){const j=(i+k+n)%n;if(G.pl[j].alive)return j}return Math.max(0,i)}
+function nextAliveFrom(i){const n=G.pl.length;for(let k=1;k<=n;k++){const j=(i+k+n)%n;if(G.pl[j].alive&&G.pl[j].on!==false)return j}return Math.max(0,i)}
+function onlineAlive(){return G.pl.filter(p=>p.alive&&p.on!==false).length}
+function curOk(){const c=G.pl[G.cur];return c&&c.alive&&c.on!==false}
 function resetTimer(){G.end=performance.now()+G.dur*1000}
 function aliveCount(){return G.pl.filter(p=>p.alive).length}
 function endIfLastStanding(){
@@ -304,7 +306,7 @@ function act(from,a){
   if(!G)return;
   const curP=G.pl[G.cur];
   switch(a.t){
-    case "start": if(G.state==="idle"&&isHostish(from)&&!G.ov&&aliveCount()>=2){if(!G.pl[G.cur]||!G.pl[G.cur].alive)G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()} break;
+    case "start": if(G.state==="idle"&&isHostish(from)&&!G.ov&&onlineAlive()>=2){if(!curOk())G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()} break;
     case "tap":
       if(G.state!=="run"||G.used.includes(a.l)||!G.letters.includes(a.l))break;
       if(MODE!=="local"&&(!curP||from!==curP.id))break;
@@ -317,7 +319,7 @@ function act(from,a){
       if(G.pl[h.who]&&G.pl[h.who].alive)G.cur=h.who;
       if(G.state==="run")resetTimer();else G.pausedLeft=G.dur*1000;break}
     case "pause": if(isHostish(from)&&G.state==="run"){G.pausedLeft=G.end-performance.now();G.state="pause"} break;
-    case "resume": if(isHostish(from)&&G.state==="pause"&&aliveCount()>=2){if(!G.pl[G.cur]||!G.pl[G.cur].alive)G.cur=nextAliveFrom(G.cur);G.end=performance.now()+G.pausedLeft;G.state="run"} break;
+    case "resume": if(isHostish(from)&&G.state==="pause"&&onlineAlive()>=2){if(!curOk()){G.cur=nextAliveFrom(G.cur);G.pausedLeft=G.dur*1000}G.end=performance.now()+G.pausedLeft;G.state="run"} break;
     case "newcat": if(isHostish(from)&&G.state==="idle")pickCat(); break;
     case "setcat":{
       const c=String(a.cat||"").trim().slice(0,40);
@@ -394,7 +396,9 @@ function render(prev){
     if(hostish&&!V.ov){hi.innerHTML=`<button class="hubbtn" id="hubgo">Valendo</button>`;$("hubgo").onclick=()=>{unlockAudio();dispatch({t:"start"})}}
     else hi.innerHTML=`<span class="wait">Esperando quem criou a sala dar o valendo</span>`;
   }else if(V.state==="pause"){
-    if(hostish){hi.innerHTML=`<button class="hubbtn" id="hubgo">Voltar</button>`;$("hubgo").onclick=()=>dispatch({t:"resume"})}
+    const online=V.pl.filter(p=>p.alive&&p.on!==false).length;
+    if(hostish&&online<2)hi.innerHTML=`<span class="wait">Pausado: esperando a galera reconectar</span>`;
+    else if(hostish){hi.innerHTML=`<button class="hubbtn" id="hubgo">Voltar</button>`;$("hubgo").onclick=()=>dispatch({t:"resume"})}
     else hi.innerHTML=`<span class="wait">Pausado</span>`;
   }else{
     hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.ceil(Math.max(0,V.end-performance.now())/1000):0}</span><span class="who">${curP?esc(curP.name):""}</span>`;
@@ -404,7 +408,7 @@ function render(prev){
   else{t.textContent=V.state==="run"&&curP?"Vez de "+curP.name:"";t.className="turn"}
   if(mine&&!wasMyTurn&&MODE!=="local"){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){};beep(980,.08,"sine",.07)}
   wasMyTurn=mine;
-  $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""} <b>⭐${p.pts||0} 🍺${p.drinks}</b></span>`).join("");
+  $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.on===false?" (caiu)":""} <b>⭐${p.pts||0} 🍺${p.drinks}</b></span>`).join("");
   $("undo").hidden=!hostish;$("pause").hidden=!hostish;$("newCat").hidden=!hostish;
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");
@@ -519,7 +523,7 @@ function startHost(name,restore){
   if(restore){
     roomCode=restore.code;G=restore.G||null;lobbyPl=(restore.lobby||[]).filter(p=>p.id===ME);
     if(!lobbyPl.length)lobbyPl=[{id:ME,name}];
-    if(G){G.pl.forEach(p=>{if(p.id!==ME&&p.on){p.on=false;p.alive=false}});if(G.state==="run")G.state="pause";G.end=0}
+    if(G){G.pl.forEach(p=>{if(p.id!==ME)p.on=false});if(G.state==="run")G.state="pause";G.end=0}
   }else{roomCode=randCode();lobbyPl=[{id:ME,name}];G=null}
   $("lobbyRole").textContent="Sua sala";$("lobbyStatus").textContent=restore?"Reabrindo a sala…":"Abrindo a sala…";$("copyLink").hidden=true;
   mountSettings("hostSettings");
@@ -534,7 +538,6 @@ function openHostPeer(tries,keepCode){
     c.lastSeen=Date.now();
     c.on("data",d=>onHostData(c,d));
     c.on("close",()=>onLeave(c));
-    c.on("error",()=>onLeave(c));
   });
   p.on("disconnected",()=>{
     if(peer!==p||p.destroyed||MODE!=="host")return;
@@ -582,12 +585,12 @@ function onLeave(c){
   conns.delete(c.pid);
   if(!G){lobbyPl=lobbyPl.filter(p=>p.id!==c.pid);broadcastLobby();return}
   const i=G.pl.findIndex(p=>p.id===c.pid);if(i<0)return;
-  const p=G.pl[i];p.on=false;
-  if(p.alive){p.alive=false;
-    if(G.state==="run"||G.state==="pause"||G.state==="idle"){
-      if(!endIfLastStanding()&&i===G.cur){G.cur=nextAliveFrom(G.cur);if(G.state==="run")resetTimer();else if(G.state==="pause")G.pausedLeft=G.dur*1000}
-    }
-  }
+  /* a drop is not an elimination: the player stays in the round, turns skip them until they come back */
+  G.pl[i].on=false;
+  if(G.state==="run"){
+    if(onlineAlive()<2){G.pausedLeft=i===G.cur?G.dur*1000:Math.max(0,G.end-performance.now());if(i===G.cur)G.cur=nextAliveFrom(G.cur);G.state="pause"}
+    else if(i===G.cur){G.cur=nextAliveFrom(G.cur);resetTimer()}
+  }else if(G.state==="pause"&&i===G.cur&&onlineAlive()>=1){G.cur=nextAliveFrom(G.cur);G.pausedLeft=G.dur*1000}
   sync();
 }
 function broadcastLobby(){
@@ -674,11 +677,11 @@ function guestFail(msg){
 setInterval(()=>{
   if(MODE==="guest"&&hostConn&&hostConn.open){
     try{hostConn.send({t:"ping"})}catch(e){}
-    if(Date.now()-lastHostMsg>12000){const c=hostConn;hostConn=null;try{c.close()}catch(e){};lost()}
+    if(Date.now()-lastHostMsg>20000){const c=hostConn;hostConn=null;try{c.close()}catch(e){};lost()}
     else lsSet(ROOM_KEY,{code:roomCode,name:guestName,t:Date.now()});
   }
   if(MODE==="host"){
-    conns.forEach(c=>{if(Date.now()-(c.lastSeen||0)>15000){try{c.close()}catch(e){};onLeave(c)}});
+    conns.forEach(c=>{if(Date.now()-(c.lastSeen||0)>30000){try{c.close()}catch(e){};onLeave(c)}});
     saveHost();
   }
 },4000);
