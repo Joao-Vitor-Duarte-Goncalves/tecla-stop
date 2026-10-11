@@ -119,10 +119,16 @@ details.how[open] summary::after{content:"−"}
 .pip{width:8px;height:8px;border-radius:50%;background:var(--line)}
 .pip.done{background:var(--yellow-dk)}
 .pip.now{background:var(--yellow);box-shadow:0 0 0 3px rgba(246,194,28,.25)}
-.roomtag{background:var(--night-2);border:1px dashed var(--line);border-radius:10px;padding:4px 10px;display:flex;flex-direction:column;align-items:center;line-height:1.1}
-.roomtag b{font-family:var(--display);font-weight:400;font-size:1.05rem;letter-spacing:.14em;color:var(--yellow)}
-.roomtag span{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.gbar .spacer{width:64px}
+.comanda .lbl{align-items:center}
+.roomtag{background:transparent;border:1px dashed var(--paper-line);border-radius:999px;padding:2px 10px;font-size:.72rem;font-weight:700;color:var(--muted);display:flex;align-items:baseline;gap:5px;white-space:nowrap}
+.roomtag{color:var(--paper-muted)}
+.roomtag b{font-family:var(--display);font-weight:400;font-size:.9rem;letter-spacing:.12em;color:var(--cap-ink)}
+.roomtag span{font-size:.62rem;text-transform:uppercase;letter-spacing:.06em}
+.gbar .spacer{width:78px}
+.gbar #newCat{white-space:nowrap;padding:8px 10px;font-size:.72rem}
+#roundLbl{white-space:nowrap}
+.pip{width:6px!important;height:6px!important}
+.pips{gap:3px!important;flex-wrap:nowrap!important}
 
 /* comanda (bar order slip) holding the theme */
 .comanda{position:relative;background:var(--paper);color:var(--paper-ink);border:1px solid var(--paper-line);border-radius:4px 4px 10px 10px;padding:20px 16px 14px;
@@ -143,7 +149,7 @@ details.how[open] summary::after{content:"−"}
 .turn.mine{color:var(--yellow);font-family:var(--display);font-weight:400;font-size:1.25rem}
 
 /* the board: yellow plastic table with caps around the rim */
-.board{position:relative;width:min(100%,420px);aspect-ratio:1;max-width:100%;margin:0 auto;perspective:1100px;perspective-origin:50% 20%}
+.board{position:relative;width:clamp(240px,calc(100svh - 410px),420px);aspect-ratio:1;max-width:100%;margin:0 auto;perspective:1100px;perspective-origin:50% 20%}
 .floor{position:absolute;left:6%;right:6%;bottom:-5%;height:18%;border-radius:50%;background:radial-gradient(closest-side, rgba(0,0,0,.5), transparent);filter:blur(8px)}
 .tilt{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(14deg)}
 .spinner{position:absolute;inset:0;transform-style:preserve-3d}
@@ -184,7 +190,9 @@ details.how[open] summary::after{content:"−"}
 .pl.off{opacity:.35;font-style:italic}
 .addform{max-width:340px;margin:0 auto;width:100%}
 .addbtn{align-self:center;border-style:dashed}
-.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tools{display:flex;gap:8px}
+.tools .btn{flex:1}
+#addov input{text-align:center;font-size:1.1rem}
 .tools .btn{padding:10px 6px}
 
 /* overlays */
@@ -308,11 +316,11 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
   <header class="gbar">
     <button class="btn ghost small" data-home>Sair</button>
     <div class="roundbox"><span class="lbl" id="roundLbl">Rodada 1</span><div class="pips" id="pips" aria-hidden="true"></div></div>
-    <button class="roomtag" id="roomTag" hidden aria-label="Copiar link da sala"><b id="roomTagCode">····</b><span id="roomTagHint">copiar link</span></button>
-    <span class="spacer" id="roomSpacer"></span>
+    <button class="btn ghost small" id="newCat">Outro tema</button>
+    <span class="spacer" id="catSpacer"></span>
   </header>
   <section class="comanda" aria-live="polite">
-    <span class="lbl"><span>Comanda</span><span>Tema da rodada</span></span>
+    <span class="lbl"><span id="comandaLeft">Comanda</span><button class="roomtag" id="roomTag" hidden type="button" aria-label="Copiar link da sala">Sala <b id="roomTagCode">····</b> <span id="roomTagHint">copiar link</span></button><span>Tema da rodada</span></span>
     <div class="reel" id="reel"><strong id="catTxt">—</strong></div>
     <form class="row catform" id="catForm" hidden><input type="text" id="catIn" placeholder="Ou escreve o tema de vocês" maxlength="40" autocomplete="off" aria-label="Tema personalizado"><button class="btn small" type="submit">Usar</button></form>
   </section>
@@ -333,10 +341,8 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
     </div>
   </div>
   <div class="roda"><div class="players" id="plist"></div><button class="btn ghost small rkbtn" id="rkBtn">Ver ranking</button></div>
-  <button class="btn ghost small addbtn" id="addOpen" hidden type="button">+ Adicionar jogador</button>
-  <form class="row addform" id="addMid" hidden><input type="text" id="addMidIn" placeholder="Nome de quem chegou" maxlength="16" autocomplete="off" aria-label="Nome do novo jogador"><button class="btn small" type="submit">Pôr na roda</button></form>
   <nav class="tools" id="tools">
-    <button class="btn ghost small" id="newCat">Outro tema</button>
+    <button class="btn ghost small" id="addOpen" hidden type="button">+ Jogador</button>
     <button class="btn ghost small" id="undo">Desfazer</button>
     <button class="btn ghost small" id="pause">Pausar</button>
   </nav>
@@ -345,6 +351,7 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
 <button class="themebtn" id="themeBtn" type="button" aria-label="Mudar para modo escuro"></button>
 <div class="net" id="net" role="status" hidden></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
+<div class="ov" id="addov" hidden><form class="ovbox" id="addMid"><span class="lbl">Chegou alguém?</span><div class="big win mid">Pôr na roda</div><p>A pessoa entra na rodada que está rolando.</p><input type="text" id="addMidIn" placeholder="Nome" maxlength="16" autocomplete="off" aria-label="Nome do novo jogador"><button class="btn" type="submit">Adicionar</button><button class="btn ghost small" type="button" id="addCancel">Cancelar</button></form></div>
 <div class="ov" id="rkov" hidden><div class="ovbox" id="rkbox" role="dialog" aria-label="Ranking"></div></div>
 
 <script>
@@ -578,8 +585,8 @@ function render(prev){
   buildKeys(V.letters);
   const hostish=MODE!=="guest", mine=myTurn(), curP=V.pl[V.cur];
   $("board").querySelectorAll(".key").forEach(k=>{const u=V.used.includes(k.dataset.l);k.classList.toggle("used",u);k.disabled=u||!mine});
-  $("roundLbl").textContent="Rodada "+V.round+(V.maxRounds?" de "+V.maxRounds:"");
-  $("pips").innerHTML=V.maxRounds&&V.maxRounds<=15?Array.from({length:V.maxRounds},(_,i)=>`<span class="pip ${i+1<V.round?"done":i+1===V.round?"now":""}"></span>`).join(""):"";
+  $("roundLbl").textContent="Rodada "+V.round+(V.maxRounds?"/"+V.maxRounds:"");
+  $("pips").innerHTML=V.maxRounds&&V.maxRounds<=10?Array.from({length:V.maxRounds},(_,i)=>`<span class="pip ${i+1<V.round?"done":i+1===V.round?"now":""}"></span>`).join(""):"";
   const hi=$("hubin");$("hub").classList.remove("danger");
   if(V.state==="idle"){
     $("prog").setAttribute("stroke-dashoffset",0);
@@ -602,13 +609,13 @@ function render(prev){
   $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}"><span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.on===false?" (caiu)":""}</span></span>`).join("");
   const lk=isLocked();$("rkBtn").textContent=lk?"🔒 Ranking trancado":"Ver ranking";$("rkBtn").classList.toggle("locked",lk);
   renderSheet();
-  $("tools").hidden=!hostish;
+  $("tools").hidden=!hostish;$("newCat").hidden=!hostish;$("catSpacer").hidden=hostish;
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");
   $("newCat").disabled=V.state!=="idle";
   $("catForm").hidden=!(hostish&&V.state==="idle"&&!V.ov);
-  $("addOpen").hidden=MODE!=="local"||addOpenState;$("addMid").hidden=MODE!=="local"||!addOpenState;
-  $("roomTag").hidden=MODE==="local"||!roomCode;$("roomTagCode").textContent=roomCode;$("roomSpacer").hidden=!$("roomTag").hidden;
+  $("addOpen").hidden=MODE!=="local";
+  $("roomTag").hidden=MODE==="local"||!roomCode;$("roomTagCode").textContent=roomCode;$("comandaLeft").hidden=!$("roomTag").hidden;
   $("catForm").hidden=$("catForm").hidden||spinning;
   maybeSpin();
   renderOverlay();
@@ -699,9 +706,9 @@ $("rkov").onclick=e=>{if(e.target===$("rkov"))$("rkov").hidden=true};
 $("pause").onclick=()=>dispatch({t:V&&V.state==="pause"?"resume":"pause"});
 $("newCat").onclick=()=>dispatch({t:"newcat"});
 $("catForm").onsubmit=e=>{e.preventDefault();const c=$("catIn").value.trim();if(!c)return;dispatch({t:"setcat",cat:c});$("catIn").value="";$("catIn").blur()};
-let addOpenState=false;
-$("addOpen").onclick=()=>{addOpenState=true;render();$("addMidIn").focus()};
-$("addMid").onsubmit=e=>{e.preventDefault();const n=$("addMidIn").value.trim();addOpenState=false;if(n)dispatch({t:"addlocal",name:n});else render();$("addMidIn").value="";$("addMidIn").blur()};
+$("addOpen").onclick=()=>{$("addov").hidden=false;$("addMidIn").value="";$("addMidIn").focus()};
+$("addCancel").onclick=()=>{$("addov").hidden=true};
+$("addMid").onsubmit=e=>{e.preventDefault();const n=$("addMidIn").value.trim();if(!n){$("addMidIn").focus();return}$("addov").hidden=true;$("addMidIn").blur();dispatch({t:"addlocal",name:n})};
 
 /* ---------- local mode ---------- */
 function renderChips(){
@@ -821,7 +828,7 @@ $("hostGo").onclick=()=>{if(lobbyPl.length<2)return;unlockAudio();newMatch(lobby
 $("roomTag").onclick=()=>{
   const url=location.origin+location.pathname+"#"+roomCode;
   try{navigator.clipboard.writeText(url).then(()=>{$("roomTagHint").textContent="link copiado"},()=>{$("roomTagHint").textContent=url})}catch(e){$("roomTagHint").textContent=url}
-  setTimeout(()=>{$("roomTagHint").textContent="toque pra copiar o link"},2500);
+  setTimeout(()=>{$("roomTagHint").textContent="copiar link"},2500);
 };
 $("copyLink").onclick=()=>{
   const url=location.origin+location.pathname+"#"+roomCode;
@@ -919,7 +926,7 @@ function teardown(){
   try{peer&&peer.destroy()}catch(e){}
   peer=null;hostConn=null;G=null;V=null;lastOvKey=null;wasMyTurn=false;
   spinning=false;clearTimeout(spinTimer);spunRound=-1;shownCat=null;$("reel").classList.remove("spinning");
-  $("ov").hidden=true;$("rkov").hidden=true;netBar("");
+  $("ov").hidden=true;$("rkov").hidden=true;$("addov").hidden=true;netBar("");
   try{wake&&wake.release()}catch(e){}
   try{noSleep&&noSleep.isEnabled&&noSleep.disable()}catch(e){}
 }
