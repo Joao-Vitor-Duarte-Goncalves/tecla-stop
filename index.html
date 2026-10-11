@@ -190,7 +190,6 @@ details.how[open] summary::after{content:"−"}
 .hubbtn:active{transform:translateY(4px);box-shadow:inset 0 0 0 4px var(--red),inset 0 0 0 6px rgba(255,255,255,.7),0 2px 0 var(--red-dk)}
 
 .roda{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px}
-.roda .players{display:contents}
 .who.mine{color:#ff6b62;font-family:var(--sign);font-weight:400;font-size:1.15rem}
 .players{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .pl{background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-size:.9rem}
@@ -203,7 +202,7 @@ details.how[open] summary::after{content:"−"}
   box-shadow:inset 0 0 0 3px #3b4a42,0 3px 0 rgba(0,0,0,.35)}
 .rkbtn.locked{color:var(--chalk-dim)}
 .tools{display:flex;gap:8px}
-.tools .btn{flex:1;padding:10px 6px}
+.tools .btn,.tools .rkbtn{flex:1;padding:10px 6px;min-width:0}
 
 /* overlays */
 .ov{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:20px;z-index:10}
@@ -404,11 +403,12 @@ body.bottled .top .lbl{background:var(--surface)}
     </div>
     </div>
   </div>
-  <div class="roda"><div class="players" id="plist"></div><button class="rkbtn" id="rkBtn">Placar</button></div>
+  <div class="roda"><div class="players" id="plist"></div></div>
   <nav class="tools" id="tools">
     <button class="btn ghost small" id="addOpen" hidden type="button">+ Jogador</button>
     <button class="btn ghost small" id="undo">Desfazer</button>
     <button class="btn ghost small" id="pause">Pausar</button>
+    <button class="rkbtn" id="rkBtn" type="button">Placar</button>
   </nav>
 </div>
 
@@ -719,7 +719,7 @@ function render(prev){
   $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}"><span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.on===false?" (caiu)":""}</span></span>`).join("");
   const lk=isLocked();$("rkBtn").textContent=lk?"🔒 Placar":"Placar";$("rkBtn").classList.toggle("locked",lk);
   renderSheet();
-  $("tools").hidden=!hostish;$("newCat").hidden=!hostish;$("catSpacer").hidden=hostish;
+  $("undo").hidden=!hostish;$("pause").hidden=!hostish;$("newCat").hidden=!hostish;$("catSpacer").hidden=hostish;
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");
   $("newCat").disabled=V.state!=="idle";
