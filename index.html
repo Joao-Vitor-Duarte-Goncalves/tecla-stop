@@ -10,23 +10,31 @@
 <script src="https://unpkg.com/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
 <style>
 /* Boteco à noite: a mesa de plástico amarela é o tabuleiro, as letras são tampinhas de cerveja, o tema vem escrito numa comanda. Single dark look by choice. */
+/* Mesa de boteco: tampinhas em volta de uma mesa amarela de plástico, tema na comanda. Neutros grafite (escuro) e cinza-azulado claro (claro); o amarelo e o vermelho são da mesa e do botão. */
 :root{
-  --night:#17110d; --night-2:#211812; --night-3:#2c2018; --line:#3d2d21;
-  --yellow:#f6c21c; --yellow-hi:#ffd84a; --yellow-dk:#c99a05;
-  --cap:#f3efe6; --cap-shade:#cfc7b6; --cap-rim:#b9b2a3; --cap-rim-dk:#8f887a; --cap-ink:#c0261c;
-  --cap-used:#3a2c22; --red:#e5402f; --paper:#fbf6ea; --paper-ink:#2a2018; --paper-line:#e4d9c3;
-  --ink:#f5ede1; --muted:#b8a691;
+  --night:#eef1f5; --night-2:#ffffff; --night-3:#e4e8ee; --line:#d2d8e0; --glow:#ffffff;
+  --ink:#14181d; --muted:#5b6470; --scrim:rgba(15,18,24,.55); --accent-text:#c0261c;
+  --yellow:#f6c21c; --yellow-hi:#ffd84a; --yellow-dk:#c99a05; --yellow-edge:#a77f00;
+  --cap:#f4f4f2; --cap-shade:#cfd2d6; --cap-rim:#b7bbc1; --cap-rim-dk:#868b93; --cap-ink:#c0261c;
+  --used-face:#3b4048; --used-rim:#4b515a; --used-rim-dk:#2f343b; --used-ink:#6f7781;
+  --red:#e5402f; --paper:#fdfdfb; --paper-ink:#1a1d22; --paper-line:#e1e5ea; --paper-muted:#8a919b;
   --display:"Bowlby One","Arial Black",Impact,sans-serif;
   --hand:"Permanent Marker","Comic Sans MS","Segoe Print",cursive;
   --body:"Barlow","Segoe UI",system-ui,sans-serif;
-  color-scheme:dark;
+  color-scheme:light;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --night:#0f1216; --night-2:#171b21; --night-3:#1f242b; --line:#2b313a; --glow:#1c222b;
+  --ink:#eef1f5; --muted:#9aa3ae; --scrim:rgba(5,7,10,.82); --accent-text:#f6c21c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --night:#0f1216; --night-2:#171b21; --night-3:#1f242b; --line:#2b313a; --glow:#1c222b;
+  --ink:#eef1f5; --muted:#9aa3ae; --scrim:rgba(5,7,10,.82); --accent-text:#f6c21c; color-scheme:dark}
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0}
 body{background:var(--night);color:var(--ink);font-family:var(--body);font-size:16px;
-  background-image:radial-gradient(120% 60% at 50% 0%, #2a1d14 0, var(--night) 60%);}
+  background-image:radial-gradient(120% 60% at 50% 0%, var(--glow) 0, var(--night) 60%);}
 .wrap{max-width:460px;margin:0 auto;padding-inline:16px;padding-block:14px 28px;display:flex;flex-direction:column;gap:16px;min-height:100%}
 button{font-family:var(--body);cursor:pointer;border:0;color:inherit}
 button:disabled{cursor:default}
@@ -60,7 +68,7 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--yellow)}
 .caps .cap:nth-child(odd){transform:rotate(-8deg)}
 .caps .cap:nth-child(even){transform:rotate(6deg) translateY(4px)}
 h1{font-family:var(--display);font-weight:400;font-size:2.4rem;line-height:.95;margin:0;letter-spacing:.01em}
-h1 span{color:var(--yellow)}
+h1 span{color:var(--accent-text)}
 .sub{color:var(--muted);margin:0;line-height:1.5;max-width:34ch}
 .namebox{display:flex;flex-direction:column;gap:8px}
 .primary{display:flex;flex-direction:column;gap:4px;text-align:left;background:var(--yellow);color:var(--paper-ink);border-radius:16px;padding:16px;box-shadow:0 5px 0 var(--yellow-dk)}
@@ -73,11 +81,13 @@ input.code{text-transform:uppercase;letter-spacing:.35em;font-family:var(--displ
 .secondary{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;background:transparent;border:1px dashed var(--line);border-radius:16px;padding:14px}
 .secondary strong{display:block;font-weight:800}
 .secondary span{color:var(--muted);font-size:.9rem}
-.secondary .arrow{font-family:var(--display);color:var(--yellow);font-size:1.3rem}
+.secondary .arrow{font-family:var(--display);color:var(--accent-text);font-size:1.3rem}
+.seg3{grid-template-columns:repeat(3,auto);gap:4px}
+.seg3 button{padding:7px 12px;font-size:.85rem}
 .toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:.95rem}
 details.how{border-top:1px solid var(--line);padding-top:12px}
 details.how summary{cursor:pointer;font-weight:800;list-style:none;display:flex;justify-content:space-between}
-details.how summary::after{content:"+";font-family:var(--display);color:var(--yellow)}
+details.how summary::after{content:"+";font-family:var(--display);color:var(--accent-text)}
 details.how[open] summary::after{content:"−"}
 .rules{color:var(--muted);font-size:.92rem;line-height:1.5;margin:10px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 
@@ -107,46 +117,52 @@ details.how[open] summary::after{content:"−"}
 .gbar .spacer{width:64px}
 
 /* comanda (bar order slip) holding the theme */
-.comanda{position:relative;background:var(--paper);color:var(--paper-ink);border-radius:4px 4px 10px 10px;padding:20px 16px 14px;
+.comanda{position:relative;background:var(--paper);color:var(--paper-ink);border:1px solid var(--paper-line);border-radius:4px 4px 10px 10px;padding:20px 16px 14px;
   transform:rotate(-1deg);box-shadow:0 8px 18px rgba(0,0,0,.45)}
 .comanda .lbl{border-bottom:1px dashed var(--paper-line);padding-bottom:6px}
 .comanda::before{content:"";position:absolute;left:0;right:0;top:-6px;height:12px;
   background:radial-gradient(circle at 8px 0, var(--night) 5px, transparent 5.5px) repeat-x;background-size:16px 12px}
-.comanda .lbl{color:#9a8a70;display:flex;justify-content:space-between}
+.comanda .lbl{color:var(--paper-muted);display:flex;justify-content:space-between}
 .reel{min-height:3.1em;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden}
 #catTxt{font-family:var(--hand);font-weight:400;font-size:1.55rem;line-height:1.15;text-wrap:balance;display:block}
-.reel.spinning #catTxt{color:#8c7b62;filter:blur(.4px)}
+.reel.spinning #catTxt{color:var(--paper-muted);filter:blur(.4px)}
 .catform{margin-top:8px}
 .catform input{background:#fff;color:var(--paper-ink);border-color:var(--paper-line)}
-.catform input::placeholder{color:#9a8a70}
+.catform input::placeholder{color:var(--paper-muted)}
 .catform .btn{box-shadow:0 3px 0 var(--yellow-dk)}
 
 .turn{text-align:center;font-weight:800;font-size:1.05rem;min-height:1.4em}
 .turn.mine{color:var(--yellow);font-family:var(--display);font-weight:400;font-size:1.25rem}
 
 /* the board: yellow plastic table with caps around the rim */
-.board{position:relative;width:min(100%,420px);aspect-ratio:1;max-width:100%;margin:0 auto}
-.table{position:absolute;inset:2%;border-radius:50%;
+.board{position:relative;width:min(100%,420px);aspect-ratio:1;max-width:100%;margin:0 auto;perspective:1100px;perspective-origin:50% 20%}
+.floor{position:absolute;left:6%;right:6%;bottom:-5%;height:18%;border-radius:50%;background:radial-gradient(closest-side, rgba(0,0,0,.5), transparent);filter:blur(8px)}
+.tilt{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(14deg)}
+.spinner{position:absolute;inset:0;transform-style:preserve-3d}
+.edge{position:absolute;inset:2%;border-radius:50%;background:var(--yellow-edge);transform:translateZ(var(--z))}
+.gloss{position:absolute;inset:2%;border-radius:50%;pointer-events:none;transform:translateZ(2px);
+  background:radial-gradient(55% 38% at 32% 18%, rgba(255,255,255,.5), transparent 70%),radial-gradient(40% 30% at 75% 85%, rgba(0,0,0,.12), transparent 70%)}
+.table{position:absolute;inset:2%;border-radius:50%;transform:translateZ(0);
   background:radial-gradient(circle at 38% 30%, var(--yellow-hi) 0, var(--yellow) 42%, var(--yellow-dk) 100%);
   box-shadow:inset 0 0 0 6px rgba(255,255,255,.18), inset 0 -10px 24px rgba(0,0,0,.25), 0 14px 30px rgba(0,0,0,.55)}
 .table::after{content:"";position:absolute;inset:16%;border-radius:50%;border:2px solid rgba(120,85,0,.25)}
-.ring{position:absolute;inset:0}
-.key{position:absolute;transform:translate(-50%,-50%);font-size:clamp(1rem,5vw,1.45rem);transition:transform .12s, filter .2s, opacity .2s}
-.key:active:not(:disabled){transform:translate(-50%,-46%) scale(.95)}
-.key.used{background:radial-gradient(circle, var(--cap-used) 0 58%, #2a2019 59% 62%, transparent 63%),repeating-conic-gradient(#4a3a2e 0 8deg, #33271e 8deg 15deg);color:#6e5a48;box-shadow:inset 0 2px 4px rgba(0,0,0,.5)}
+.ring{position:absolute;inset:0;transform-style:preserve-3d}
+.key{position:absolute;transform:translate(-50%,-50%) translateZ(12px);font-size:clamp(1rem,5vw,1.45rem);transition:transform .12s, filter .2s, opacity .2s}
+.key:active:not(:disabled){transform:translate(-50%,-50%) translateZ(4px) scale(.95)}
+.key.used{background:radial-gradient(circle, var(--used-face) 0 58%, var(--used-rim-dk) 59% 62%, transparent 63%),repeating-conic-gradient(var(--used-rim) 0 8deg, var(--used-rim-dk) 8deg 15deg);color:var(--used-ink);box-shadow:inset 0 2px 4px rgba(0,0,0,.5)}
 .key:disabled:not(.used){filter:saturate(.7) brightness(.92)}
-.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:50%;aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle at 50% 35%, #2b211a, #120d0a);box-shadow:0 0 0 6px rgba(0,0,0,.25), inset 0 2px 6px rgba(255,255,255,.06)}
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateZ(22px);width:50%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 50% 30%, #2c323b, #0c0e11);box-shadow:0 0 0 6px rgba(0,0,0,.25), inset 0 2px 6px rgba(255,255,255,.06)}
 .hub svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .hub circle{fill:none;stroke-width:6}
-.hub .track{stroke:#3a2c22}
+.hub .track{stroke:#2e343d}
 .hub .prog{stroke:var(--yellow);stroke-linecap:round}
 .hub.danger .prog{stroke:var(--red)}
 .hubin{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:12%;text-align:center}
-.secs{font-family:var(--display);font-size:clamp(2.6rem,13vw,3.6rem);line-height:1;font-variant-numeric:tabular-nums}
+.secs{color:#f4f6f8;font-family:var(--display);font-size:clamp(2.6rem,13vw,3.6rem);line-height:1;font-variant-numeric:tabular-nums}
 .hub.danger .secs{color:var(--red)}
 .who{font-weight:800;font-size:1rem;max-width:8em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--yellow)}
-.wait{color:var(--muted);font-weight:700;font-size:.9rem;line-height:1.3}
+.wait{color:#aeb6c1;font-weight:700;font-size:.9rem;line-height:1.3}
 .hubbtn{background:var(--red);color:#fff;border-radius:50%;width:100%;aspect-ratio:1;font-family:var(--display);font-size:clamp(1rem,5vw,1.3rem);line-height:1.05;box-shadow:0 6px 0 #8e2117, inset 0 2px 0 rgba(255,255,255,.25)}
 .hubbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #8e2117}
 
@@ -163,7 +179,7 @@ details.how[open] summary::after{content:"−"}
 .tools .btn{padding:10px 6px}
 
 /* overlays */
-.ov{position:fixed;inset:0;background:rgba(10,7,5,.86);display:grid;place-items:center;padding:20px;z-index:10}
+.ov{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:20px;z-index:10}
 .ovbox{background:var(--night-2);border:1px solid var(--line);border-radius:18px;padding:24px 20px;max-width:360px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;max-height:100%;overflow:auto}
 .big{font-family:var(--display);font-size:2.5rem;line-height:1;color:var(--red);text-wrap:balance}
 .big.win{color:var(--yellow)}
@@ -215,6 +231,7 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
   <button class="secondary" id="mLocal"><span><strong>Um celular só</strong><span>Passa de mão em mão. Sem internet.</span></span><span class="arrow" aria-hidden="true">→</span></button>
   <p class="err" id="homeErr" hidden></p>
   <div class="toggle"><span>Bipe nos últimos 3 segundos</span><input type="checkbox" id="sound" checked></div>
+  <div class="toggle"><span>Aparência</span><div class="seg seg3" id="themeSeg"><button type="button" data-t="auto">Auto</button><button type="button" data-t="light">Claro</button><button type="button" data-t="dark">Escuro</button></div></div>
   <details class="how">
     <summary>Como funciona</summary>
     <ol class="rules">
@@ -293,11 +310,18 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
   </section>
   <div class="turn" id="turn"></div>
   <div class="board" id="board">
-    <div class="table" aria-hidden="true"></div>
-    <div class="ring" id="ring"></div>
+    <div class="floor" id="floor" aria-hidden="true"></div>
+    <div class="tilt" id="tilt">
+    <div class="spinner" id="spinner">
+      <div class="edge" style="--z:-14px" aria-hidden="true"></div><div class="edge" style="--z:-10px" aria-hidden="true"></div><div class="edge" style="--z:-6px" aria-hidden="true"></div><div class="edge" style="--z:-3px" aria-hidden="true"></div>
+      <div class="table" aria-hidden="true"></div>
+      <div class="ring" id="ring"></div>
+    </div>
+    <div class="gloss" aria-hidden="true"></div>
     <div class="hub" id="hub">
       <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="46"/><circle class="prog" id="prog" cx="50" cy="50" r="46" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg>
       <div class="hubin" id="hubin"></div>
+    </div>
     </div>
   </div>
   <div class="roda"><div class="players" id="plist"></div><button class="btn ghost small rkbtn" id="rkBtn">Ver ranking</button></div>
@@ -322,7 +346,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ---------- prefs ---------- */
-let S={players:["Ana","Bruno","Carla"],dur:10,rounds:10,molec:true,hard:false,sound:true,name:"",key:""};
+let S={players:["Ana","Bruno","Carla"],dur:10,rounds:10,molec:true,theme:"auto",hard:false,sound:true,name:"",key:""};
 try{const s=JSON.parse(localStorage.getItem("tecla-stop")||"null");if(s)S=Object.assign(S,s)}catch(e){}
 if(!S.key)S.key=Math.random().toString(36).slice(2,10);
 const save=()=>{try{localStorage.setItem("tecla-stop",JSON.stringify(S))}catch(e){}};
@@ -334,6 +358,9 @@ function homeErr(msg){$("homeErr").textContent=msg||"";$("homeErr").hidden=!msg}
 $("myName").value=S.name;
 $("myName").oninput=e=>{S.name=e.target.value.trim();save()};
 $("sound").checked=S.sound;$("sound").onchange=e=>{S.sound=e.target.checked;save()};
+function applyTheme(){const r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",S.theme);$("themeSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===S.theme))}
+$("themeSeg").onclick=e=>{const b=e.target.closest("button");if(b){S.theme=b.dataset.t;save();applyTheme()}};
+applyTheme();
 $("molec").checked=S.molec;$("molec").onchange=e=>{S.molec=e.target.checked;save()};
 $("hard").checked=S.hard;$("hard").onchange=e=>{S.hard=e.target.checked;save()};
 function renderSeg(){$("seg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.s===S.dur))}
@@ -490,7 +517,13 @@ function spin(full){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches){$("catTxt").textContent=V.cat;shownCat=V.cat;return}
   spinning=true;$("reel").classList.add("spinning");
   const pool=CATS.concat(MOLEC),total=full?2400:1000;
-  if(full){try{$("ring").animate([{transform:"rotate(-1080deg)"},{transform:"rotate(0deg)"}],{duration:total,easing:"cubic-bezier(.15,.65,.2,1)"})}catch(e){}}
+  if(full){try{
+    /* the table tips toward the camera, spins three turns and settles back */
+    const D=total+200;
+    $("tilt").animate([{transform:"rotateX(14deg)"},{transform:"rotateX(58deg) translateY(3%) scale(.94)",offset:.2},{transform:"rotateX(58deg) translateY(3%) scale(.94)",offset:.72},{transform:"rotateX(14deg)"}],{duration:D,easing:"ease-in-out"});
+    $("spinner").animate([{transform:"rotateZ(-1080deg)"},{transform:"rotateZ(0deg)"}],{duration:D,easing:"cubic-bezier(.2,.55,.12,1)"});
+    $("floor").animate([{transform:"scale(1)",opacity:1},{transform:"scale(.8,1.25)",opacity:.7,offset:.2},{transform:"scale(.8,1.25)",opacity:.7,offset:.72},{transform:"scale(1)",opacity:1}],{duration:D,easing:"ease-in-out"});
+  }catch(e){}}
   let t=0,step=45;
   const tick=()=>{
     if(!V||!spinning){spinning=false;return}
