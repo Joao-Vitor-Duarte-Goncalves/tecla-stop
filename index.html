@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Barlow:wght@500;600;800&display=swap">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
 <style>
 /* Layout: one-screen bar-counter board — letter keys in a ring around a countdown hub. Single dark look by choice. */
 :root{
@@ -267,7 +268,13 @@ function needName(){const n=$("myName").value.trim();if(!n){homeErr("Coloca seu 
 let ac=null, wake=null;
 function unlockAudio(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume&&ac.resume()}catch(e){}}
 function beep(f,d,type="square",vol=.08){if(!S.sound||!ac)return;try{const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=vol;o.connect(g);g.connect(ac.destination);const t=ac.currentTime;g.gain.exponentialRampToValueAtTime(.0001,t+d);o.start(t);o.stop(t+d)}catch(e){}}
-function keepAwake(){try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{})}catch(e){}}
+/* keep the screen on: native wake lock where it exists, NoSleep (silent looping video) for iPhones and in-app browsers */
+let noSleep=null;
+function keepAwake(){
+  try{if(typeof NoSleep!=="undefined"){noSleep=noSleep||new NoSleep();if(!noSleep.isEnabled)noSleep.enable().catch(()=>{})}}catch(e){}
+  try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{})}catch(e){}
+}
+document.addEventListener("click",()=>{if(MODE)keepAwake()},{capture:true});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&MODE)keepAwake()});
 
 /* ---------- state ---------- */
@@ -700,6 +707,7 @@ function teardown(){
   peer=null;hostConn=null;G=null;V=null;lastOvKey=null;wasMyTurn=false;
   $("ov").hidden=true;netBar("");
   try{wake&&wake.release()}catch(e){}
+  try{noSleep&&noSleep.isEnabled&&noSleep.disable()}catch(e){}
 }
 function leave(){lsDel(HOST_KEY);lsDel(ROOM_KEY);teardown();homeErr("");show("home")}
 
