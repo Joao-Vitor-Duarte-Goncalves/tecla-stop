@@ -244,12 +244,16 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
 .fallcap::after{content:"";position:absolute;inset:4.5%;border-radius:50%;background:radial-gradient(circle at 38% 30%, var(--yellow-hi) 0, var(--yellow) 42%, var(--yellow-dk) 100%);box-shadow:inset 0 0 0 6px rgba(255,255,255,.18)}
 .introskip{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);left:0;right:0;text-align:center;color:#fff;font-weight:700;font-size:.85rem;opacity:.75;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 /* fora da partida o fundo é uma garrafa azul em close; entrar numa opção gira a garrafa e voltar desgira */
-.scene{position:fixed;inset:0;z-index:-1;overflow:hidden;display:none;background:#030b24}
+/* a garrafa muda com o tema: de dia é vidro azul contra a luz (claro e translúcido), de madrugada é azul-marinho */
+:root{--sc-bg:#dfe8f8;--sc-0:#6e8fd6;--sc-1:#9db7ee;--sc-hi:#ffffff;--sc-2:#7d9ee6;--sc-3:#88a7ea;--sc-wash:linear-gradient(rgba(240,245,253,.55),rgba(240,245,253,.35) 45%,rgba(240,245,253,.6))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sc-bg:#030b24;--sc-0:#030b24;--sc-1:#0a2463;--sc-hi:#3e6fe0;--sc-2:#1a3f9c;--sc-3:#0f2c74;--sc-wash:linear-gradient(rgba(3,11,36,.35),rgba(3,11,36,.5))}}
+:root[data-theme="dark"]{--sc-bg:#030b24;--sc-0:#030b24;--sc-1:#0a2463;--sc-hi:#3e6fe0;--sc-2:#1a3f9c;--sc-3:#0f2c74;--sc-wash:linear-gradient(rgba(3,11,36,.35),rgba(3,11,36,.5))}
+.scene{position:fixed;inset:0;z-index:-1;overflow:hidden;display:none;background:var(--sc-bg)}
 .scene .blurred{position:absolute;inset:-24px;filter:blur(7px) saturate(.9)}
-.scene::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(3,11,36,.35),rgba(3,11,36,.5))}
+.scene::after{content:"";position:absolute;inset:0;pointer-events:none;background:var(--sc-wash)}
 body.bottled .scene{display:block}
-body.bottled{background:#030b24;--surface:var(--glass-surface);--surface-2:var(--glass-surface-2)}
-.scene .glass{position:absolute;inset:0;background:linear-gradient(90deg,#030b24 0,#0a2463 16%,#3e6fe0 25%,#1a3f9c 33%,#0f2c74 72%,#030b24 100%)}
+body.bottled{background:var(--sc-bg);--surface:var(--glass-surface);--surface-2:var(--glass-surface-2)}
+.scene .glass{position:absolute;inset:0;background:linear-gradient(90deg,var(--sc-0) 0,var(--sc-1) 16%,var(--sc-hi) 25%,var(--sc-2) 33%,var(--sc-3) 72%,var(--sc-0) 100%)}
 .scene .label{position:absolute;left:0;right:0;top:50%;height:34%;overflow:hidden}
 .lslice{position:absolute;top:0;bottom:0;overflow:hidden}
 .lsliceIn{position:absolute;top:0;left:0;height:100%;background-repeat:repeat-x;transform-origin:0 0}
@@ -257,7 +261,7 @@ body.bottled{background:#030b24;--surface:var(--glass-surface);--surface-2:var(-
 .cslice{position:absolute;top:0;bottom:0;overflow:hidden;transform-origin:50% 50%}
 .cylclone{position:absolute!important;margin:0!important}
 .scene .label::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(90deg,rgba(3,11,36,.8) 0,rgba(3,11,36,.2) 16%,transparent 28%,transparent 62%,rgba(3,11,36,.3) 80%,rgba(3,11,36,.85) 100%)}
+  background:linear-gradient(90deg,var(--sc-0) 0,transparent 22%,transparent 62%,var(--sc-0) 100%);opacity:.75}
 .scene .shine{position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(90deg,transparent 21%,rgba(255,255,255,.28) 25%,rgba(255,255,255,.05) 29%,transparent 32%),linear-gradient(90deg,transparent 82%,rgba(255,255,255,.1) 87%,transparent 91%)}
 .scene .bubbles{position:absolute;inset:0;pointer-events:none;
