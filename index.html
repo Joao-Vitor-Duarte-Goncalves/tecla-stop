@@ -245,8 +245,11 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
 .introskip{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);left:0;right:0;text-align:center;color:#fff;font-weight:700;font-size:.85rem;opacity:.75;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 /* fora da partida o fundo é uma garrafa azul em close; entrar numa opção gira a garrafa e voltar desgira */
 .scene{position:fixed;inset:0;z-index:-1;overflow:hidden;display:none;background:#030b24}
+.scene .blurred{position:absolute;inset:-24px;filter:blur(7px) saturate(.9)}
+.scene::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(3,11,36,.35),rgba(3,11,36,.5))}
 body.bottled .scene{display:block}
 body.bottled{background:#030b24;--surface:var(--glass-surface);--surface-2:var(--glass-surface-2)}
+.wrap.turning{position:absolute;left:0;right:0;top:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;will-change:transform,opacity}
 .scene .glass{position:absolute;inset:0;background:linear-gradient(90deg,#030b24 0,#0a2463 16%,#3e6fe0 25%,#1a3f9c 33%,#0f2c74 72%,#030b24 100%)}
 .scene .label{position:absolute;left:0;right:0;top:50%;height:34%;overflow:hidden;background:#fbf7ec;box-shadow:0 0 0 1px rgba(0,0,0,.2)}
 .scene .strip{position:absolute;top:0;bottom:0;left:0;display:flex;will-change:transform;transform:translateX(-220vw)}
@@ -402,7 +405,7 @@ body.bottled .top .lbl{background:var(--surface)}
 </div>
 
 <button class="themebtn" id="themeBtn" type="button" aria-label="Mudar para modo escuro"></button>
-<div class="scene" id="scene" aria-hidden="true"><div class="glass"></div><div class="bubbles"></div><div class="label"><div class="strip" id="labelStrip"><div class="face"><span class="brand">Tecla Stop</span><span class="note2">gelada, de mesa,<br>pra roda toda</span><span class="brand">Tecla Stop</span><span><span class="seal">desde a primeira rodada</span></span></div><div class="face"><span class="brand">Tecla Stop</span><span class="note2">gelada, de mesa,<br>pra roda toda</span><span class="brand">Tecla Stop</span><span><span class="seal">desde a primeira rodada</span></span></div></div></div><div class="shine"></div></div>
+<div class="scene" id="scene" aria-hidden="true"><div class="blurred"><div class="glass"></div><div class="bubbles"></div><div class="label"><div class="strip" id="labelStrip"><div class="face"><span class="brand">Tecla Stop</span><span class="note2">gelada, de mesa,<br>pra roda toda</span><span class="brand">Tecla Stop</span><span><span class="seal">desde a primeira rodada</span></span></div><div class="face"><span class="brand">Tecla Stop</span><span class="note2">gelada, de mesa,<br>pra roda toda</span><span class="brand">Tecla Stop</span><span><span class="seal">desde a primeira rodada</span></span></div></div></div><div class="shine"></div></div></div>
 <div class="opening" id="intro" hidden></div>
 <div class="net" id="net" role="status" hidden></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
@@ -432,17 +435,25 @@ const TURN={home:0,local:1,lobby:1};
 function show(id){
   const from=curScreen;curScreen=id;["home","local","lobby","game"].forEach(s=>$(s).hidden=s!==id);
   document.body.classList.toggle("bottled",id!=="game");
-  if(id in TURN&&from in TURN&&TURN[from]!==TURN[id])turnBottle(TURN[from],TURN[id],id);
+  if(id in TURN&&from in TURN&&TURN[from]!==TURN[id])turnBottle(TURN[from],TURN[id],id,from);
   if(id==="game"&&from!=="game"&&(from==="local"||from==="lobby"))playIntro();
 }
-function turnBottle(a,b,id){
+function turnBottle(a,b,id,fromId){
   const st=$("labelStrip"),off=n=>`translateX(${-220+120*n}vw)`;
   st.style.transform=off(b);
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const fwd=b>a;
   st.animate([{transform:off(a)},{transform:off(b)}],{duration:1100,easing:"cubic-bezier(.6,0,.25,1)"});
   $("scene").animate([{transform:"scale(1)"},{transform:"scale(1.06)",offset:.45},{transform:"scale(1)"}],{duration:1100,easing:"ease-in-out"});
-  $(id).animate([{opacity:0,transform:`translateX(${fwd?60:-60}px)`},{opacity:0,transform:`translateX(${fwd?60:-60}px)`,offset:.35},{opacity:1,transform:"none"}],{duration:900,easing:"cubic-bezier(.2,.7,.2,1)"});
+  /* the screens sit on the bottle's curve: the old one turns away with the label, the new one turns in from the other side */
+  const R=Math.round(innerWidth*.75),o=`50% 50% -${R}px`,ang=fwd?80:-80,P="perspective(1100px)";
+  const outEl=$(fromId),inEl=$(id),y=scrollY;
+  outEl.hidden=false;outEl.classList.add("turning");inEl.classList.add("turning");outEl.style.top=(-y)+"px";
+  const opt={duration:1100,easing:"cubic-bezier(.6,0,.25,1)",fill:"both"};
+  const aOut=outEl.animate([{transform:`${P} rotateY(0deg)`,transformOrigin:o,opacity:1},{transform:`${P} rotateY(${ang}deg)`,transformOrigin:o,opacity:0}],opt);
+  const aIn=inEl.animate([{transform:`${P} rotateY(${-ang}deg)`,transformOrigin:o,opacity:0},{transform:`${P} rotateY(0deg)`,transformOrigin:o,opacity:1}],opt);
+  scrollTo(0,0);
+  aIn.onfinish=()=>{aOut.cancel();aIn.cancel();outEl.hidden=curScreen!==fromId;outEl.classList.remove("turning");inEl.classList.remove("turning");outEl.style.top=""};
 }
 function homeErr(msg){$("homeErr").textContent=msg||"";$("homeErr").hidden=!msg}
 $("myName").value=S.name;
