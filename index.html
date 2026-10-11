@@ -61,6 +61,10 @@ button:disabled{cursor:default}
 .cat{background:var(--key);color:var(--key-ink);border-radius:14px;padding:12px 14px;text-align:center;box-shadow:0 4px 0 #b9a47e}
 .cat .lbl{color:#7a6545}
 .cat strong{display:block;font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1;margin-top:4px;text-wrap:balance}
+.catform{margin-top:10px}
+.catform input{background:#fff8ea;color:var(--key-ink);border-color:#d8c49e}
+.catform input::placeholder{color:#8a7656}
+.addform{max-width:320px;margin:0 auto;width:100%}
 .turn{text-align:center;font-weight:800;font-size:1.1rem;min-height:1.4em}
 .turn.mine{color:var(--amber)}
 .board{position:relative;width:min(100%,420px);aspect-ratio:1;max-width:100%;margin:0 auto}
@@ -128,6 +132,7 @@ button:disabled{cursor:default}
     <li>Tempo acabou: bebe e sai da rodada.</li>
     <li>Último que sobrar ganha a rodada e escolhe quem bebe.</li>
     <li>Se acabarem as letras, elas voltam e o tempo cai 2 segundos.</li>
+    <li>Chegou alguém? Entra na hora, na rodada que estiver rolando.</li>
   </ol>
 </div>
 
@@ -181,7 +186,9 @@ button:disabled{cursor:default}
     <span class="lbl" id="roundLbl">Rodada 1</span>
     <button class="btn ghost small" id="newCat">Outro tema</button>
   </div>
-  <div class="cat"><span class="lbl">Tema</span><strong id="catTxt">—</strong></div>
+  <div class="cat"><span class="lbl">Tema</span><strong id="catTxt">—</strong>
+    <form class="row catform" id="catForm" hidden><input type="text" id="catIn" placeholder="Ou escreve o tema de vocês" maxlength="40" autocomplete="off" aria-label="Tema personalizado"><button class="btn small" type="submit">Usar</button></form>
+  </div>
   <div class="turn" id="turn"></div>
   <div class="board" id="board">
     <div class="hub" id="hub">
@@ -190,6 +197,7 @@ button:disabled{cursor:default}
     </div>
   </div>
   <div class="players" id="plist"></div>
+  <form class="row addform" id="addMid" hidden><input type="text" id="addMidIn" placeholder="Chegou alguém? Nome" maxlength="16" autocomplete="off" aria-label="Nome de quem chegou"><button class="btn small" type="submit">Entrar</button></form>
   <div class="actions">
     <button class="btn ghost small" id="undo">Desfazer toque</button>
     <button class="btn ghost small" id="pause">Pausar</button>
@@ -246,12 +254,13 @@ let peer=null, hostConn=null, conns=new Map(), lobbyPl=[], roomCode="";
 /* ---------- engine (local / host only) ---------- */
 function newMatch(players){
   G={pl:players.map(p=>({id:p.id,name:p.name,drinks:0,alive:true,on:true})),round:0,starter:-1,
-     letters:BASE.concat(S.hard?HARD:[]),lastCat:null,cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
+     letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
   newRound();
 }
-function pickCat(){let c;do{c=CATS[Math.floor(Math.random()*CATS.length)]}while(c===G.lastCat&&CATS.length>1);G.lastCat=c;G.cat=c}
+function pickCat(){const pool=CATS.concat(G.custom);let c;do{c=pool[Math.floor(Math.random()*pool.length)]}while(c===G.lastCat&&pool.length>1);G.lastCat=c;G.cat=c}
+function joinable(){return !(G.ov&&(G.ov.kind==="win"||G.ov.kind==="few"))}
 function newRound(){
-  G.round++;G.pl.forEach(p=>p.alive=p.on);G.used=[];G.hist=[];G.dur=S.dur;G.ov=null;
+  G.round++;G.pl.forEach(p=>{p.alive=p.on;p.lost=false});G.used=[];G.hist=[];G.dur=S.dur;G.ov=null;
   if(G.pl.filter(p=>p.alive).length<2){G.state="idle";G.ov={kind:"few"};pickCat();return}
   G.starter=nextAliveFrom(G.starter);G.cur=G.starter;G.state="idle";pickCat();
 }
@@ -283,6 +292,14 @@ function act(from,a){
     case "pause": if(isHostish(from)&&G.state==="run"){G.pausedLeft=G.end-performance.now();G.state="pause"} break;
     case "resume": if(isHostish(from)&&G.state==="pause"){G.end=performance.now()+G.pausedLeft;G.state="run"} break;
     case "newcat": if(isHostish(from)&&G.state==="idle")pickCat(); break;
+    case "setcat":{
+      const c=String(a.cat||"").trim().slice(0,40);
+      if(!c||!isHostish(from)||G.state!=="idle"||G.ov)break;
+      G.cat=c;G.lastCat=c;if(!CATS.includes(c)&&!G.custom.includes(c))G.custom.push(c);break}
+    case "addlocal":{
+      const n=String(a.name||"").trim().slice(0,16);
+      if(MODE!=="local"||!n||G.pl.length>=16)break;
+      G.pl.push({id:"p"+Date.now(),name:n,drinks:0,alive:joinable(),on:true,lost:false});break}
     case "continue":{
       if(G.state!=="ov"&&!(G.ov&&G.ov.kind==="few"))break;
       const k=G.ov&&G.ov.kind;
@@ -294,7 +311,7 @@ function act(from,a){
   sync();
 }
 function timeout(){
-  const p=G.pl[G.cur];p.drinks++;p.alive=false;G.state="ov";
+  const p=G.pl[G.cur];p.drinks++;p.alive=false;p.lost=true;G.state="ov";
   if(!endIfLastStanding()){G.ov={kind:"drink",name:p.name,next:G.pl[nextAliveFrom(G.cur)].name}}
   else G.ov.loser=p.name;
   G.seq++;sync();
@@ -361,6 +378,8 @@ function render(prev){
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");
   $("newCat").disabled=V.state!=="idle";
+  $("catForm").hidden=!(hostish&&V.state==="idle"&&!V.ov);
+  $("addMid").hidden=MODE!=="local";
   renderOverlay();
 }
 function renderOverlay(){
@@ -400,6 +419,8 @@ requestAnimationFrame(frame);
 $("undo").onclick=()=>dispatch({t:"undo"});
 $("pause").onclick=()=>dispatch({t:V&&V.state==="pause"?"resume":"pause"});
 $("newCat").onclick=()=>dispatch({t:"newcat"});
+$("catForm").onsubmit=e=>{e.preventDefault();const c=$("catIn").value.trim();if(!c)return;dispatch({t:"setcat",cat:c});$("catIn").value="";$("catIn").blur()};
+$("addMid").onsubmit=e=>{e.preventDefault();const n=$("addMidIn").value.trim();if(!n)return;dispatch({t:"addlocal",name:n});$("addMidIn").value="";$("addMidIn").blur()};
 
 /* ---------- local mode ---------- */
 function renderChips(){
@@ -454,7 +475,7 @@ function onHostData(c,d){
     const old=conns.get(id);if(old&&old!==c){try{old.close()}catch(e){}}
     c.pid=id;conns.set(id,c);
     if(!G){const ex=lobbyPl.find(p=>p.id===id);if(ex)ex.name=name;else lobbyPl.push({id,name});broadcastLobby()}
-    else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name}else G.pl.push({id,name,drinks:0,alive:false,on:true});sync()}
+    else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&joinable())ex.alive=true}else G.pl.push({id,name,drinks:0,alive:joinable(),on:true,lost:false});sync()}
     return;
   }
   if(c.pid)act(c.pid,d);
