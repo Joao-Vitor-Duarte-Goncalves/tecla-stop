@@ -13,7 +13,7 @@
    Claro = boteco de dia (azulejo branco com cobalto). Escuro = boteco de madrugada (azulejo marinho). */
 :root{
   --wall:#f4f6f8; --wall-wash:rgba(244,246,248,.72); --surface:#ffffff; --surface-2:#eef2f7; --line:#c9d3e0;
-  --ink:#0f1b33; --muted:#4f5d75; --scrim:rgba(10,20,45,.55); --accent-text:#c8212b;
+  --ink:#0f1b33; --muted:#4f5d75; --scrim:rgba(10,20,45,.55); --accent-text:#c8212b; --glass-surface:rgba(255,255,255,.84); --glass-surface-2:rgba(238,242,247,.8);
   --tile:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23f7f9fb'/%3E%3Cg fill='none' stroke='%231f4fa3' stroke-width='2'%3E%3Ccircle r='15'/%3E%3Ccircle cx='64' r='15'/%3E%3Ccircle cy='64' r='15'/%3E%3Ccircle cx='64' cy='64' r='15'/%3E%3Ccircle cx='32' cy='32' r='20' stroke-width='1.2' stroke-dasharray='2 3'/%3E%3C/g%3E%3Cg fill='%231f4fa3'%3E%3Cpath d='M32 13c4.5 8 4.5 11 0 19c-4.5-8-4.5-11 0-19zM32 51c-4.5-8-4.5-11 0-19c4.5 8 4.5 11 0 19zM13 32c8-4.5 11-4.5 19 0c-8 4.5-11 4.5-19 0zM51 32c-8 4.5-11 4.5-19 0c8-4.5 11-4.5 19 0z'/%3E%3Ccircle r='7'/%3E%3Ccircle cx='64' r='7'/%3E%3Ccircle cy='64' r='7'/%3E%3Ccircle cx='64' cy='64' r='7'/%3E%3Ccircle cx='32' cy='3.5' r='1.8'/%3E%3Ccircle cx='32' cy='60.5' r='1.8'/%3E%3Ccircle cx='3.5' cy='32' r='1.8'/%3E%3Ccircle cx='60.5' cy='32' r='1.8'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='3.4' fill='%23f7f9fb' stroke='%231f4fa3' stroke-width='2'/%3E%3Cpath d='M0 .5H64M.5 0V64' stroke='%23cfd8e3'/%3E%3C/svg%3E");
   --cobalt:#1f4fa3; --cobalt-dk:#163a7a;
   --yellow:#f6c21c; --yellow-hi:#ffd84a; --yellow-dk:#c99a05; --yellow-edge:#a77f00;
@@ -30,12 +30,12 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --wall:#0b1530; --wall-wash:rgba(11,21,48,.78); --surface:#122042; --surface-2:#0e1a36; --line:#2a3d68;
-  --ink:#eef2fa; --muted:#a3b0c9; --scrim:rgba(3,7,18,.82); --accent-text:#ffd84a;
+  --ink:#eef2fa; --muted:#a3b0c9; --scrim:rgba(3,7,18,.82); --accent-text:#ffd84a; --glass-surface:rgba(14,26,58,.8); --glass-surface-2:rgba(10,20,46,.75);
   --tile:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230d1a3a'/%3E%3Cg fill='none' stroke='%233a62b8' stroke-width='2'%3E%3Ccircle r='15'/%3E%3Ccircle cx='64' r='15'/%3E%3Ccircle cy='64' r='15'/%3E%3Ccircle cx='64' cy='64' r='15'/%3E%3Ccircle cx='32' cy='32' r='20' stroke-width='1.2' stroke-dasharray='2 3'/%3E%3C/g%3E%3Cg fill='%233a62b8'%3E%3Cpath d='M32 13c4.5 8 4.5 11 0 19c-4.5-8-4.5-11 0-19zM32 51c-4.5-8-4.5-11 0-19c4.5 8 4.5 11 0 19zM13 32c8-4.5 11-4.5 19 0c-8 4.5-11 4.5-19 0zM51 32c-8 4.5-11 4.5-19 0c8-4.5 11-4.5 19 0z'/%3E%3Ccircle r='7'/%3E%3Ccircle cx='64' r='7'/%3E%3Ccircle cy='64' r='7'/%3E%3Ccircle cx='64' cy='64' r='7'/%3E%3Ccircle cx='32' cy='3.5' r='1.8'/%3E%3Ccircle cx='32' cy='60.5' r='1.8'/%3E%3Ccircle cx='3.5' cy='32' r='1.8'/%3E%3Ccircle cx='60.5' cy='32' r='1.8'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='3.4' fill='%230d1a3a' stroke='%233a62b8' stroke-width='2'/%3E%3Cpath d='M0 .5H64M.5 0V64' stroke='%23152650'/%3E%3C/svg%3E");
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --wall:#0b1530; --wall-wash:rgba(11,21,48,.78); --surface:#122042; --surface-2:#0e1a36; --line:#2a3d68;
-  --ink:#eef2fa; --muted:#a3b0c9; --scrim:rgba(3,7,18,.82); --accent-text:#ffd84a;
+  --ink:#eef2fa; --muted:#a3b0c9; --scrim:rgba(3,7,18,.82); --accent-text:#ffd84a; --glass-surface:rgba(14,26,58,.8); --glass-surface-2:rgba(10,20,46,.75);
   --tile:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230d1a3a'/%3E%3Cg fill='none' stroke='%233a62b8' stroke-width='2'%3E%3Ccircle r='15'/%3E%3Ccircle cx='64' r='15'/%3E%3Ccircle cy='64' r='15'/%3E%3Ccircle cx='64' cy='64' r='15'/%3E%3Ccircle cx='32' cy='32' r='20' stroke-width='1.2' stroke-dasharray='2 3'/%3E%3C/g%3E%3Cg fill='%233a62b8'%3E%3Cpath d='M32 13c4.5 8 4.5 11 0 19c-4.5-8-4.5-11 0-19zM32 51c-4.5-8-4.5-11 0-19c4.5 8 4.5 11 0 19zM13 32c8-4.5 11-4.5 19 0c-8 4.5-11 4.5-19 0zM51 32c-8 4.5-11 4.5-19 0c8-4.5 11-4.5 19 0z'/%3E%3Ccircle r='7'/%3E%3Ccircle cx='64' r='7'/%3E%3Ccircle cy='64' r='7'/%3E%3Ccircle cx='64' cy='64' r='7'/%3E%3Ccircle cx='32' cy='3.5' r='1.8'/%3E%3Ccircle cx='32' cy='60.5' r='1.8'/%3E%3Ccircle cx='3.5' cy='32' r='1.8'/%3E%3Ccircle cx='60.5' cy='32' r='1.8'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='3.4' fill='%230d1a3a' stroke='%233a62b8' stroke-width='2'/%3E%3Cpath d='M0 .5H64M.5 0V64' stroke='%23152650'/%3E%3C/svg%3E");
   color-scheme:dark}
 *,*::before,*::after{box-sizing:border-box}
@@ -235,18 +235,37 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
 ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
 ::view-transition-new(root){z-index:9999}
 .themewipe{position:fixed;inset:0;z-index:30;pointer-events:none}
-.opening{position:fixed;inset:0;z-index:26;overflow:hidden;background:#05080f}
-.openvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.opening{position:fixed;inset:0;z-index:26;overflow:hidden;background-color:var(--wall);background-image:linear-gradient(var(--wall-wash),var(--wall-wash)),var(--tile);background-size:auto,72px 72px}
+.opening .bottle{position:absolute;left:0;bottom:0;width:100%;height:400vw;will-change:transform}
+.opening .capg,.opening .foam{transform-box:fill-box;transform-origin:50% 100%}
+.opening .foam{opacity:0}
 .fallcap{position:fixed;display:none;border-radius:50%;will-change:transform;box-shadow:0 20px 40px rgba(0,0,0,.4)}
 .fallcap::before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(#ffd84a 0 4deg, var(--yellow-edge) 4deg 8deg)}
 .fallcap::after{content:"";position:absolute;inset:4.5%;border-radius:50%;background:radial-gradient(circle at 38% 30%, var(--yellow-hi) 0, var(--yellow) 42%, var(--yellow-dk) 100%);box-shadow:inset 0 0 0 6px rgba(255,255,255,.18)}
 .introskip{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);left:0;right:0;text-align:center;color:#fff;font-weight:700;font-size:.85rem;opacity:.75;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-/* telas de fora da partida: o fundo é a foto da garrafa na mesa do bar; mudar de tela gira a câmera em volta dela */
-.scene{position:fixed;inset:0;z-index:-1;overflow:hidden;display:none;background:#05080f}
+/* fora da partida o fundo é uma garrafa azul em close; entrar numa opção gira a garrafa e voltar desgira */
+.scene{position:fixed;inset:0;z-index:-1;overflow:hidden;display:none;background:#030b24}
 body.bottled .scene{display:block}
-.scene img{position:absolute;inset:-4%;width:108%;height:108%;object-fit:cover;object-position:45% 50%;will-change:object-position,transform}
-.scene::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(5,10,25,.25),rgba(5,10,25,.55) 45%,rgba(5,10,25,.75))}
-body.bottled{background:#05080f}
+body.bottled{background:#030b24;--surface:var(--glass-surface);--surface-2:var(--glass-surface-2)}
+.scene .glass{position:absolute;inset:0;background:linear-gradient(90deg,#030b24 0,#0a2463 16%,#3e6fe0 25%,#1a3f9c 33%,#0f2c74 72%,#030b24 100%)}
+.scene .label{position:absolute;left:0;right:0;top:50%;height:34%;overflow:hidden;background:#fbf7ec;box-shadow:0 0 0 1px rgba(0,0,0,.2)}
+.scene .strip{position:absolute;top:0;bottom:0;left:0;display:flex;will-change:transform;transform:translateX(-220vw)}
+.scene .face{width:240vw;height:100%;flex:none;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;
+  border-top:10px solid #d7262e;border-bottom:10px solid #d7262e;box-shadow:inset 0 14px 0 #f6c21c,inset 0 -14px 0 #f6c21c}
+.scene .face span{display:grid;place-items:center;text-align:center;line-height:1}
+.scene .brand{font-family:var(--sign);color:#d7262e;font-size:clamp(2.2rem,12vw,3.6rem)}
+.scene .seal{width:min(26vw,120px);aspect-ratio:1;border-radius:50%;margin:auto;border:3px solid #1f4fa3;color:#1f4fa3;font-family:var(--sign);font-size:.9rem;padding:8px}
+.scene .note2{font-family:var(--hand);color:#1f4fa3;font-size:clamp(1rem,5vw,1.4rem)}
+.scene .label::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(3,11,36,.8) 0,rgba(3,11,36,.2) 16%,transparent 28%,transparent 62%,rgba(3,11,36,.3) 80%,rgba(3,11,36,.85) 100%)}
+.scene .shine{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent 21%,rgba(255,255,255,.28) 25%,rgba(255,255,255,.05) 29%,transparent 32%),linear-gradient(90deg,transparent 82%,rgba(255,255,255,.1) 87%,transparent 91%)}
+.scene .bubbles{position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,255,255,.45) 0 2px,transparent 2.5px),radial-gradient(circle,rgba(255,255,255,.3) 0 1.5px,transparent 2px),radial-gradient(circle,rgba(255,255,255,.35) 0 3px,transparent 3.5px);
+  background-size:90px 140px,60px 110px,130px 200px;background-position:20px 0,70px 40px,10px 80px;animation:bubbles 9s linear infinite}
+@keyframes bubbles{to{background-position:20px -140px,70px -70px,10px -120px}}
+body.bottled .panel,body.bottled .intro,body.bottled .homeopts,body.bottled .secondary,body.bottled .top .lbl,body.bottled .err{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+body.bottled .lbl{color:var(--ink)}
 body.bottled .top .lbl{background:var(--surface)}
 .shake{animation:shake .45s}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
@@ -383,7 +402,7 @@ body.bottled .top .lbl{background:var(--surface)}
 </div>
 
 <button class="themebtn" id="themeBtn" type="button" aria-label="Mudar para modo escuro"></button>
-<div class="scene" id="scene" aria-hidden="true"><img id="sceneImg" src="media/garrafa.jpg" alt=""></div>
+<div class="scene" id="scene" aria-hidden="true"><div class="glass"></div><div class="bubbles"></div><div class="label"><div class="strip" id="labelStrip"><div class="face"><span class="brand">Tecla Stop</span><span class="note2">gelada, de mesa,<br>pra roda toda</span><span class="brand">Tecla Stop</span><span><span class="seal">desde a primeira rodada</span></span></div><div class="face"><span class="brand">Tecla Stop</span><span class="note2">gelada, de mesa,<br>pra roda toda</span><span class="brand">Tecla Stop</span><span><span class="seal">desde a primeira rodada</span></span></div></div></div><div class="shine"></div></div>
 <div class="opening" id="intro" hidden></div>
 <div class="net" id="net" role="status" hidden></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
@@ -407,18 +426,24 @@ const save=()=>{try{localStorage.setItem("tecla-stop",JSON.stringify(S))}catch(e
 save();
 
 /* ---------- screens ---------- */
-let curScreen="home";
-/* home shows the bottle from one side; setup screens orbit to the other side; going back orbits back */
-const SCENE_POS={home:45,local:72,lobby:72};
-function turnScene(from,to){
-  const img=$("sceneImg");if(!img||!(to in SCENE_POS))return;
-  const a=SCENE_POS[from]??SCENE_POS[to],b=SCENE_POS[to];
-  img.style.objectPosition=b+"% 50%";
-  if(a===b||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
-  img.animate([{objectPosition:a+"% 50%",transform:"scale(1)"},{transform:"scale(1.07)",offset:.5},{objectPosition:b+"% 50%",transform:"scale(1)"}],{duration:900,easing:"cubic-bezier(.55,0,.25,1)"});
+let curScreen="home";document.body.classList.add("bottled");
+/* home shows the label from the front; opening an option turns the bottle half a turn, going back turns it back */
+const TURN={home:0,local:1,lobby:1};
+function show(id){
+  const from=curScreen;curScreen=id;["home","local","lobby","game"].forEach(s=>$(s).hidden=s!==id);
+  document.body.classList.toggle("bottled",id!=="game");
+  if(id in TURN&&from in TURN&&TURN[from]!==TURN[id])turnBottle(TURN[from],TURN[id],id);
+  if(id==="game"&&from!=="game"&&(from==="local"||from==="lobby"))playIntro();
 }
-document.body.classList.add("bottled");
-function show(id){const from=curScreen;curScreen=id;["home","local","lobby","game"].forEach(s=>$(s).hidden=s!==id);document.body.classList.toggle("bottled",id!=="game");turnScene(from,id);if(id==="game"&&from!=="game"&&(from==="local"||from==="lobby"))playIntro()}
+function turnBottle(a,b,id){
+  const st=$("labelStrip"),off=n=>`translateX(${-220+120*n}vw)`;
+  st.style.transform=off(b);
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const fwd=b>a;
+  st.animate([{transform:off(a)},{transform:off(b)}],{duration:1100,easing:"cubic-bezier(.6,0,.25,1)"});
+  $("scene").animate([{transform:"scale(1)"},{transform:"scale(1.06)",offset:.45},{transform:"scale(1)"}],{duration:1100,easing:"ease-in-out"});
+  $(id).animate([{opacity:0,transform:`translateX(${fwd?60:-60}px)`},{opacity:0,transform:`translateX(${fwd?60:-60}px)`,offset:.35},{opacity:1,transform:"none"}],{duration:900,easing:"cubic-bezier(.2,.7,.2,1)"});
+}
 function homeErr(msg){$("homeErr").textContent=msg||"";$("homeErr").hidden=!msg}
 $("myName").value=S.name;
 $("myName").oninput=e=>{S.name=e.target.value.trim();save()};
@@ -735,6 +760,29 @@ function renderSheet(){
 
 /* ---------- abertura: a câmera sobe pela garrafa, a tampa estoura e cai virando a mesa ---------- */
 let introPlaying=false,introTimers=[];
+const BOTTLE_SVG=`<svg class="bottle" viewBox="0 0 400 1600" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+<defs>
+ <linearGradient id="glass" gradientUnits="userSpaceOnUse" x1="0" x2="400" y1="0" y2="0">
+  <stop offset="0" stop-color="#030b24"/><stop offset=".16" stop-color="#0a2463"/><stop offset=".27" stop-color="#6f9cff"/><stop offset=".33" stop-color="#1a3f9c"/><stop offset=".72" stop-color="#0f2c74"/><stop offset="1" stop-color="#030b24"/>
+ </linearGradient>
+ <linearGradient id="neckhi" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+ <linearGradient id="capside" x1="0" x2="1"><stop offset="0" stop-color="#c99a05"/><stop offset=".35" stop-color="#ffd84a"/><stop offset=".6" stop-color="#f6c21c"/><stop offset="1" stop-color="#a77f00"/></linearGradient>
+</defs>
+<path d="M156 268V540C156 640 0 700 0 900V1600H400V900C400 700 244 640 244 540V268Z" fill="url(#glass)"/>
+<path d="M176 280V540C176 610 90 660 70 760" fill="none" stroke="url(#neckhi)" stroke-width="10" stroke-linecap="round"/>
+<rect x="0" y="1060" width="400" height="300" fill="#fdfdfb"/>
+<rect x="0" y="1072" width="400" height="6" fill="#d7262e"/><rect x="0" y="1342" width="400" height="6" fill="#d7262e"/>
+<text x="200" y="1205" text-anchor="middle" font-family="Alfa Slab One, Rockwell, Georgia, serif" font-size="64" fill="#d7262e">Tecla Stop</text>
+<text x="200" y="1260" text-anchor="middle" font-family="Permanent Marker, cursive" font-size="26" fill="#1f4fa3">gelada, de mesa, pra roda toda</text>
+<rect x="146" y="240" width="108" height="30" rx="8" fill="#0a1f55"/>
+<g class="foam">
+ <circle cx="200" cy="238" r="26" fill="#fff"/><circle cx="176" cy="226" r="18" fill="#fff"/><circle cx="226" cy="224" r="20" fill="#fff"/><circle cx="196" cy="206" r="16" fill="#fff"/><circle cx="214" cy="198" r="10" fill="#fff"/><circle cx="182" cy="196" r="8" fill="#fff"/>
+</g>
+<g class="capg">
+ <path d="M138 202H262V238L256 246L250 238L244 246L238 238L232 246L226 238L220 246L214 238L208 246L202 238L196 246L190 238L184 246L178 238L172 246L166 238L160 246L154 238L148 246L142 238L138 242Z" fill="url(#capside)"/>
+ <rect x="138" y="198" width="124" height="10" rx="4" fill="#ffd84a"/>
+</g>
+</svg>`;
 function introSound(){
   if(!S.sound||!ac)return;
   try{
@@ -749,27 +797,29 @@ function introSound(){
 function playIntro(){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   introPlaying=true;
-  const ov=$("intro");
-  ov.innerHTML=`<video class="openvid" id="openvid" src="media/abertura.mp4" poster="media/abertura-poster.jpg" muted playsinline preload="auto"></video><div class="fallcap" id="fallcap"></div><span class="introskip">toque pra pular</span>`;
-  ov.hidden=false;
+  const ov=$("intro");ov.innerHTML=BOTTLE_SVG+`<div class="fallcap" id="fallcap"></div><span class="introskip">toque pra pular</span>`;ov.hidden=false;
+  const svg=ov.querySelector(".bottle"),cap=ov.querySelector(".capg"),foam=ov.querySelector(".foam"),fall=$("fallcap");
   $("tilt").style.opacity="0";$("floor").style.opacity="0";
-  const vid=$("openvid"),fall=$("fallcap");
+  const H=svg.getBoundingClientRect().height,vh=innerHeight,endY=0.875*H-0.62*vh;
   const T=(ms,fn)=>introTimers.push(setTimeout(fn,ms));
-  let fell=false;
-  /* when the cap has left the frame, the yellow cap drops from above and becomes the table */
-  const drop=()=>{
-    if(fell||!introPlaying)return;fell=true;
+  /* 1. a câmera sobe do rótulo até o gargalo */
+  svg.animate([{transform:"translateY(0)"},{transform:`translateY(${endY}px)`}],{duration:1200,easing:"cubic-bezier(.5,0,.2,1)",fill:"forwards"});
+  /* 2. a tampa treme e estoura com espuma */
+  T(1250,()=>cap.animate([{transform:"translate(0,0)"},{transform:"translate(-3px,-2px) rotate(-3deg)"},{transform:"translate(3px,-3px) rotate(3deg)"},{transform:"translate(0,-2px)"}],{duration:260,iterations:1}));
+  T(1520,()=>{
+    introSound();
+    cap.animate([{transform:"translate(0,0) rotate(0)"},{transform:"translate(40px,-700px) rotate(-560deg)"}],{duration:700,easing:"cubic-bezier(.2,.7,.4,1)",fill:"forwards"});
+    foam.animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1.3)",opacity:1,offset:.4},{transform:"scale(1.6) translateY(-30px)",opacity:0}],{duration:1100,easing:"ease-out",fill:"forwards"});
+  });
+  /* 3. a tampa cai do alto e vira a mesa; a garrafa some */
+  T(2050,()=>{
     const r=$("board").getBoundingClientRect();
-    Object.assign(fall.style,{left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px",display:"block"});
-    vid.animate([{opacity:1},{opacity:0}],{duration:400,fill:"forwards"});
+    Object.assign(fall.style,{left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px"});
+    fall.style.display="block";
+    svg.animate([{opacity:1},{opacity:0}],{duration:450,fill:"forwards"});
     fall.animate([{transform:"translateY(-110vh) rotate(-540deg) scale(.45)"},{transform:"translateY(0) rotate(0) scale(1.06)",offset:.8},{transform:"translateY(0) rotate(0) scale(1)"}],{duration:900,easing:"cubic-bezier(.35,0,.25,1)",fill:"forwards"});
-    T(930,()=>endIntro());
-  };
-  vid.addEventListener("ended",drop);
-  vid.addEventListener("timeupdate",()=>{if(vid.currentTime>=2.85&&!vid._pop){vid._pop=1;introSound()}});
-  vid.addEventListener("error",drop);
-  const p=vid.play();if(p&&p.catch)p.catch(()=>drop());
-  T(6000,drop); /* safety: never hang on a slow or blocked video */
+  });
+  T(2980,()=>endIntro());
   ov.onclick=()=>endIntro();
 }
 function endIntro(){
