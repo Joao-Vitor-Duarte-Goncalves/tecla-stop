@@ -18,6 +18,7 @@
   color-scheme:dark;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
+*,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0}
 body{background:var(--felt);color:var(--ink);font-family:var(--body);font-size:16px;
@@ -75,7 +76,7 @@ button:disabled{cursor:default}
   box-shadow:0 4px 0 #b9a47e;transition:transform .12s, background .2s, box-shadow .2s, opacity .2s}
 .key:active:not(:disabled){transform:translate(-50%,-46%);box-shadow:0 1px 0 #b9a47e}
 .key.used{background:var(--key-used);color:#5f8072;box-shadow:none}
-.key:disabled:not(.used){opacity:.5}
+.key:disabled:not(.used){opacity:.8;box-shadow:0 2px 0 #b9a47e}
 .hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52%;aspect-ratio:1;border-radius:50%;
   background:var(--felt);border:2px solid var(--line);display:grid;place-items:center;text-align:center}
 .hub svg{position:absolute;inset:-2px;width:calc(100% + 4px);height:calc(100% + 4px);transform:rotate(-90deg)}
@@ -83,12 +84,12 @@ button:disabled{cursor:default}
 .hub .track{stroke:var(--line)}
 .hub .prog{stroke:var(--amber);stroke-linecap:round}
 .hub.danger .prog{stroke:var(--red)}
-.hubin{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px}
+.hubin{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:12%;text-align:center}
 .secs{font-family:var(--display);font-size:clamp(2.6rem,13vw,3.6rem);line-height:1;font-variant-numeric:tabular-nums}
 .hub.danger .secs{color:var(--red)}
 .who{font-weight:800;font-size:1.05rem;max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wait{color:var(--muted);font-weight:600;font-size:.95rem;max-width:8em;line-height:1.3}
-.hubbtn{background:var(--amber);color:var(--key-ink);border-radius:50%;width:78%;aspect-ratio:1;font-family:var(--display);font-size:clamp(1rem,5vw,1.3rem);line-height:1.05;box-shadow:0 5px 0 #a8701f}
+.hubbtn{background:var(--amber);color:var(--key-ink);border-radius:50%;width:100%;aspect-ratio:1;font-family:var(--display);font-size:clamp(1rem,5vw,1.3rem);line-height:1.05;box-shadow:0 5px 0 #a8701f}
 .players{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .pl{border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-weight:600;font-size:.9rem;display:flex;gap:6px;align-items:center;font-variant-numeric:tabular-nums}
 .pl.cur{background:var(--amber);color:var(--key-ink);border-color:var(--amber)}
@@ -109,6 +110,9 @@ button:disabled{cursor:default}
 .rkpos{font-family:var(--display);font-size:1.1rem}
 .rkname{font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rkstat{font-size:.85rem;font-weight:600;opacity:.85}
+.net{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 8px) 16px 8px;background:var(--red);color:#fff;text-align:center;font-weight:700;font-size:.9rem;z-index:20}
+body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
+.rkpts{color:inherit;font-weight:800}
 .shake{animation:shake .45s}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -158,6 +162,7 @@ button:disabled{cursor:default}
     <button type="button" data-r="5">5</button><button type="button" data-r="10">10</button>
     <button type="button" data-r="15">15</button><button type="button" data-r="0">Livre</button>
   </div>
+  <div class="toggle"><span>Temas de molecagem</span><input type="checkbox" id="molec"></div>
   <div class="toggle"><span>Incluir Q, X e Z (modo sofrência)</span><input type="checkbox" id="hard"></div>
 </div>
 
@@ -220,17 +225,19 @@ button:disabled{cursor:default}
   </div>
 </div>
 
+<div class="net" id="net" role="status" hidden></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
 
 <script>
 const CATS=["Marcas de cerveja","Coisas que se fala bêbado","Desculpas pra sair mais cedo","Coisas que tem num bar","Petiscos de boteco","Comidas","Frutas","Animais","Países","Cidades do Brasil","Times de futebol","Profissões","Nomes de mulher","Nomes de homem","Cantores brasileiros","Bandas","Filmes","Séries","Novelas","Personagens de desenho","Marcas","Coisas da cozinha","Partes do corpo","Coisas que levam pra praia","Esportes","Instrumentos musicais","Cores","Coisas verdes","Coisas redondas","Coisas que se encontra na bolsa","Apelidos de ex","Coisas de São João","Pratos do Nordeste","Palavrões leves","Doenças","Remédios","Carros","Objetos do quarto","Coisas que você não empresta","Lugares pra um primeiro encontro","Gírias","Super-heróis","Aplicativos","Jogos","Matérias da escola","Coisas que fazem barulho","Roupas","Sobremesas","Bebidas sem álcool","Drinks e coquetéis","Lugares de Teresina","Coisas que dão ressaca","Coisas que se faz no Carnaval","Peixes e frutos do mar","Verbos","Coisas geladas","Signos e coisas místicas","Coisas que se joga fora","Palavras em inglês","Famosos da internet"];
+const MOLEC=["Coisas com formato suspeito", "Coisas que ficam duras", "Coisas que ficam molhadas", "Coisas que se coloca na boca", "Coisas que se aperta", "Coisas que se lambe", "Frutas com duplo sentido", "Palavras com duplo sentido", "Coisas que fazem barulho de madrugada", "Coisas que se faz no escuro", "Cantadas ruins", "Mentiras de primeiro encontro", "Mentiras que todo mundo conta no Tinder", "Coisas que o crush não pode saber", "Coisas que você mandaria pro ex às 3 da manhã", "Motivos pra terminar um namoro", "Lugares estranhos pra dar um beijo", "Lugares pra dar uma escapada", "Coisas que não se fala pra sogra", "Coisas que sua mãe não pode ver no seu celular", "Coisas escondidas no histórico do navegador", "Coisas que tem na gaveta da cabeceira", "Emojis com segundas intenções", "Apelidos carinhosos ridículos", "Desculpas pra chegar em casa tarde", "Desculpas pra não pagar a conta", "Desculpas pra não ir pra academia", "Desculpas pra sair do grupo da família", "Desculpas de quem chegou atrasado", "Coisas que você faz bêbado e se arrepende", "Coisas que acontecem depois da meia-noite", "Coisas que se faz de ressaca", "Motivos pra ser expulso de um bar", "Coisas que se fala pro segurança da balada", "Coisas que se grita no Carnaval", "Coisas pra fazer numa despedida de solteiro", "Coisas que se faz na festa da firma e se arrepende", "Coisas que se faz escondido no trabalho", "Coisas que ninguém admite que faz", "Coisas que você faria por 1 milhão de reais", "Coisas que a vizinha fofoqueira comenta", "Xingamentos de criança", "Coisas que você fala quando topa o dedinho", "Músicas de sofrência", "Coisas que se faz no banheiro além do óbvio", "Partes do corpo com nome engraçado", "Coisas que dão vergonha alheia", "Coisas que se fala no áudio de 5 minutos", "Indiretas pra postar no status", "Coisas que alguém dessa roda já fez"];
 const BASE="ABCDEFGHIJLMNOPRSTUV".split(""), HARD=["Q","X","Z"];
 const PREFIX="teclastop-v1-";
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ---------- prefs ---------- */
-let S={players:["Ana","Bruno","Carla"],dur:10,rounds:10,hard:false,sound:true,name:"",key:""};
+let S={players:["Ana","Bruno","Carla"],dur:10,rounds:10,molec:true,hard:false,sound:true,name:"",key:""};
 try{const s=JSON.parse(localStorage.getItem("tecla-stop")||"null");if(s)S=Object.assign(S,s)}catch(e){}
 if(!S.key)S.key=Math.random().toString(36).slice(2,10);
 const save=()=>{try{localStorage.setItem("tecla-stop",JSON.stringify(S))}catch(e){}};
@@ -242,6 +249,7 @@ function homeErr(msg){$("homeErr").textContent=msg||"";$("homeErr").hidden=!msg}
 $("myName").value=S.name;
 $("myName").oninput=e=>{S.name=e.target.value.trim();save()};
 $("sound").checked=S.sound;$("sound").onchange=e=>{S.sound=e.target.checked;save()};
+$("molec").checked=S.molec;$("molec").onchange=e=>{S.molec=e.target.checked;save()};
 $("hard").checked=S.hard;$("hard").onchange=e=>{S.hard=e.target.checked;save()};
 function renderSeg(){$("seg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.s===S.dur))}
 $("seg").onclick=e=>{const b=e.target.closest("button");if(b){S.dur=+b.dataset.s;save();renderSeg()}};
@@ -272,10 +280,10 @@ let peer=null, hostConn=null, conns=new Map(), lobbyPl=[], roomCode="";
 /* ---------- engine (local / host only) ---------- */
 function newMatch(players){
   G={pl:players.map(p=>({id:p.id,name:p.name,drinks:0,wins:0,pts:0,alive:true,on:true})),round:0,maxRounds:S.rounds,starter:-1,
-     letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
+     letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],molec:S.molec,cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
   newRound();
 }
-function pickCat(){const pool=CATS.concat(G.custom);let c;do{c=pool[Math.floor(Math.random()*pool.length)]}while(c===G.lastCat&&pool.length>1);G.lastCat=c;G.cat=c}
+function pickCat(){const pool=CATS.concat(G.molec?MOLEC:[],G.custom);let c;do{c=pool[Math.floor(Math.random()*pool.length)]}while(c===G.lastCat&&pool.length>1);G.lastCat=c;G.cat=c}
 function joinable(){return !(G.ov&&(G.ov.kind==="win"||G.ov.kind==="few"||G.ov.kind==="final"))}
 function newRound(){
   G.round++;G.outs=0;G.pl.forEach(p=>{p.alive=p.on;p.lost=false});G.used=[];G.hist=[];G.dur=S.dur;G.ov=null;
@@ -296,7 +304,7 @@ function act(from,a){
   if(!G)return;
   const curP=G.pl[G.cur];
   switch(a.t){
-    case "start": if(G.state==="idle"&&isHostish(from)&&!G.ov){G.state="run";resetTimer()} break;
+    case "start": if(G.state==="idle"&&isHostish(from)&&!G.ov&&aliveCount()>=2){if(!G.pl[G.cur]||!G.pl[G.cur].alive)G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()} break;
     case "tap":
       if(G.state!=="run"||G.used.includes(a.l)||!G.letters.includes(a.l))break;
       if(MODE!=="local"&&(!curP||from!==curP.id))break;
@@ -309,7 +317,7 @@ function act(from,a){
       if(G.pl[h.who]&&G.pl[h.who].alive)G.cur=h.who;
       if(G.state==="run")resetTimer();else G.pausedLeft=G.dur*1000;break}
     case "pause": if(isHostish(from)&&G.state==="run"){G.pausedLeft=G.end-performance.now();G.state="pause"} break;
-    case "resume": if(isHostish(from)&&G.state==="pause"){G.end=performance.now()+G.pausedLeft;G.state="run"} break;
+    case "resume": if(isHostish(from)&&G.state==="pause"&&aliveCount()>=2){if(!G.pl[G.cur]||!G.pl[G.cur].alive)G.cur=nextAliveFrom(G.cur);G.end=performance.now()+G.pausedLeft;G.state="run"} break;
     case "newcat": if(isHostish(from)&&G.state==="idle")pickCat(); break;
     case "setcat":{
       const c=String(a.cat||"").trim().slice(0,40);
@@ -347,7 +355,7 @@ function snapshot(){
 }
 function sync(){
   const snap=snapshot();
-  if(MODE==="host"){conns.forEach(c=>{try{c.open&&c.send(snap)}catch(e){}})}
+  if(MODE==="host"){conns.forEach(c=>{try{c.open&&c.send(snap)}catch(e){}});saveHost()}
   applyView(snap);
 }
 function dispatch(a){
@@ -439,7 +447,7 @@ function finalHtml(){
   const sponge=maxD>0?V.pl.filter(p=>p.drinks===maxD).map(p=>p.name):[];
   let pos=0,prevKey=null;
   const rows=rk.map((p,i)=>{const k=(p.pts||0)+":"+(p.wins||0)+":"+p.drinks;if(k!==prevKey){pos=i+1;prevKey=k}
-    return `<li class="rk${pos===1?" first":""}"><span class="rkpos">${pos}º</span><span class="rkname">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}</span><span class="rkstat"><b>${p.pts||0} pts</b> · ${p.wins||0} vit · ${p.drinks} 🍺</span></li>`}).join("");
+    return `<li class="rk${pos===1?" first":""}"><span class="rkpos">${pos}º</span><span class="rkname">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}</span><span class="rkstat"><span class="rkpts">${p.pts||0} pt${Math.abs(p.pts||0)===1?"":"s"}</span> · ${p.wins||0} vit · ${p.drinks} 🍺</span></li>`}).join("");
   const champ=rk[0];
   return `<span class="lbl">Fim da partida · ${V.round} rodada${V.round===1?"":"s"}</span>
     <div class="big win mid">${esc(champ?champ.name:"")} é o campeão</div>
@@ -497,31 +505,71 @@ function lobbyView(){
   else{$("hostGo").hidden=true;$("lobbyNote").textContent="Esperando quem criou a sala começar."}
 }
 
+/* ---------- persistence helpers ---------- */
+const HOST_KEY="tecla-stop-host", ROOM_KEY="tecla-stop-room", MAX_AGE=3*3600e3;
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+function netBar(msg){$("net").textContent=msg||"";$("net").hidden=!msg;document.body.classList.toggle("has-net",!!msg)}
+
 /* host */
-$("mCreate").onclick=()=>{const n=needName();if(!n||!peerOk())return;unlockAudio();keepAwake();startHost(n,0)};
-function startHost(name,tries){
-  MODE="host";ME=S.key;lobbyPl=[{id:ME,name}];conns.clear();G=null;V=null;lastLetters="";
-  roomCode=randCode();
-  $("lobbyRole").textContent="Sua sala";$("lobbyStatus").textContent="Abrindo a sala…";$("copyLink").hidden=true;
-  mountSettings("hostSettings");show("lobby");lobbyView();
-  peer=new Peer(PREFIX+roomCode,{debug:0});
-  peer.on("open",()=>{$("lobbyStatus").textContent="Sala aberta. Manda o código ou o link pra galera.";$("copyLink").hidden=false});
-  peer.on("connection",c=>{
+$("mCreate").onclick=()=>{const n=needName();if(!n||!peerOk())return;unlockAudio();keepAwake();startHost(n,null)};
+function startHost(name,restore){
+  MODE="host";ME=S.key;conns.clear();V=null;lastLetters="";
+  if(restore){
+    roomCode=restore.code;G=restore.G||null;lobbyPl=(restore.lobby||[]).filter(p=>p.id===ME);
+    if(!lobbyPl.length)lobbyPl=[{id:ME,name}];
+    if(G){G.pl.forEach(p=>{if(p.id!==ME&&p.on){p.on=false;p.alive=false}});if(G.state==="run")G.state="pause";G.end=0}
+  }else{roomCode=randCode();lobbyPl=[{id:ME,name}];G=null}
+  $("lobbyRole").textContent="Sua sala";$("lobbyStatus").textContent=restore?"Reabrindo a sala…":"Abrindo a sala…";$("copyLink").hidden=true;
+  mountSettings("hostSettings");
+  if(G)sync();else{show("lobby");lobbyView()}
+  if(restore)netBar("Reabrindo a sala "+roomCode+"… a galera volta sozinha");
+  openHostPeer(0,!!restore);
+}
+function openHostPeer(tries,keepCode){
+  const p=new Peer(PREFIX+roomCode,{debug:0});peer=p;
+  p.on("open",()=>{if(peer!==p)return;netBar("");$("lobbyStatus").textContent="Sala aberta. Manda o código ou o link pra galera.";$("copyLink").hidden=false;saveHost()});
+  p.on("connection",c=>{
+    c.lastSeen=Date.now();
     c.on("data",d=>onHostData(c,d));
     c.on("close",()=>onLeave(c));
     c.on("error",()=>onLeave(c));
   });
-  peer.on("disconnected",()=>{try{peer.reconnect()}catch(e){}});
-  peer.on("error",e=>{
-    if(e.type==="unavailable-id"&&tries<4){try{peer.destroy()}catch(_){};startHost(name,tries+1);return}
-    if(e.type==="network"||e.type==="server-error"||e.type==="socket-error")$("lobbyStatus").textContent="Perdi o contato com o servidor de salas. Quem já entrou continua jogando; pra novos entrarem, confere a internet.";
+  p.on("disconnected",()=>{
+    if(peer!==p||p.destroyed||MODE!=="host")return;
+    netBar("Sem contato com o servidor de salas. Quem já está conectado continua jogando.");
+    setTimeout(()=>{try{if(peer===p&&!p.destroyed&&p.disconnected)p.reconnect()}catch(e){}},2000);
   });
+  p.on("error",e=>{
+    if(peer!==p||MODE!=="host")return;
+    if(e.type==="unavailable-id"){
+      try{p.destroy()}catch(_){}
+      if(keepCode){
+        if(tries<20){netBar("Reabrindo a sala "+roomCode+"…");setTimeout(()=>{if(MODE==="host"&&peer===p)openHostPeer(tries+1,true)},2000)}
+        else netBar("Não consegui reabrir a sala "+roomCode+". Toque em Sair e crie outra.");
+      }else if(tries<4){roomCode=randCode();lobbyView();openHostPeer(tries+1,false)}
+      return;
+    }
+    if(["network","server-error","socket-error","socket-closed"].includes(e.type)){
+      netBar("Sem contato com o servidor de salas. Tentando de novo…");
+      setTimeout(()=>{try{if(peer===p&&!p.destroyed&&p.disconnected)p.reconnect()}catch(_){}},3000);
+    }
+  });
+}
+function saveHost(){
+  if(MODE!=="host")return;
+  let g=null;
+  if(G){g=JSON.parse(JSON.stringify(G));if(G.state==="run"){g.state="pause";g.pausedLeft=Math.max(0,G.end-performance.now())}}
+  lsSet(HOST_KEY,{code:roomCode,lobby:lobbyPl,G:g,name:S.name,t:Date.now()});
 }
 function onHostData(c,d){
   if(!d||typeof d!=="object")return;
+  c.lastSeen=Date.now();
+  if(d.t==="ping"){try{c.send({t:"pong"})}catch(e){}return}
   if(d.t==="join"){
     const id=String(d.key||"").slice(0,20)||Math.random().toString(36).slice(2),name=String(d.name||"Alguém").slice(0,16);
-    const old=conns.get(id);if(old&&old!==c){try{old.close()}catch(e){}}
+    const old=conns.get(id);if(old&&old!==c){old.pid=null;try{old.close()}catch(e){}}
     c.pid=id;conns.set(id,c);
     if(!G){const ex=lobbyPl.find(p=>p.id===id);if(ex)ex.name=name;else lobbyPl.push({id,name});broadcastLobby()}
     else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&joinable())ex.alive=true}else G.pl.push({id,name,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});sync()}
@@ -544,7 +592,7 @@ function onLeave(c){
 }
 function broadcastLobby(){
   const msg={t:"lobby",code:roomCode,players:lobbyPl};
-  conns.forEach(c=>{try{c.open&&c.send(msg)}catch(e){}});lobbyView();
+  conns.forEach(c=>{try{c.open&&c.send(msg)}catch(e){}});lobbyView();saveHost();
 }
 $("hostGo").onclick=()=>{if(lobbyPl.length<2)return;unlockAudio();newMatch(lobbyPl);sync()};
 $("roomTag").onclick=()=>{
@@ -561,46 +609,105 @@ $("copyLink").onclick=()=>{
 /* guest */
 $("joinForm").onsubmit=e=>{e.preventDefault();const n=needName();if(!n||!peerOk())return;
   const code=$("joinCode").value.trim().toUpperCase();if(!/^[A-Z]{4}$/.test(code)){homeErr("O código tem 4 letras.");return}
-  unlockAudio();keepAwake();startGuest(n,code)};
-let joinTimer=null;
-function startGuest(name,code){
-  MODE="guest";ME=S.key;roomCode=code;G=null;V=null;lastLetters="";
-  $("lobbyRole").textContent="Sala de outra pessoa";$("lobbyStatus").textContent="Entrando…";$("copyLink").hidden=true;$("hostSettings").innerHTML="";
+  unlockAudio();keepAwake();startGuest(n,code,false)};
+let guestName="",everConnected=false,rcTimer=null,rcStart=0,rcN=0,lastHostMsg=0;
+function startGuest(name,code,auto){
+  MODE="guest";ME=S.key;roomCode=code;guestName=name;G=null;V=null;lastLetters="";
+  everConnected=!!auto;rcStart=Date.now();rcN=0;
+  $("lobbyRole").textContent="Sala de outra pessoa";$("lobbyStatus").textContent=auto?"Voltando pra sala…":"Entrando…";$("copyLink").hidden=true;$("hostSettings").innerHTML="";
   show("lobby");$("roomCode").textContent=code;$("lobbyPlayers").innerHTML="";$("hostGo").hidden=true;$("lobbyNote").textContent="";
-  peer=new Peer({debug:0});
-  clearTimeout(joinTimer);
-  joinTimer=setTimeout(()=>{if(!hostConn||!hostConn.open)guestFail("Não consegui conectar. Tenta todo mundo no mesmo Wi-Fi e confere o código.")},15000);
-  peer.on("open",()=>{
-    hostConn=peer.connect(PREFIX+code,{reliable:true});
-    hostConn.on("open",()=>{clearTimeout(joinTimer);hostConn.send({t:"join",name,key:S.key});$("lobbyStatus").textContent="Você entrou."});
-    hostConn.on("data",onGuestData);
-    hostConn.on("close",()=>{if(MODE==="guest")guestFail("A conexão com a sala caiu. Se o celular de quem criou bloqueou a tela, peça pra desbloquear e entre de novo.")});
+  if(auto)netBar("Voltando pra sala "+code+"…");
+  attempt();
+}
+function attempt(){
+  clearTimeout(rcTimer);if(MODE!=="guest")return;
+  try{peer&&peer.destroy()}catch(e){}
+  hostConn=null;
+  const p=new Peer({debug:0});peer=p;
+  const guard=setTimeout(()=>{if(peer===p&&!(hostConn&&hostConn.open))retryLater()},10000);
+  p.on("open",()=>{
+    if(peer!==p)return;
+    const c=p.connect(PREFIX+roomCode,{reliable:true});
+    c.on("open",()=>{
+      if(peer!==p||MODE!=="guest")return;
+      clearTimeout(guard);hostConn=c;lastHostMsg=Date.now();everConnected=true;rcStart=0;rcN=0;netBar("");
+      $("lobbyStatus").textContent="Você entrou.";
+      c.send({t:"join",name:guestName,key:S.key});
+      lsSet(ROOM_KEY,{code:roomCode,name:guestName,t:Date.now()});
+    });
+    c.on("data",d=>{if(peer!==p)return;lastHostMsg=Date.now();onGuestData(d)});
+    c.on("close",()=>{if(hostConn===c){hostConn=null;lost()}});
+    c.on("error",()=>{});
   });
-  peer.on("error",e=>{
-    if(e.type==="peer-unavailable")guestFail("Sala "+code+" não encontrada. Confere o código.");
-    else if(e.type==="network"||e.type==="server-error"||e.type==="socket-error")guestFail("Sem conexão com o servidor de salas. Confere a internet.");
+  p.on("error",e=>{
+    if(peer!==p||MODE!=="guest")return;
+    clearTimeout(guard);
+    if(e.type==="peer-unavailable"&&!everConnected){guestFail("Sala "+roomCode+" não encontrada. Confere o código.");return}
+    retryLater();
   });
 }
+function lost(){if(MODE!=="guest")return;if(!rcStart)rcStart=Date.now();retryLater(300)}
+function retryLater(ms){
+  if(MODE!=="guest")return;
+  clearTimeout(rcTimer);
+  if(!rcStart)rcStart=Date.now();
+  const limit=everConnected?180000:25000;
+  if(Date.now()-rcStart>limit){
+    guestFail(everConnected?"Não consegui voltar pra sala "+roomCode+". Se quem criou fechou o jogo, peça pra abrir de novo e entre com o código.":"Não consegui conectar. Tenta todo mundo no mesmo Wi-Fi e confere o código.");
+    return;
+  }
+  rcN++;
+  netBar(everConnected?"Conexão caiu. Reconectando… (tentativa "+rcN+")":"Conectando… (tentativa "+rcN+")");
+  rcTimer=setTimeout(attempt,ms!=null?ms:Math.min(1000*rcN,5000));
+}
 function onGuestData(d){
-  if(!d||typeof d!=="object")return;
-  if(d.t==="lobby"){V=null;show("lobby");$("ov").hidden=true;V={lobby:d.players};lobbyView();V=null;return}
+  if(!d||typeof d!=="object"||d.t==="pong")return;
+  if(d.t==="lobby"){show("lobby");$("ov").hidden=true;V={lobby:d.players};lobbyView();V=null;return}
   if(d.t==="state")applyView(d);
 }
 function guestFail(msg){
-  clearTimeout(joinTimer);
+  clearTimeout(rcTimer);lsDel(ROOM_KEY);
   const code=roomCode;teardown();show("home");homeErr(msg);$("joinCode").value=code;
 }
 
+/* heartbeat: guests ping, host drops silent phones, everyone retries when the screen wakes */
+setInterval(()=>{
+  if(MODE==="guest"&&hostConn&&hostConn.open){
+    try{hostConn.send({t:"ping"})}catch(e){}
+    if(Date.now()-lastHostMsg>12000){const c=hostConn;hostConn=null;try{c.close()}catch(e){};lost()}
+    else lsSet(ROOM_KEY,{code:roomCode,name:guestName,t:Date.now()});
+  }
+  if(MODE==="host"){
+    conns.forEach(c=>{if(Date.now()-(c.lastSeen||0)>15000){try{c.close()}catch(e){};onLeave(c)}});
+    saveHost();
+  }
+},4000);
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState!=="visible")return;
+  if(MODE==="guest"&&!(hostConn&&hostConn.open)){rcN=0;if(!rcStart)rcStart=Date.now();attempt()}
+  if(MODE==="host"&&peer&&peer.disconnected&&!peer.destroyed){try{peer.reconnect()}catch(e){}}
+});
+
 /* ---------- leave ---------- */
 function teardown(){
+  const m=MODE;MODE=null;clearTimeout(rcTimer);
   try{hostConn&&hostConn.close()}catch(e){}
   conns.forEach(c=>{try{c.close()}catch(e){}});conns.clear();
   try{peer&&peer.destroy()}catch(e){}
-  peer=null;hostConn=null;MODE=null;G=null;V=null;lastOvKey=null;wasMyTurn=false;
-  $("ov").hidden=true;
+  peer=null;hostConn=null;G=null;V=null;lastOvKey=null;wasMyTurn=false;
+  $("ov").hidden=true;netBar("");
   try{wake&&wake.release()}catch(e){}
 }
-function leave(){teardown();homeErr("");show("home")}
+function leave(){lsDel(HOST_KEY);lsDel(ROOM_KEY);teardown();homeErr("");show("home")}
+
+/* ---------- reopen after reload ---------- */
+(function restore(){
+  if(typeof Peer==="undefined")return;
+  const h=lsGet(HOST_KEY);
+  if(h&&h.code&&Date.now()-h.t<MAX_AGE&&(!/^[A-Z]{4}$/.test(hashCode)||hashCode===h.code)){keepAwake();startHost(h.name||S.name||"Anfitrião",h);return}
+  const r=lsGet(ROOM_KEY);
+  if(r&&r.code&&r.name&&Date.now()-r.t<MAX_AGE&&(!/^[A-Z]{4}$/.test(hashCode)||hashCode===r.code)){keepAwake();startGuest(r.name,r.code,true)}
+})();
 </script>
 </body>
 </html>
