@@ -101,6 +101,12 @@ button:disabled{cursor:default}
 .big.mid{font-size:1.8rem}
 .ovbox p{margin:0;color:var(--muted);line-height:1.45}
 .ovbox .name{color:var(--ink);font-weight:800}
+.ranking{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;text-align:left}
+.rk{display:grid;grid-template-columns:2.4em 1fr auto;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--felt);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.rk.first{background:var(--amber);color:var(--key-ink);border-color:var(--amber)}
+.rkpos{font-family:var(--display);font-size:1.1rem}
+.rkname{font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rkstat{font-size:.85rem;font-weight:600;opacity:.85}
 .shake{animation:shake .45s}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -133,6 +139,8 @@ button:disabled{cursor:default}
     <li>Último que sobrar ganha a rodada e escolhe quem bebe.</li>
     <li>Se acabarem as letras, elas voltam e o tempo cai 2 segundos.</li>
     <li>Chegou alguém? Entra na hora, na rodada que estiver rolando.</li>
+    <li>Pontos: quanto mais você dura na rodada, mais ganha. Cada pessoa que sai antes de você vale +1 ponto. Ser o primeiro a sair tira 1 ponto.</li>
+    <li>No fim das rodadas sai o ranking por pontos.</li>
   </ol>
 </div>
 
@@ -142,6 +150,11 @@ button:disabled{cursor:default}
   <div class="seg" id="seg">
     <button type="button" data-s="6">6s</button><button type="button" data-s="8">8s</button>
     <button type="button" data-s="10">10s</button><button type="button" data-s="15">15s</button>
+  </div>
+  <span class="lbl">Rodadas na partida</span>
+  <div class="seg" id="segR">
+    <button type="button" data-r="5">5</button><button type="button" data-r="10">10</button>
+    <button type="button" data-r="15">15</button><button type="button" data-r="0">Livre</button>
   </div>
   <div class="toggle"><span>Incluir Q, X e Z (modo sofrência)</span><input type="checkbox" id="hard"></div>
 </div>
@@ -214,7 +227,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ---------- prefs ---------- */
-let S={players:["Ana","Bruno","Carla"],dur:10,hard:false,sound:true,name:"",key:""};
+let S={players:["Ana","Bruno","Carla"],dur:10,rounds:10,hard:false,sound:true,name:"",key:""};
 try{const s=JSON.parse(localStorage.getItem("tecla-stop")||"null");if(s)S=Object.assign(S,s)}catch(e){}
 if(!S.key)S.key=Math.random().toString(36).slice(2,10);
 const save=()=>{try{localStorage.setItem("tecla-stop",JSON.stringify(S))}catch(e){}};
@@ -229,7 +242,9 @@ $("sound").checked=S.sound;$("sound").onchange=e=>{S.sound=e.target.checked;save
 $("hard").checked=S.hard;$("hard").onchange=e=>{S.hard=e.target.checked;save()};
 function renderSeg(){$("seg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.s===S.dur))}
 $("seg").onclick=e=>{const b=e.target.closest("button");if(b){S.dur=+b.dataset.s;save();renderSeg()}};
-renderSeg();
+function renderSegR(){$("segR").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.r===S.rounds))}
+$("segR").onclick=e=>{const b=e.target.closest("button");if(b){S.rounds=+b.dataset.r;save();renderSegR()}};
+renderSeg();renderSegR();
 function mountSettings(where){$(where).appendChild($("settings"));$("settings").hidden=false}
 document.querySelectorAll("[data-home]").forEach(b=>b.onclick=leave);
 const hashCode=(location.hash||"").replace("#","").toUpperCase();
@@ -253,14 +268,14 @@ let peer=null, hostConn=null, conns=new Map(), lobbyPl=[], roomCode="";
 
 /* ---------- engine (local / host only) ---------- */
 function newMatch(players){
-  G={pl:players.map(p=>({id:p.id,name:p.name,drinks:0,alive:true,on:true})),round:0,starter:-1,
+  G={pl:players.map(p=>({id:p.id,name:p.name,drinks:0,wins:0,pts:0,alive:true,on:true})),round:0,maxRounds:S.rounds,starter:-1,
      letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
   newRound();
 }
 function pickCat(){const pool=CATS.concat(G.custom);let c;do{c=pool[Math.floor(Math.random()*pool.length)]}while(c===G.lastCat&&pool.length>1);G.lastCat=c;G.cat=c}
-function joinable(){return !(G.ov&&(G.ov.kind==="win"||G.ov.kind==="few"))}
+function joinable(){return !(G.ov&&(G.ov.kind==="win"||G.ov.kind==="few"||G.ov.kind==="final"))}
 function newRound(){
-  G.round++;G.pl.forEach(p=>{p.alive=p.on;p.lost=false});G.used=[];G.hist=[];G.dur=S.dur;G.ov=null;
+  G.round++;G.outs=0;G.pl.forEach(p=>{p.alive=p.on;p.lost=false});G.used=[];G.hist=[];G.dur=S.dur;G.ov=null;
   if(G.pl.filter(p=>p.alive).length<2){G.state="idle";G.ov={kind:"few"};pickCat();return}
   G.starter=nextAliveFrom(G.starter);G.cur=G.starter;G.state="idle";pickCat();
 }
@@ -268,9 +283,10 @@ function nextAliveFrom(i){const n=G.pl.length;for(let k=1;k<=n;k++){const j=(i+k
 function resetTimer(){G.end=performance.now()+G.dur*1000}
 function aliveCount(){return G.pl.filter(p=>p.alive).length}
 function endIfLastStanding(){
-  if(aliveCount()<=1){const w=G.pl.find(p=>p.alive);G.state="ov";G.ov={kind:"win",winner:w?w.name:"Ninguém"};return true}
+  if(aliveCount()<=1){const w=G.pl.find(p=>p.alive),gain=G.outs||0;if(w){w.wins++;w.pts+=gain}G.state="ov";G.ov={kind:"win",winner:w?w.name:"Ninguém",gain,last:isLastRound()};return true}
   return false;
 }
+function isLastRound(){return G.maxRounds>0&&G.round>=G.maxRounds}
 function isHostish(from){return MODE==="local"||from===ME}
 
 function act(from,a){
@@ -299,28 +315,32 @@ function act(from,a){
     case "addlocal":{
       const n=String(a.name||"").trim().slice(0,16);
       if(MODE!=="local"||!n||G.pl.length>=16)break;
-      G.pl.push({id:"p"+Date.now(),name:n,drinks:0,alive:joinable(),on:true,lost:false});break}
+      G.pl.push({id:"p"+Date.now(),name:n,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});break}
+    case "rematch":{
+      if(!isHostish(from)||G.state!=="over")break;
+      G.pl=G.pl.filter(p=>p.on);G.pl.forEach(p=>{p.wins=0;p.drinks=0;p.pts=0});G.round=0;G.maxRounds=S.rounds;G.starter=-1;G.seq++;newRound();break}
     case "continue":{
       if(G.state!=="ov"&&!(G.ov&&G.ov.kind==="few"))break;
       const k=G.ov&&G.ov.kind;
       if(k==="drink"){G.ov=null;G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()}
       else if(k==="reset"){G.ov=null;G.used=[];G.hist=[];G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()}
+      else if((k==="win"||k==="few")&&isLastRound()){G.state="over";G.ov={kind:"final"};G.seq++}
       else if(k==="win"||k==="few"){newRound()}
       break}
   }
   sync();
 }
 function timeout(){
-  const p=G.pl[G.cur];p.drinks++;p.alive=false;p.lost=true;G.state="ov";
-  if(!endIfLastStanding()){G.ov={kind:"drink",name:p.name,next:G.pl[nextAliveFrom(G.cur)].name}}
-  else G.ov.loser=p.name;
+  const p=G.pl[G.cur],gain=G.outs?G.outs:-1;p.drinks++;p.pts+=gain;G.outs++;p.alive=false;p.lost=true;G.state="ov";
+  if(!endIfLastStanding()){G.ov={kind:"drink",name:p.name,gain,next:G.pl[nextAliveFrom(G.cur)].name}}
+  else{G.ov.loser=p.name;G.ov.loserGain=gain}
   G.seq++;sync();
 }
 
 /* ---------- sync ---------- */
 function snapshot(){
   const left=G.state==="run"?Math.max(0,G.end-performance.now()):G.state==="pause"?G.pausedLeft:null;
-  return {t:"state",pl:G.pl,round:G.round,letters:G.letters,cat:G.cat,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,seq:G.seq};
+  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,seq:G.seq};
 }
 function sync(){
   const snap=snapshot();
@@ -356,7 +376,7 @@ function render(prev){
   buildKeys(V.letters);
   const hostish=MODE!=="guest", mine=myTurn(), curP=V.pl[V.cur];
   $("board").querySelectorAll(".key").forEach(k=>{const u=V.used.includes(k.dataset.l);k.classList.toggle("used",u);k.disabled=u||!mine});
-  $("catTxt").textContent=V.cat;$("roundLbl").textContent="Rodada "+V.round;
+  $("catTxt").textContent=V.cat;$("roundLbl").textContent="Rodada "+V.round+(V.maxRounds?" de "+V.maxRounds:"");
   const hi=$("hubin");$("hub").classList.remove("danger");
   if(V.state==="idle"){
     $("prog").setAttribute("stroke-dashoffset",0);
@@ -373,7 +393,7 @@ function render(prev){
   else{t.textContent=V.state==="run"&&curP?"Vez de "+curP.name:"";t.className="turn"}
   if(mine&&!wasMyTurn&&MODE!=="local"){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){};beep(980,.08,"sine",.07)}
   wasMyTurn=mine;
-  $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""} <b>🍺${p.drinks}</b></span>`).join("");
+  $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""} <b>⭐${p.pts||0} 🍺${p.drinks}</b></span>`).join("");
   $("undo").hidden=!hostish;$("pause").hidden=!hostish;$("newCat").hidden=!hostish;
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");
@@ -388,15 +408,40 @@ function renderOverlay(){
   const key=V.seq+":"+o.kind+":"+V.round;
   if(key===lastOvKey)return;lastOvKey=key;
   let html="";
-  if(o.kind==="drink")html=`<div class="big">${esc(o.name)} bebe!</div><p>Estourou o tempo e sai da rodada. Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
-  else if(o.kind==="win")html=(o.loser?`<div class="big">${esc(o.loser)} bebe!</div>`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div><p>Escolhe alguém pra dar um gole.</p>`;
+  if(o.kind==="drink")html=`<div class="big">${esc(o.name)} bebe!</div><p>Estourou o tempo e sai da rodada com <span class="name">${ptsTxt(o.gain)}</span>. Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
+  else if(o.kind==="win")html=(o.loser?`<div class="big">${esc(o.loser)} bebe!</div><p>${esc(o.loser)} sai com <span class="name">${ptsTxt(o.loserGain)}</span>.</p>`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div><p>Leva <span class="name">${ptsTxt(o.gain)}</span> e escolhe alguém pra dar um gole.</p>`;
   else if(o.kind==="reset")html=`<div class="big win">Zerou o tabuleiro</div><p>As letras voltam e o tempo cai para <span class="name">${o.dur}s</span>. Mesmo tema.</p>`;
   else if(o.kind==="few")html=`<div class="big win mid">Falta gente</div><p>Precisa de pelo menos 2 pessoas conectadas pra jogar a rodada.</p>`;
-  const btn=o.kind==="win"||o.kind==="few"?"Próxima rodada":"Continuar";
+  else if(o.kind==="final")html=finalHtml();
+  if(o.kind==="final"){
+    const host=MODE!=="guest";
+    $("ovbox").innerHTML=html+(host?`<button class="btn" id="ovgo">Nova partida</button>`:`<p>Esperando quem criou a sala começar outra.</p>`);
+    $("ov").hidden=false;
+    if(host)$("ovgo").onclick=()=>{unlockAudio();dispatch({t:"rematch"})};
+    beep(523,.15,"triangle",.08);setTimeout(()=>beep(659,.15,"triangle",.08),160);setTimeout(()=>beep(784,.3,"triangle",.08),320);
+    return;
+  }
+  const btn=(o.kind==="win"||o.kind==="few")?(o.last||(V.maxRounds&&V.round>=V.maxRounds)?"Ver ranking":"Próxima rodada"):"Continuar";
   $("ovbox").innerHTML=html+`<button class="btn" id="ovgo">${btn}</button>`;
   $("ov").hidden=false;
   $("ovgo").onclick=()=>{unlockAudio();dispatch({t:"continue"})};
   if(o.kind==="drink"||o.kind==="win"&&o.loser){beep(140,.6,"sawtooth",.12);const b=$("ovbox");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake")}
+}
+
+function ptsTxt(n){n=n||0;return (n>0?"+":n<0?"−":"")+Math.abs(n)+" ponto"+(Math.abs(n)===1?"":"s")}
+function finalHtml(){
+  const rk=V.pl.slice().sort((a,b)=>(b.pts||0)-(a.pts||0)||(b.wins||0)-(a.wins||0)||a.drinks-b.drinks||a.name.localeCompare(b.name));
+  const maxD=Math.max(...V.pl.map(p=>p.drinks));
+  const sponge=maxD>0?V.pl.filter(p=>p.drinks===maxD).map(p=>p.name):[];
+  let pos=0,prevKey=null;
+  const rows=rk.map((p,i)=>{const k=(p.pts||0)+":"+(p.wins||0)+":"+p.drinks;if(k!==prevKey){pos=i+1;prevKey=k}
+    return `<li class="rk${pos===1?" first":""}"><span class="rkpos">${pos}º</span><span class="rkname">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}</span><span class="rkstat"><b>${p.pts||0} pts</b> · ${p.wins||0} vit · ${p.drinks} 🍺</span></li>`}).join("");
+  const champ=rk[0];
+  return `<span class="lbl">Fim da partida · ${V.round} rodada${V.round===1?"":"s"}</span>
+    <div class="big win mid">${esc(champ?champ.name:"")} é o campeão</div>
+    <ol class="ranking">${rows}</ol>
+    ${sponge.length?`<p>Esponja da noite: <span class="name">${sponge.map(esc).join(", ")}</span>, com ${maxD} gole${maxD===1?"":"s"}.</p>`:""}
+    <p class="note">Ranking por pontos. Empate: mais rodadas vencidas, depois quem bebeu menos.</p>`;
 }
 
 /* ---------- frame loop ---------- */
@@ -475,7 +520,7 @@ function onHostData(c,d){
     const old=conns.get(id);if(old&&old!==c){try{old.close()}catch(e){}}
     c.pid=id;conns.set(id,c);
     if(!G){const ex=lobbyPl.find(p=>p.id===id);if(ex)ex.name=name;else lobbyPl.push({id,name});broadcastLobby()}
-    else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&joinable())ex.alive=true}else G.pl.push({id,name,drinks:0,alive:joinable(),on:true,lost:false});sync()}
+    else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&joinable())ex.alive=true}else G.pl.push({id,name,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});sync()}
     return;
   }
   if(c.pid)act(c.pid,d);
