@@ -293,8 +293,10 @@ function newMatch(players){
 function pickCat(){const pool=CATS.concat(G.molec?MOLEC:[],G.custom);let c;do{c=pool[Math.floor(Math.random()*pool.length)]}while(c===G.lastCat&&pool.length>1);G.lastCat=c;G.cat=c}
 function joinable(){return !(G.ov&&(G.ov.kind==="win"||G.ov.kind==="few"||G.ov.kind==="final"))}
 function newRound(){
-  G.round++;G.outs=0;G.pl.forEach(p=>{p.alive=p.on;p.lost=false});G.used=[];G.hist=[];G.dur=S.dur;G.ov=null;
-  if(G.pl.filter(p=>p.alive).length<2){G.state="idle";G.ov={kind:"few"};pickCat();return}
+  /* the round only counts once it can actually be played: waiting for people never burns a round */
+  G.outs=0;G.pl.forEach(p=>{p.alive=p.on!==false;p.lost=false});G.used=[];G.hist=[];G.dur=S.dur;G.ov=null;
+  if(G.pl.filter(p=>p.alive).length<2){G.state="idle";G.ov={kind:"few"};G.seq++;return}
+  G.round++;
   G.starter=nextAliveFrom(G.starter);G.cur=G.starter;G.state="idle";pickCat();
 }
 function nextAliveFrom(i){const n=G.pl.length;for(let k=1;k<=n;k++){const j=(i+k+n)%n;if(G.pl[j].alive&&G.pl[j].on!==false)return j}return Math.max(0,i)}
@@ -344,7 +346,7 @@ function act(from,a){
       const k=G.ov&&G.ov.kind;
       if(k==="drink"){G.ov=null;G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()}
       else if(k==="reset"){G.ov=null;G.used=[];G.hist=[];G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()}
-      else if((k==="win"||k==="few")&&isLastRound()){G.state="over";G.ov={kind:"final"};G.seq++}
+      else if(k==="win"&&isLastRound()){G.state="over";G.ov={kind:"final"};G.seq++}
       else if(k==="win"||k==="few"){newRound()}
       break}
   }
@@ -425,6 +427,11 @@ function render(prev){
   $("roomTag").hidden=MODE==="local"||!roomCode;$("roomTagCode").textContent=roomCode;
   renderOverlay();
 }
+function quitBtn(){return `<button class="btn ghost small" id="ovquit">${MODE==="host"?"Encerrar a sala":"Sair da partida"}</button>`}
+function wireQuit(){
+  const b=$("ovquit");if(!b)return;let armed=false;
+  b.onclick=()=>{if(armed){leave();return}armed=true;b.textContent="Toque de novo pra confirmar";setTimeout(()=>{armed=false;if(b.isConnected)b.textContent=MODE==="host"?"Encerrar a sala":"Sair da partida"},3000)};
+}
 function renderOverlay(){
   const o=V.ov;
   if(!o){$("ov").hidden=true;lastOvKey=null;return}
@@ -434,19 +441,19 @@ function renderOverlay(){
   if(o.kind==="drink")html=`<div class="big">${esc(o.name)} bebe!</div><p>Estourou o tempo e sai da rodada com <span class="name">${ptsTxt(o.gain)}</span>. Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
   else if(o.kind==="win")html=(o.loser?`<div class="big">${esc(o.loser)} bebe!</div><p>${esc(o.loser)} sai com <span class="name">${ptsTxt(o.loserGain)}</span>.</p>`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div><p>Leva <span class="name">${ptsTxt(o.gain)}</span> e escolhe alguém pra dar um gole.</p>`;
   else if(o.kind==="reset")html=`<div class="big win">Zerou o tabuleiro</div><p>As letras voltam e o tempo cai para <span class="name">${o.dur}s</span>. Mesmo tema.</p>`;
-  else if(o.kind==="few")html=`<div class="big win mid">Falta gente</div><p>Precisa de pelo menos 2 pessoas conectadas pra jogar a rodada.</p>`;
+  else if(o.kind==="few")html=`<div class="big win mid">Esperando a galera</div><p>Precisa de pelo menos 2 pessoas conectadas. A rodada começa sozinha quando alguém voltar.</p>`;
   else if(o.kind==="final")html=finalHtml();
   if(o.kind==="final"){
     const host=MODE!=="guest";
-    $("ovbox").innerHTML=html+(host?`<button class="btn" id="ovgo">Nova partida</button>`:`<p>Esperando quem criou a sala começar outra.</p>`);
-    $("ov").hidden=false;
+    $("ovbox").innerHTML=html+(host?`<button class="btn" id="ovgo">Nova partida</button>`:`<p>Esperando quem criou a sala começar outra.</p>`)+quitBtn();
+    $("ov").hidden=false;wireQuit();
     if(host)$("ovgo").onclick=()=>{unlockAudio();dispatch({t:"rematch"})};
     beep(523,.15,"triangle",.08);setTimeout(()=>beep(659,.15,"triangle",.08),160);setTimeout(()=>beep(784,.3,"triangle",.08),320);
     return;
   }
-  const btn=(o.kind==="win"||o.kind==="few")?(o.last||(V.maxRounds&&V.round>=V.maxRounds)?"Ver ranking":"Próxima rodada"):"Continuar";
-  $("ovbox").innerHTML=html+`<button class="btn" id="ovgo">${btn}</button>`;
-  $("ov").hidden=false;
+  const btn=o.kind==="win"?(o.last?"Ver ranking":"Próxima rodada"):o.kind==="few"?"Tentar de novo":"Continuar";
+  $("ovbox").innerHTML=html+`<button class="btn" id="ovgo">${btn}</button>`+quitBtn();
+  $("ov").hidden=false;wireQuit();
   $("ovgo").onclick=()=>{unlockAudio();dispatch({t:"continue"})};
   if(o.kind==="drink"||o.kind==="win"&&o.loser){beep(140,.6,"sawtooth",.12);const b=$("ovbox");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake")}
 }
@@ -582,7 +589,7 @@ function onHostData(c,d){
     const old=conns.get(id);if(old&&old!==c){old.pid=null;try{old.close()}catch(e){}}
     c.pid=id;conns.set(id,c);
     if(!G){const ex=lobbyPl.find(p=>p.id===id);if(ex)ex.name=name;else lobbyPl.push({id,name});broadcastLobby()}
-    else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&joinable())ex.alive=true}else G.pl.push({id,name,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});sync()}
+    else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&joinable())ex.alive=true}else G.pl.push({id,name,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});if(G.ov&&G.ov.kind==="few")newRound();sync()}
     return;
   }
   if(c.pid)act(c.pid,d);
