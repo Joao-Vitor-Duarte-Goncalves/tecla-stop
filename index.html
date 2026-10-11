@@ -121,7 +121,7 @@ details.how[open] summary::after{content:"−"}
 #settings{gap:12px}
 
 /* GAME */
-.game{gap:12px}
+.game{gap:10px}
 .gbar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;min-height:42px}
 .roundbox{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;background:var(--surface);border-radius:12px;padding:5px 8px;border:2px solid var(--line)}
 #roundLbl{white-space:nowrap;font-family:var(--sign);font-weight:400;color:var(--ink);font-size:.9rem}
@@ -133,12 +133,12 @@ details.how[open] summary::after{content:"−"}
 .gbar #newCat{white-space:nowrap;padding:8px 10px;font-size:.8rem}
 
 /* comanda holding the theme */
-.comanda{position:relative;background:var(--paper);color:var(--paper-ink);border:1px solid var(--paper-line);border-radius:4px 4px 10px 10px;padding:18px 16px 12px;
+.comanda{position:relative;background:var(--paper);color:var(--paper-ink);border:1px solid var(--paper-line);border-radius:4px 4px 10px 10px;padding:14px 14px 8px;
   transform:rotate(-1deg);box-shadow:0 8px 18px rgba(10,20,45,.35)}
 .comanda::before{content:"";position:absolute;left:0;right:0;top:-6px;height:12px;
   background:radial-gradient(circle at 8px 0, var(--wall) 5px, transparent 5.5px) repeat-x;background-size:16px 12px}
 .comanda .lbl{color:var(--paper-muted);display:flex;justify-content:space-between;align-items:center;height:28px;border-bottom:1px dashed var(--paper-line);padding-bottom:6px;font-weight:700}
-.reel{height:3.9rem;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;contain:layout paint}
+.reel{height:3.3rem;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;contain:layout paint}
 #catTxt{font-family:var(--hand);font-weight:400;font-size:1.55rem;line-height:1.2;text-wrap:balance;display:block;max-width:100%}
 .reel.spinning #catTxt{color:var(--paper-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:1.35rem!important}
 .catedit,.roomtag{background:transparent;border:1px dashed var(--paper-line);border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:700;color:var(--paper-muted);white-space:nowrap}
@@ -146,12 +146,12 @@ details.how[open] summary::after{content:"−"}
 .roomtag b{font-family:var(--sign);font-weight:400;font-size:.95rem;letter-spacing:.1em;color:var(--cap-ink)}
 .roomtag span{font-size:.7rem}
 
-.turn{align-self:center;text-align:center;font-weight:800;font-size:1rem;min-height:1.8em;padding:3px 14px;border-radius:999px;background:var(--surface);border:2px solid var(--line)}
+.turn{display:none;align-self:center;text-align:center;font-weight:800;font-size:1rem;min-height:1.8em;padding:3px 14px;border-radius:999px;background:var(--surface);border:2px solid var(--line)}
 .turn:empty{visibility:hidden}
 .turn.mine{background:var(--red);border-color:var(--red);color:#fff;font-family:var(--sign);font-weight:400;font-size:1.1rem}
 
 /* board: yellow plastic table, caps on the rim, 3D */
-.board{position:relative;width:clamp(250px,calc(100svh - 405px),460px);aspect-ratio:1;max-width:calc(100% + 16px);margin:0 -8px;align-self:center;perspective:1100px;perspective-origin:50% 20%;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.board{position:relative;width:clamp(250px,calc(100dvh - 300px),460px);aspect-ratio:1;max-width:calc(100% + 16px);margin:0 -8px;align-self:center;perspective:1100px;perspective-origin:50% 20%;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .floor{position:absolute;left:4%;right:4%;bottom:-6%;height:20%;border-radius:50%;background:radial-gradient(closest-side, rgba(5,12,30,.5), rgba(5,12,30,.18) 60%, transparent);will-change:transform,opacity}
 .tilt{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(0deg);will-change:transform}
 .spinner{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
@@ -189,7 +189,9 @@ details.how[open] summary::after{content:"−"}
   box-shadow:inset 0 0 0 4px var(--red),inset 0 0 0 6px rgba(255,255,255,.7),0 6px 0 var(--red-dk)}
 .hubbtn:active{transform:translateY(4px);box-shadow:inset 0 0 0 4px var(--red),inset 0 0 0 6px rgba(255,255,255,.7),0 2px 0 var(--red-dk)}
 
-.roda{display:flex;flex-direction:column;align-items:center;gap:10px}
+.roda{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px}
+.roda .players{display:contents}
+.who.mine{color:#ff6b62;font-family:var(--sign);font-weight:400;font-size:1.15rem}
 .players{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .pl{background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-size:.9rem}
 .pl.cur{background:var(--yellow);color:var(--paper-ink);border-color:var(--yellow-dk)}
@@ -197,7 +199,7 @@ details.how[open] summary::after{content:"−"}
 .pl.out .nm{text-decoration:line-through}
 .pl.off{opacity:.4;font-style:italic}
 /* the scoreboard button is a little chalkboard */
-.rkbtn{background:var(--chalk-bg);color:var(--chalk);font-family:var(--hand);font-size:1.05rem;border-radius:8px;padding:8px 18px;
+.rkbtn{background:var(--chalk-bg);color:var(--chalk);font-family:var(--hand);font-size:.95rem;border-radius:8px;padding:5px 12px;
   box-shadow:inset 0 0 0 3px #3b4a42,0 3px 0 rgba(0,0,0,.35)}
 .rkbtn.locked{color:var(--chalk-dim)}
 .tools{display:flex;gap:8px}
@@ -402,7 +404,7 @@ body.bottled .top .lbl{background:var(--surface)}
     </div>
     </div>
   </div>
-  <div class="roda"><div class="players" id="plist"></div><button class="rkbtn" id="rkBtn">Ver o placar</button></div>
+  <div class="roda"><div class="players" id="plist"></div><button class="rkbtn" id="rkBtn">Placar</button></div>
   <nav class="tools" id="tools">
     <button class="btn ghost small" id="addOpen" hidden type="button">+ Jogador</button>
     <button class="btn ghost small" id="undo">Desfazer</button>
@@ -709,15 +711,13 @@ function render(prev){
     else if(hostish){hi.innerHTML=`<button class="hubbtn" id="hubgo">Voltar</button>`;$("hubgo").onclick=()=>dispatch({t:"resume"})}
     else hi.innerHTML=`<span class="wait">Pausado</span>`;
   }else{
-    hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.ceil(Math.max(0,V.end-performance.now())/1000):0}</span><span class="who">${curP?esc(curP.name):""}</span>`;
+    hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.ceil(Math.max(0,V.end-performance.now())/1000):0}</span><span class="who${mine&&MODE!=="local"?" mine":""}">${mine&&MODE!=="local"?"Sua vez!":curP?esc(curP.name):""}</span>`;
   }
-  const t=$("turn");
-  if(V.state==="run"&&MODE!=="local"){t.textContent=mine?"Sua vez! Fala e toca a letra":"Vez de "+(curP?curP.name:"");t.className="turn"+(mine?" mine":"")}
-  else{t.textContent=V.state==="run"&&curP?"Vez de "+curP.name:"";t.className="turn"}
+  $("turn").textContent="";
   if(mine&&!wasMyTurn&&MODE!=="local"){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){};beep(980,.08,"sine",.07)}
   wasMyTurn=mine;
   $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}"><span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.on===false?" (caiu)":""}</span></span>`).join("");
-  const lk=isLocked();$("rkBtn").textContent=lk?"🔒 Placar trancado":"Ver o placar";$("rkBtn").classList.toggle("locked",lk);
+  const lk=isLocked();$("rkBtn").textContent=lk?"🔒 Placar":"Placar";$("rkBtn").classList.toggle("locked",lk);
   renderSheet();
   $("tools").hidden=!hostish;$("newCat").hidden=!hostish;$("catSpacer").hidden=hostish;
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
