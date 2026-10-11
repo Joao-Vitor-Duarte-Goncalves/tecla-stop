@@ -181,6 +181,14 @@ details.how[open] summary::after{content:"−"}
 body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
 .shake{animation:shake .45s}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.roda{display:flex;flex-direction:column;align-items:center;gap:10px}
+.rkbtn{min-width:60%}
+.rkbtn.locked{border-style:dashed;color:var(--muted)}
+#rkov{z-index:11}
+.lockbig{font-size:3rem;line-height:1}
+.reveal{opacity:0;animation:reveal .5s ease-out forwards}
+@keyframes reveal{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1}}
 .pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
 @keyframes pop{from{transform:scale(.6);opacity:.3}to{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -292,7 +300,7 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
       <div class="hubin" id="hubin"></div>
     </div>
   </div>
-  <div class="players" id="plist"></div>
+  <div class="roda"><div class="players" id="plist"></div><button class="btn ghost small rkbtn" id="rkBtn">Ver ranking</button></div>
   <form class="row addform" id="addMid" hidden><input type="text" id="addMidIn" placeholder="Chegou alguém? Nome" maxlength="16" autocomplete="off" aria-label="Nome de quem chegou"><button class="btn small" type="submit">Entrar</button></form>
   <nav class="tools" id="tools">
     <button class="btn ghost small" id="newCat">Outro tema</button>
@@ -303,6 +311,7 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
 
 <div class="net" id="net" role="status" hidden></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
+<div class="ov" id="rkov" hidden><div class="ovbox" id="rkbox" role="dialog" aria-label="Ranking"></div></div>
 
 <script>
 const CATS=["Marcas de cerveja","Coisas que se fala bêbado","Desculpas pra sair mais cedo","Coisas que tem num bar","Petiscos de boteco","Comidas","Frutas","Animais","Países","Cidades do Brasil","Times de futebol","Profissões","Nomes de mulher","Nomes de homem","Cantores brasileiros","Bandas","Filmes","Séries","Novelas","Personagens de desenho","Marcas","Coisas da cozinha","Partes do corpo","Coisas que levam pra praia","Esportes","Instrumentos musicais","Cores","Coisas verdes","Coisas redondas","Coisas que se encontra na bolsa","Apelidos de ex","Coisas de São João","Pratos do Nordeste","Palavrões leves","Doenças","Remédios","Carros","Objetos do quarto","Coisas que você não empresta","Lugares pra um primeiro encontro","Gírias","Super-heróis","Aplicativos","Jogos","Matérias da escola","Coisas que fazem barulho","Roupas","Sobremesas","Bebidas sem álcool","Drinks e coquetéis","Lugares de Teresina","Coisas que dão ressaca","Coisas que se faz no Carnaval","Peixes e frutos do mar","Verbos","Coisas geladas","Signos e coisas místicas","Coisas que se joga fora","Palavras em inglês","Famosos da internet"];
@@ -522,7 +531,9 @@ function render(prev){
   else{t.textContent=V.state==="run"&&curP?"Vez de "+curP.name:"";t.className="turn"}
   if(mine&&!wasMyTurn&&MODE!=="local"){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){};beep(980,.08,"sine",.07)}
   wasMyTurn=mine;
-  $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}"><span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.on===false?" (caiu)":""}</span><b>⭐${p.pts||0} 🍺${p.drinks}</b></span>`).join("");
+  $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}"><span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.on===false?" (caiu)":""}</span></span>`).join("");
+  const lk=isLocked();$("rkBtn").textContent=lk?"🔒 Ranking trancado":"Ver ranking";$("rkBtn").classList.toggle("locked",lk);
+  renderSheet();
   $("tools").hidden=!hostish;
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");
@@ -545,8 +556,8 @@ function renderOverlay(){
   const key=V.seq+":"+o.kind+":"+V.round;
   if(key===lastOvKey)return;lastOvKey=key;
   let html="";
-  if(o.kind==="drink")html=`<div class="big">${esc(o.name)} bebe!</div><p>Estourou o tempo e sai da rodada com <span class="name">${ptsTxt(o.gain)}</span>. Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
-  else if(o.kind==="win")html=(o.loser?`<div class="big">${esc(o.loser)} bebe!</div><p>${esc(o.loser)} sai com <span class="name">${ptsTxt(o.loserGain)}</span>.</p>`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div><p>Leva <span class="name">${ptsTxt(o.gain)}</span> e escolhe alguém pra dar um gole.</p>`;
+  if(o.kind==="drink")html=`<div class="big">${esc(o.name)} bebe!</div><p>Estourou o tempo e sai da rodada${isLocked()?"":` com <span class="name">${ptsTxt(o.gain)}</span>`}. Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
+  else if(o.kind==="win")html=(o.loser?`<div class="big">${esc(o.loser)} bebe!</div>${isLocked()?"":`<p>${esc(o.loser)} sai com <span class="name">${ptsTxt(o.loserGain)}</span>.</p>`}`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div><p>${isLocked()?"Escolhe":`Leva <span class="name">${ptsTxt(o.gain)}</span> e escolhe`} alguém pra dar um gole.</p>`;
   else if(o.kind==="reset")html=`<div class="big win">Zerou o tabuleiro</div><p>As letras voltam e o tempo cai para <span class="name">${o.dur}s</span>. Mesmo tema.</p>`;
   else if(o.kind==="few")html=`<div class="big win mid">Esperando a galera</div><p>Precisa de pelo menos 2 pessoas conectadas. A rodada começa sozinha quando alguém voltar.</p>`;
   else if(o.kind==="final")html=finalHtml();
@@ -566,19 +577,35 @@ function renderOverlay(){
 }
 
 function ptsTxt(n){n=n||0;return (n>0?"+":n<0?"−":"")+Math.abs(n)+" ponto"+(Math.abs(n)===1?"":"s")}
-function finalHtml(){
+function rankList(reveal){
   const rk=V.pl.slice().sort((a,b)=>(b.pts||0)-(a.pts||0)||(b.wins||0)-(a.wins||0)||a.drinks-b.drinks||a.name.localeCompare(b.name));
+  let pos=0,prevKey=null;const n=rk.length;
+  const rows=rk.map((p,i)=>{const k=(p.pts||0)+":"+(p.wins||0)+":"+p.drinks;if(k!==prevKey){pos=i+1;prevKey=k}
+    /* on the final reveal, rows appear from last place up to the champion */
+    const st=reveal?` style="animation-delay:${(n-1-i)*0.6}s"`:"";
+    return `<li class="rk${pos===1?" first":""}${reveal?" reveal":""}"${st}><span class="rkpos">${pos}º</span><span class="rkname">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}</span><span class="rkstat"><span class="rkpts">${p.pts||0} pt${Math.abs(p.pts||0)===1?"":"s"}</span> · ${p.wins||0} vit · ${p.drinks} 🍺</span></li>`}).join("");
+  return {rk,html:`<ol class="ranking">${rows}</ol>`,revealTime:(n-1)*0.6};
+}
+function finalHtml(){
+  const {rk,html,revealTime}=rankList(true);
   const maxD=Math.max(...V.pl.map(p=>p.drinks));
   const sponge=maxD>0?V.pl.filter(p=>p.drinks===maxD).map(p=>p.name):[];
-  let pos=0,prevKey=null;
-  const rows=rk.map((p,i)=>{const k=(p.pts||0)+":"+(p.wins||0)+":"+p.drinks;if(k!==prevKey){pos=i+1;prevKey=k}
-    return `<li class="rk${pos===1?" first":""}"><span class="rkpos">${pos}º</span><span class="rkname">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}</span><span class="rkstat"><span class="rkpts">${p.pts||0} pt${Math.abs(p.pts||0)===1?"":"s"}</span> · ${p.wins||0} vit · ${p.drinks} 🍺</span></li>`}).join("");
-  const champ=rk[0];
+  const champ=rk[0],d=`style="animation-delay:${revealTime+0.5}s"`;
   return `<span class="lbl">Fim da partida · ${V.round} rodada${V.round===1?"":"s"}</span>
-    <div class="big win mid">${esc(champ?champ.name:"")} é o campeão</div>
-    <ol class="ranking">${rows}</ol>
-    ${sponge.length?`<p>Esponja da noite: <span class="name">${sponge.map(esc).join(", ")}</span>, com ${maxD} gole${maxD===1?"":"s"}.</p>`:""}
+    ${html}
+    <div class="big win mid reveal" ${d}>${esc(champ?champ.name:"")} é o campeão</div>
+    ${sponge.length?`<p class="reveal" ${d}>Esponja da noite: <span class="name">${sponge.map(esc).join(", ")}</span>, com ${maxD} gole${maxD===1?"":"s"}.</p>`:""}
     <p class="note">Ranking por pontos. Empate: mais rodadas vencidas, depois quem bebeu menos.</p>`;
+}
+function isLocked(){return !!(V&&V.maxRounds>0&&V.round>V.maxRounds-3&&V.state!=="over")}
+function lockMsg(){return `Ranking trancado nas últimas 3 rodadas. Ele aparece quando acabar a rodada ${V.maxRounds}.`}
+function renderSheet(){
+  if($("rkov").hidden||!V)return;
+  let body;
+  if(isLocked())body=`<div class="lockbig" aria-hidden="true">🔒</div><div class="big win mid">Suspense</div><p>${lockMsg()}</p>`;
+  else body=`<span class="lbl">Ranking parcial · rodada ${V.round}${V.maxRounds?" de "+V.maxRounds:""}</span>${rankList(false).html}${V.maxRounds>3?`<p class="note">Nas últimas 3 rodadas o ranking tranca até o fim.</p>`:""}`;
+  $("rkbox").innerHTML=body+`<button class="btn" id="rkclose">Voltar pro jogo</button>`;
+  $("rkclose").onclick=()=>{$("rkov").hidden=true};
 }
 
 /* ---------- frame loop ---------- */
@@ -599,6 +626,8 @@ function frame(){
 requestAnimationFrame(frame);
 
 $("undo").onclick=()=>dispatch({t:"undo"});
+$("rkBtn").onclick=()=>{$("rkov").hidden=false;renderSheet()};
+$("rkov").onclick=e=>{if(e.target===$("rkov"))$("rkov").hidden=true};
 $("pause").onclick=()=>dispatch({t:V&&V.state==="pause"?"resume":"pause"});
 $("newCat").onclick=()=>dispatch({t:"newcat"});
 $("catForm").onsubmit=e=>{e.preventDefault();const c=$("catIn").value.trim();if(!c)return;dispatch({t:"setcat",cat:c});$("catIn").value="";$("catIn").blur()};
@@ -820,7 +849,7 @@ function teardown(){
   try{peer&&peer.destroy()}catch(e){}
   peer=null;hostConn=null;G=null;V=null;lastOvKey=null;wasMyTurn=false;
   spinning=false;clearTimeout(spinTimer);spunRound=-1;shownCat=null;$("reel").classList.remove("spinning");
-  $("ov").hidden=true;netBar("");
+  $("ov").hidden=true;$("rkov").hidden=true;netBar("");
   try{wake&&wake.release()}catch(e){}
   try{noSleep&&noSleep.isEnabled&&noSleep.disable()}catch(e){}
 }
