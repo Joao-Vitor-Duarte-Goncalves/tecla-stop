@@ -998,6 +998,27 @@ function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
 function netBar(msg){$("net").textContent=msg||"";$("net").hidden=!msg;document.body.classList.toggle("has-net",!!msg)}
 
+/* ---------- ICE: STUN finds a direct path; TURN relays when both phones are behind carrier NAT (different houses / 4G) ---------- */
+const TURN_HOST="staticauth.openrelay.metered.ca",TURN_SECRET="openrelayprojectsecret";
+let iceCache=null;
+async function turnCreds(){
+  const user=(Math.floor(Date.now()/1000)+12*3600)+":teclastop";
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(TURN_SECRET),{name:"HMAC",hash:"SHA-1"},false,["sign"]);
+  const sig=await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(user));
+  return {username:user,credential:btoa(String.fromCharCode(...new Uint8Array(sig)))};
+}
+async function iceConfig(){
+  if(iceCache&&Date.now()-iceCache.t<6*3600e3)return iceCache.cfg;
+  const servers=[{urls:["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302"]},{urls:"stun:"+TURN_HOST+":80"}];
+  try{
+    const c=await turnCreds();
+    servers.push({urls:["turn:"+TURN_HOST+":80","turn:"+TURN_HOST+":80?transport=tcp","turn:"+TURN_HOST+":443","turns:"+TURN_HOST+":443?transport=tcp"],username:c.username,credential:c.credential});
+  }catch(e){}
+  iceCache={t:Date.now(),cfg:{iceServers:servers}};
+  return iceCache.cfg;
+}
+iceConfig();
+
 /* host */
 $("mCreate").onclick=()=>{const n=needName();if(!n||!peerOk())return;unlockAudio();keepAwake();startHost(n,null)};
 function startHost(name,restore){
@@ -1013,8 +1034,9 @@ function startHost(name,restore){
   if(restore)netBar("Reabrindo a mesa "+roomCode+"… a galera volta sozinha");
   openHostPeer(0,!!restore);
 }
-function openHostPeer(tries,keepCode){
-  const p=new Peer(PREFIX+roomCode,{debug:0});peer=p;
+async function openHostPeer(tries,keepCode){
+  const cfg=await iceConfig();if(MODE!=="host")return;
+  const p=new Peer(PREFIX+roomCode,{debug:0,config:cfg});peer=p;
   p.on("open",()=>{if(peer!==p)return;netBar("");$("lobbyStatus").textContent="Mesa aberta. Manda o número ou o link pra galera.";$("copyLink").hidden=false;saveHost()});
   p.on("connection",c=>{
     c.lastSeen=Date.now();
@@ -1104,12 +1126,14 @@ function startGuest(name,code,auto){
   if(auto)netBar("Voltando pra mesa "+code+"…");
   attempt();
 }
-function attempt(){
+async function attempt(){
   clearTimeout(rcTimer);if(MODE!=="guest")return;
   try{peer&&peer.destroy()}catch(e){}
   hostConn=null;
-  const p=new Peer({debug:0});peer=p;
-  const guard=setTimeout(()=>{if(peer===p&&!(hostConn&&hostConn.open))retryLater()},10000);
+  const cfg=await iceConfig();if(MODE!=="guest")return;
+  const p=new Peer({debug:0,config:cfg});peer=p;
+  /* relayed connections can take a few seconds longer to set up */
+  const guard=setTimeout(()=>{if(peer===p&&!(hostConn&&hostConn.open))retryLater()},15000);
   p.on("open",()=>{
     if(peer!==p)return;
     const c=p.connect(PREFIX+roomCode,{reliable:true});
@@ -1136,13 +1160,14 @@ function retryLater(ms){
   if(MODE!=="guest")return;
   clearTimeout(rcTimer);
   if(!rcStart)rcStart=Date.now();
-  const limit=everConnected?180000:25000;
+  const limit=everConnected?180000:40000;
   if(Date.now()-rcStart>limit){
-    guestFail(everConnected?"Não consegui voltar pra mesa "+roomCode+". Se quem abriu a mesa fechou o jogo, peça pra abrir de novo e sente com o número.":"Não consegui conectar. Tenta todo mundo no mesmo Wi-Fi e confere o código.");
+    guestFail(everConnected?"Não consegui voltar pra mesa "+roomCode+". Se quem abriu a mesa fechou o jogo, peça pra abrir de novo e sente com o número.":"Não consegui chegar no celular de quem abriu a mesa. Confere o número e peça pra pessoa deixar o jogo aberto na tela. Se continuar, tente outra rede (Wi-Fi ou 4G).");
     return;
   }
   rcN++;
-  netBar(everConnected?"Conexão caiu. Reconectando… (tentativa "+rcN+")":"Conectando… (tentativa "+rcN+")");
+  netBar(everConnected?"Conexão caiu. Reconectando… (tentativa "+rcN+")":"Procurando a mesa "+roomCode+"… (tentativa "+rcN+" de 3)");
+  if(!everConnected)$("lobbyStatus").textContent="Ainda tentando. Pode levar uns segundos quando vocês estão em redes diferentes.";
   rcTimer=setTimeout(attempt,ms!=null?ms:Math.min(1000*rcN,5000));
 }
 function onGuestData(d){
