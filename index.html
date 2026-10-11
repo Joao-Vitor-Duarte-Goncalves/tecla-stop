@@ -61,6 +61,8 @@ button:disabled{cursor:default}
 .cat{background:var(--key);color:var(--key-ink);border-radius:14px;padding:12px 14px;text-align:center;box-shadow:0 4px 0 #b9a47e}
 .cat .lbl{color:#7a6545}
 .cat strong{display:block;font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1;margin-top:4px;text-wrap:balance}
+.roomtag{align-self:center;background:var(--felt-2);border:1px dashed var(--line);color:var(--muted);border-radius:999px;padding:6px 14px;font:600 .85rem var(--body);display:flex;align-items:baseline;gap:8px}
+.roomtag b{font-family:var(--display);font-weight:400;font-size:1.25rem;letter-spacing:.18em;color:var(--amber)}
 .catform{margin-top:10px}
 .catform input{background:#fff8ea;color:var(--key-ink);border-color:#d8c49e}
 .catform input::placeholder{color:#8a7656}
@@ -199,6 +201,7 @@ button:disabled{cursor:default}
     <span class="lbl" id="roundLbl">Rodada 1</span>
     <button class="btn ghost small" id="newCat">Outro tema</button>
   </div>
+  <button class="roomtag" id="roomTag" hidden aria-label="Copiar link da sala">Sala <b id="roomTagCode">····</b> <span id="roomTagHint">toque pra copiar o link</span></button>
   <div class="cat"><span class="lbl">Tema</span><strong id="catTxt">—</strong>
     <form class="row catform" id="catForm" hidden><input type="text" id="catIn" placeholder="Ou escreve o tema de vocês" maxlength="40" autocomplete="off" aria-label="Tema personalizado"><button class="btn small" type="submit">Usar</button></form>
   </div>
@@ -400,6 +403,7 @@ function render(prev){
   $("newCat").disabled=V.state!=="idle";
   $("catForm").hidden=!(hostish&&V.state==="idle"&&!V.ov);
   $("addMid").hidden=MODE!=="local";
+  $("roomTag").hidden=MODE==="local"||!roomCode;$("roomTagCode").textContent=roomCode;
   renderOverlay();
 }
 function renderOverlay(){
@@ -543,6 +547,11 @@ function broadcastLobby(){
   conns.forEach(c=>{try{c.open&&c.send(msg)}catch(e){}});lobbyView();
 }
 $("hostGo").onclick=()=>{if(lobbyPl.length<2)return;unlockAudio();newMatch(lobbyPl);sync()};
+$("roomTag").onclick=()=>{
+  const url=location.origin+location.pathname+"#"+roomCode;
+  try{navigator.clipboard.writeText(url).then(()=>{$("roomTagHint").textContent="link copiado"},()=>{$("roomTagHint").textContent=url})}catch(e){$("roomTagHint").textContent=url}
+  setTimeout(()=>{$("roomTagHint").textContent="toque pra copiar o link"},2500);
+};
 $("copyLink").onclick=()=>{
   const url=location.origin+location.pathname+"#"+roomCode;
   const done=()=>{$("copyLink").textContent="Link copiado"};
