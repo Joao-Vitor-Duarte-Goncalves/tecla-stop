@@ -183,6 +183,7 @@ details.how[open] summary::after{content:"−"}
 .pl.out .nm{text-decoration:line-through}
 .pl.off{opacity:.35;font-style:italic}
 .addform{max-width:340px;margin:0 auto;width:100%}
+.addbtn{align-self:center;border-style:dashed}
 .tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .tools .btn{padding:10px 6px}
 
@@ -332,7 +333,8 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
     </div>
   </div>
   <div class="roda"><div class="players" id="plist"></div><button class="btn ghost small rkbtn" id="rkBtn">Ver ranking</button></div>
-  <form class="row addform" id="addMid" hidden><input type="text" id="addMidIn" placeholder="Chegou alguém? Nome" maxlength="16" autocomplete="off" aria-label="Nome de quem chegou"><button class="btn small" type="submit">Entrar</button></form>
+  <button class="btn ghost small addbtn" id="addOpen" hidden type="button">+ Adicionar jogador</button>
+  <form class="row addform" id="addMid" hidden><input type="text" id="addMidIn" placeholder="Nome de quem chegou" maxlength="16" autocomplete="off" aria-label="Nome do novo jogador"><button class="btn small" type="submit">Pôr na roda</button></form>
   <nav class="tools" id="tools">
     <button class="btn ghost small" id="newCat">Outro tema</button>
     <button class="btn ghost small" id="undo">Desfazer</button>
@@ -605,7 +607,7 @@ function render(prev){
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");
   $("newCat").disabled=V.state!=="idle";
   $("catForm").hidden=!(hostish&&V.state==="idle"&&!V.ov);
-  $("addMid").hidden=MODE!=="local";
+  $("addOpen").hidden=MODE!=="local"||addOpenState;$("addMid").hidden=MODE!=="local"||!addOpenState;
   $("roomTag").hidden=MODE==="local"||!roomCode;$("roomTagCode").textContent=roomCode;$("roomSpacer").hidden=!$("roomTag").hidden;
   $("catForm").hidden=$("catForm").hidden||spinning;
   maybeSpin();
@@ -697,7 +699,9 @@ $("rkov").onclick=e=>{if(e.target===$("rkov"))$("rkov").hidden=true};
 $("pause").onclick=()=>dispatch({t:V&&V.state==="pause"?"resume":"pause"});
 $("newCat").onclick=()=>dispatch({t:"newcat"});
 $("catForm").onsubmit=e=>{e.preventDefault();const c=$("catIn").value.trim();if(!c)return;dispatch({t:"setcat",cat:c});$("catIn").value="";$("catIn").blur()};
-$("addMid").onsubmit=e=>{e.preventDefault();const n=$("addMidIn").value.trim();if(!n)return;dispatch({t:"addlocal",name:n});$("addMidIn").value="";$("addMidIn").blur()};
+let addOpenState=false;
+$("addOpen").onclick=()=>{addOpenState=true;render();$("addMidIn").focus()};
+$("addMid").onsubmit=e=>{e.preventDefault();const n=$("addMidIn").value.trim();addOpenState=false;if(n)dispatch({t:"addlocal",name:n});else render();$("addMidIn").value="";$("addMidIn").blur()};
 
 /* ---------- local mode ---------- */
 function renderChips(){
