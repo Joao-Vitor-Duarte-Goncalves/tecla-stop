@@ -119,7 +119,7 @@ details.how[open] summary::after{content:"−"}
 .pip{width:8px;height:8px;border-radius:50%;background:var(--line)}
 .pip.done{background:var(--yellow-dk)}
 .pip.now{background:var(--yellow);box-shadow:0 0 0 3px rgba(246,194,28,.25)}
-.comanda .lbl{align-items:center}
+.comanda .lbl{align-items:center;height:28px}
 .roomtag{background:transparent;border:1px dashed var(--paper-line);border-radius:999px;padding:2px 10px;font-size:.72rem;font-weight:700;color:var(--muted);display:flex;align-items:baseline;gap:5px;white-space:nowrap}
 .roomtag{color:var(--paper-muted)}
 .roomtag b{font-family:var(--display);font-weight:400;font-size:.9rem;letter-spacing:.12em;color:var(--cap-ink)}
@@ -137,9 +137,10 @@ details.how[open] summary::after{content:"−"}
 .comanda::before{content:"";position:absolute;left:0;right:0;top:-6px;height:12px;
   background:radial-gradient(circle at 8px 0, var(--night) 5px, transparent 5.5px) repeat-x;background-size:16px 12px}
 .comanda .lbl{color:var(--paper-muted);display:flex;justify-content:space-between}
-.reel{min-height:3.1em;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden}
-#catTxt{font-family:var(--hand);font-weight:400;font-size:1.55rem;line-height:1.15;text-wrap:balance;display:block}
-.reel.spinning #catTxt{color:var(--paper-muted);filter:blur(.4px)}
+.reel{height:3.9rem;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;contain:layout paint}
+#catTxt{font-family:var(--hand);font-weight:400;font-size:1.55rem;line-height:1.2;text-wrap:balance;display:block;max-width:100%}
+.reel.spinning #catTxt{color:var(--paper-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:1.35rem!important}
+.catedit{background:transparent;border:1px dashed var(--paper-line);border-radius:999px;padding:2px 10px;font-size:.72rem;font-weight:700;color:var(--paper-muted)}
 .catform{margin-top:8px}
 .catform input{background:#fff;color:var(--paper-ink);border-color:var(--paper-line)}
 .catform input::placeholder{color:var(--paper-muted)}
@@ -150,9 +151,9 @@ details.how[open] summary::after{content:"−"}
 
 /* the board: yellow plastic table with caps around the rim */
 .board{position:relative;width:clamp(240px,calc(100svh - 410px),420px);aspect-ratio:1;max-width:100%;margin:0 auto;perspective:1100px;perspective-origin:50% 20%}
-.floor{position:absolute;left:6%;right:6%;bottom:-5%;height:18%;border-radius:50%;background:radial-gradient(closest-side, rgba(0,0,0,.5), transparent);filter:blur(8px)}
-.tilt{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(14deg)}
-.spinner{position:absolute;inset:0;transform-style:preserve-3d}
+.floor{position:absolute;left:4%;right:4%;bottom:-6%;height:20%;border-radius:50%;background:radial-gradient(closest-side, rgba(0,0,0,.45), rgba(0,0,0,.18) 60%, transparent);will-change:transform,opacity}
+.tilt{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(14deg);will-change:transform}
+.spinner{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
 .edge{position:absolute;inset:2%;border-radius:50%;background:var(--yellow-edge);transform:translateZ(var(--z))}
 .gloss{position:absolute;inset:2%;border-radius:50%;pointer-events:none;transform:translateZ(2px);
   background:radial-gradient(55% 38% at 32% 18%, rgba(255,255,255,.5), transparent 70%),radial-gradient(40% 30% at 75% 85%, rgba(0,0,0,.12), transparent 70%)}
@@ -164,7 +165,6 @@ details.how[open] summary::after{content:"−"}
 .key{position:absolute;transform:translate(-50%,-50%) translateZ(12px);font-size:clamp(1rem,5vw,1.45rem);transition:transform .12s, filter .2s, opacity .2s}
 .key:active:not(:disabled){transform:translate(-50%,-50%) translateZ(4px) scale(.95)}
 .key.used{background:radial-gradient(circle, var(--used-face) 0 58%, var(--used-rim-dk) 59% 62%, transparent 63%),repeating-conic-gradient(var(--used-rim) 0 8deg, var(--used-rim-dk) 8deg 15deg);color:var(--used-ink);box-shadow:inset 0 2px 4px rgba(0,0,0,.5)}
-.key:disabled:not(.used){filter:saturate(.7) brightness(.92)}
 .hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateZ(22px);width:50%;aspect-ratio:1;border-radius:50%;
   background:radial-gradient(circle at 50% 30%, #2c323b, #0c0e11);box-shadow:0 0 0 6px rgba(0,0,0,.25), inset 0 2px 6px rgba(255,255,255,.06)}
 .hub svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
@@ -320,9 +320,8 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
     <span class="spacer" id="catSpacer"></span>
   </header>
   <section class="comanda" aria-live="polite">
-    <span class="lbl"><span id="comandaLeft">Comanda</span><button class="roomtag" id="roomTag" hidden type="button" aria-label="Copiar link da sala">Sala <b id="roomTagCode">····</b> <span id="roomTagHint">copiar link</span></button><span>Tema da rodada</span></span>
+    <span class="lbl"><span id="comandaLeft">Comanda</span><button class="roomtag" id="roomTag" hidden type="button" aria-label="Copiar link da sala">Sala <b id="roomTagCode">····</b> <span id="roomTagHint">copiar link</span></button><span id="comandaRight">Tema da rodada</span><button class="catedit" id="catOpen" type="button" hidden>✎ Escrever tema</button></span>
     <div class="reel" id="reel"><strong id="catTxt">—</strong></div>
-    <form class="row catform" id="catForm" hidden><input type="text" id="catIn" placeholder="Ou escreve o tema de vocês" maxlength="40" autocomplete="off" aria-label="Tema personalizado"><button class="btn small" type="submit">Usar</button></form>
   </section>
   <div class="turn" id="turn"></div>
   <div class="board" id="board">
@@ -352,6 +351,7 @@ body.has-net .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 52px)}
 <div class="net" id="net" role="status" hidden></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
 <div class="ov" id="addov" hidden><form class="ovbox" id="addMid"><span class="lbl">Chegou alguém?</span><div class="big win mid">Pôr na roda</div><p>A pessoa entra na rodada que está rolando.</p><input type="text" id="addMidIn" placeholder="Nome" maxlength="16" autocomplete="off" aria-label="Nome do novo jogador"><button class="btn" type="submit">Adicionar</button><button class="btn ghost small" type="button" id="addCancel">Cancelar</button></form></div>
+<div class="ov" id="catov" hidden><form class="ovbox" id="catForm"><span class="lbl">Tema de vocês</span><div class="big win mid">Escrever tema</div><input type="text" id="catIn" placeholder="Ex.: Coisas que o João fala bêbado" maxlength="40" autocomplete="off" aria-label="Tema personalizado"><button class="btn" type="submit">Usar esse tema</button><button class="btn ghost small" type="button" id="catCancel">Cancelar</button></form></div>
 <div class="ov" id="rkov" hidden><div class="ovbox" id="rkbox" role="dialog" aria-label="Ranking"></div></div>
 
 <script>
@@ -549,15 +549,17 @@ function buildKeys(letters){
 let spinning=false,spunRound=-1,shownCat=null,spinTimer=null,justSpun=false;
 function maybeSpin(){
   if(!V)return;
-  if(V.state!=="idle"||V.ov){if(!spinning){$("catTxt").textContent=V.cat;shownCat=V.cat}return}
+  if(V.state!=="idle"||V.ov){if(!spinning&&shownCat!==V.cat){setCat(V.cat);shownCat=V.cat}return}
   if(spinning)return;
   if(V.round!==spunRound){spunRound=V.round;spin(true)}
-  else if(V.cat!==shownCat){if(V.catBy==="typed"){$("catTxt").textContent=V.cat;shownCat=V.cat;popCat()}else spin(false)}
+  else if(V.cat!==shownCat){if(V.catBy==="typed"){setCat(V.cat);shownCat=V.cat;popCat()}else spin(false)}
 }
+/* the comanda never changes size: long themes shrink their font until they fit in two lines */
+function setCat(t){const el=$("catTxt"),box=$("reel");el.textContent=t;let f=1.55;el.style.fontSize=f+"rem";while(el.offsetHeight>box.clientHeight&&f>.95){f-=.1;el.style.fontSize=f.toFixed(2)+"rem"}}
 function popCat(){const c=$("catTxt");c.classList.remove("pop");void c.offsetWidth;c.classList.add("pop")}
 function spin(full){
-  if(matchMedia("(prefers-reduced-motion: reduce)").matches){$("catTxt").textContent=V.cat;shownCat=V.cat;return}
-  spinning=true;$("reel").classList.add("spinning");
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){setCat(V.cat);shownCat=V.cat;return}
+  spinning=true;$("reel").classList.add("spinning");$("catTxt").style.fontSize="";
   const pool=CATS.concat(MOLEC),total=full?2400:1000;
   if(full){try{
     /* the table tips toward the camera, spins three turns and settles back */
@@ -571,7 +573,7 @@ function spin(full){
     if(!V||!spinning){spinning=false;return}
     if(t>=total-80){
       spinning=false;justSpun=true;$("reel").classList.remove("spinning");
-      $("catTxt").textContent=V.cat;shownCat=V.cat;popCat();beep(740,.14,"triangle",.07);render();return;
+      setCat(V.cat);shownCat=V.cat;popCat();beep(740,.14,"triangle",.07);render();return;
     }
     $("catTxt").textContent=pool[Math.floor(Math.random()*pool.length)];
     beep(260+Math.random()*180,.025,"square",.025);
@@ -613,10 +615,9 @@ function render(prev){
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");
   $("newCat").disabled=V.state!=="idle";
-  $("catForm").hidden=!(hostish&&V.state==="idle"&&!V.ov);
   $("addOpen").hidden=MODE!=="local";
   $("roomTag").hidden=MODE==="local"||!roomCode;$("roomTagCode").textContent=roomCode;$("comandaLeft").hidden=!$("roomTag").hidden;
-  $("catForm").hidden=$("catForm").hidden||spinning;
+  const canEdit=hostish&&V.state==="idle"&&!V.ov&&!spinning;$("catOpen").hidden=!canEdit;$("comandaRight").hidden=canEdit;
   maybeSpin();
   renderOverlay();
 }
@@ -705,7 +706,9 @@ $("rkBtn").onclick=()=>{$("rkov").hidden=false;renderSheet()};
 $("rkov").onclick=e=>{if(e.target===$("rkov"))$("rkov").hidden=true};
 $("pause").onclick=()=>dispatch({t:V&&V.state==="pause"?"resume":"pause"});
 $("newCat").onclick=()=>dispatch({t:"newcat"});
-$("catForm").onsubmit=e=>{e.preventDefault();const c=$("catIn").value.trim();if(!c)return;dispatch({t:"setcat",cat:c});$("catIn").value="";$("catIn").blur()};
+$("catOpen").onclick=()=>{$("catov").hidden=false;$("catIn").value="";$("catIn").focus()};
+$("catCancel").onclick=()=>{$("catov").hidden=true};
+$("catForm").onsubmit=e=>{e.preventDefault();const c=$("catIn").value.trim();if(!c){$("catIn").focus();return}$("catov").hidden=true;$("catIn").blur();dispatch({t:"setcat",cat:c})};
 $("addOpen").onclick=()=>{$("addov").hidden=false;$("addMidIn").value="";$("addMidIn").focus()};
 $("addCancel").onclick=()=>{$("addov").hidden=true};
 $("addMid").onsubmit=e=>{e.preventDefault();const n=$("addMidIn").value.trim();if(!n){$("addMidIn").focus();return}$("addov").hidden=true;$("addMidIn").blur();dispatch({t:"addlocal",name:n})};
@@ -926,7 +929,7 @@ function teardown(){
   try{peer&&peer.destroy()}catch(e){}
   peer=null;hostConn=null;G=null;V=null;lastOvKey=null;wasMyTurn=false;
   spinning=false;clearTimeout(spinTimer);spunRound=-1;shownCat=null;$("reel").classList.remove("spinning");
-  $("ov").hidden=true;$("rkov").hidden=true;$("addov").hidden=true;netBar("");
+  $("ov").hidden=true;$("rkov").hidden=true;$("addov").hidden=true;$("catov").hidden=true;netBar("");
   try{wake&&wake.release()}catch(e){}
   try{noSleep&&noSleep.isEnabled&&noSleep.disable()}catch(e){}
 }
