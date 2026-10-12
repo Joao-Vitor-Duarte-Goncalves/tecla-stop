@@ -614,6 +614,8 @@ function dispatch(a){
 let lastOvKey=null, lastLetters="", wasMyTurn=false, lastBeep=null;
 function applyView(snap){
   const prev=V;V=snap;
+  /* "Nova partida" no fim também abre a garrafa de novo */
+  if(prev&&prev.state==="over"&&snap.round===1&&!introPlaying){spunRound=-1;playIntro()}
   if(snap.state==="run")V.end=performance.now()+snap.left;
   if(snap.state==="pause")V.pausedLeft=snap.left;
   show("game");
@@ -835,8 +837,6 @@ function introSound(){
 }
 function playIntro(){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
-  /* a garrafa abrindo é a abertura da noite: depois de ver uma vez, some por 3 horas */
-  const seen=+(lsGet("tecla-intro")||0);if(Date.now()-seen<3*3600e3)return;lsSet("tecla-intro",Date.now());
   introPlaying=true;
   const ov=$("intro");ov.innerHTML=BOTTLE_SVG+`<div class="fallcap" id="fallcap"></div><span class="introskip">toque pra pular</span>`;ov.hidden=false;
   const svg=ov.querySelector(".bottle"),cap=ov.querySelector(".capg"),foam=ov.querySelector(".foam"),fall=$("fallcap");
