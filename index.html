@@ -212,6 +212,9 @@ details.how[open] summary::after{content:"−"}
 @keyframes hkpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%) scale(1)}}
 .ptsline{font-size:.95rem}
 .ptsline b{color:var(--ink)}
+.judge{margin:0;background:var(--yellow);color:var(--paper-ink);border-radius:12px;padding:10px 12px;font-size:.88rem;line-height:1.4}
+.takeover{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:21;background:var(--surface);border:2px solid var(--red);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.takeover p{margin:0;font-size:.9rem;line-height:1.4}
 .tools{display:flex;gap:6px;justify-content:center}
 .tools .btn,.tools .rkbtn{flex:0 1 auto;padding:8px 14px;min-width:0;font-size:.85rem;border-radius:999px;line-height:1.2}
 
@@ -373,7 +376,7 @@ body.bottled .top .lbl{background:var(--surface)}
   <div class="panel" style="align-items:center;text-align:center">
     <span class="lbl">Número da mesa</span>
     <div class="roomcode" id="roomCode">····</div>
-    <button class="btn ghost small" id="copyLink" hidden>Copiar link de convite</button>
+    <button class="btn" id="copyLink" hidden>Chamar a galera</button>
     <p class="note" id="lobbyStatus">Conectando…</p>
   </div>
   <div class="panel">
@@ -381,6 +384,7 @@ body.bottled .top .lbl{background:var(--surface)}
     <div class="chips" id="lobbyPlayers"></div>
   </div>
   <div id="hostSettings"></div>
+  <p class="judge" id="judgeNote" hidden><b>Seu celular é o juiz.</b> Deixe o jogo aberto e a tela ligada. Se você sair do app, a rodada pausa até você voltar.</p>
   <button class="btn" id="hostGo" hidden>Começar a partida</button>
   <p class="note" id="lobbyNote"></p>
 </div>
@@ -394,7 +398,7 @@ body.bottled .top .lbl{background:var(--surface)}
     <span class="spacer" id="catSpacer"></span>
   </header>
   <section class="comanda" aria-live="polite">
-    <span class="lbl"><span id="comandaLeft">Comanda</span><button class="roomtag" id="roomTag" hidden type="button" aria-label="Copiar link da mesa">Mesa <b id="roomTagCode">····</b> <span id="roomTagHint">copiar link</span></button><span id="comandaRight">Tema da rodada</span><button class="catedit" id="catOpen" type="button" hidden>✎ Escrever tema</button></span>
+    <span class="lbl"><span id="comandaLeft">Comanda</span><button class="roomtag" id="roomTag" hidden type="button" aria-label="Copiar link da mesa">Mesa <b id="roomTagCode">····</b> <span id="roomTagHint" data-l="convidar">convidar</span></button><span id="comandaRight">Tema da rodada</span><button class="catedit" id="catOpen" type="button" hidden>✎ Escrever tema</button></span>
     <div class="reel" id="reel"><strong id="catTxt">—</strong></div>
   </section>
   <div class="turn" id="turn"></div>
@@ -428,6 +432,7 @@ body.bottled .top .lbl{background:var(--surface)}
 <div class="scene" id="scene" aria-hidden="true"><div class="blurred"><div class="glass"></div><div class="bubbles"></div><div class="label" id="bottleLabel"></div><div class="shine"></div></div></div>
 <div class="opening" id="intro" hidden></div>
 <div class="net" id="net" role="status" hidden></div>
+<div class="takeover" id="takeover" hidden><p><b>Quem abriu a mesa sumiu.</b> Dá pra continuar a partida com o seu celular como juiz, com o placar como estava.</p><button class="btn" id="takeBtn" type="button">Assumir a mesa</button></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
 <div class="ov" id="addov" hidden><form class="ovbox" id="addMid"><span class="lbl">Chegou alguém?</span><div class="big win mid">Pôr na roda</div><p>A pessoa entra na rodada que está rolando.</p><input type="text" id="addMidIn" placeholder="Nome" maxlength="16" autocomplete="off" aria-label="Nome do novo jogador"><button class="btn" type="submit">Adicionar</button><button class="btn ghost small" type="button" id="addCancel">Cancelar</button></form></div>
 <div class="ov" id="catov" hidden><form class="ovbox" id="catForm"><span class="lbl">Tema de vocês</span><div class="big win mid">Escrever tema</div><input type="text" id="catIn" placeholder="Ex.: Coisas que o João fala bêbado" maxlength="40" autocomplete="off" aria-label="Tema personalizado"><button class="btn" type="submit">Usar esse tema</button><button class="btn ghost small" type="button" id="catCancel">Cancelar</button></form></div>
@@ -618,8 +623,10 @@ function timeout(){
 /* ---------- sync ---------- */
 function snapshot(){
   const left=G.state==="run"?Math.max(0,G.end-performance.now()):G.state==="pause"?G.pausedLeft:null;
-  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,seq:G.seq};
+  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,hostAway:!!G.hostAway,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,seq:G.seq,full:fullCopy()};
 }
+/* a copy of the whole game (without device clocks) so a guest can take over the table */
+function fullCopy(){const c=JSON.parse(JSON.stringify(G));if(G.state==="run"){c.state="pause";c.pausedLeft=Math.max(1500,G.end-performance.now())}c.end=0;(c.hist||[]).forEach(h=>{h.at=0});return c}
 function sync(){
   const snap=snapshot();
   if(MODE==="host"){conns.forEach(c=>{try{c.open&&c.send(snap)}catch(e){}});saveHost()}
@@ -744,7 +751,7 @@ function render(prev){
     const online=V.pl.filter(p=>p.alive&&p.on!==false).length;
     if(hostish&&online<2)hi.innerHTML=`<span class="wait">Pausado: esperando a galera reconectar</span>`;
     else if(hostish){hi.innerHTML=`<button class="hubbtn" id="hubgo">Voltar</button>`;$("hubgo").onclick=()=>dispatch({t:"resume"})}
-    else hi.innerHTML=`<span class="wait">Pausado</span>`;
+    else hi.innerHTML=`<span class="wait">${V.hostAway?"Quem abriu a mesa saiu do jogo. Esperando voltar":"Pausado"}</span>`;
   }else{
     hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.ceil(Math.max(0,V.end-performance.now())/1000):0}</span><span class="who${mine&&MODE!=="local"?" mine":""}">${mine&&MODE!=="local"?"Sua vez!":curP?esc(curP.name):""}</span>`;
   }
@@ -1071,8 +1078,9 @@ function lobbyView(){
   $("roomCode").textContent=roomCode||"····";
   const list=MODE==="host"?lobbyPl:(V&&V.lobby)||[];
   $("lobbyPlayers").innerHTML=list.map(p=>`<span class="chip noclose">${esc(p.name)}${p.id===ME?" (você)":""}</span>`).join("")||`<span class="note">Ninguém ainda.</span>`;
-  if(MODE==="host"){$("hostGo").hidden=false;$("hostGo").disabled=list.length<2;$("lobbyNote").textContent=list.length<2?"Esperando pelo menos mais 1 pessoa entrar.":"Deixa seu celular com a tela ligada: ele é o juiz do tempo."}
+  if(MODE==="host"){$("hostGo").hidden=false;$("hostGo").disabled=list.length<2;$("lobbyNote").textContent=list.length<2?"Esperando pelo menos mais 1 pessoa entrar.":""}
   else{$("hostGo").hidden=true;$("lobbyNote").textContent="Esperando quem abriu a mesa começar."}
+  $("judgeNote").hidden=MODE!=="host";
 }
 
 /* ---------- persistence helpers ---------- */
@@ -1105,7 +1113,8 @@ iceConfig();
 
 /* host */
 $("mCreate").onclick=()=>{const n=needName();if(!n||!peerOk())return;unlockAudio();keepAwake();startHost(n,null)};
-function startHost(name,restore){
+function startHost(name,restore,takeover){
+  takingOver=!!takeover;if(!takeover)hostSuffix=(restore&&restore.suffix)||"";
   MODE="host";ME=S.key;conns.clear();V=null;lastLetters="";
   if(restore){
     roomCode=restore.code;G=restore.G||null;lobbyPl=(restore.lobby||[]).filter(p=>p.id===ME);
@@ -1120,8 +1129,8 @@ function startHost(name,restore){
 }
 async function openHostPeer(tries,keepCode){
   const cfg=await iceConfig();if(MODE!=="host")return;
-  const p=new Peer(PREFIX+roomCode,{debug:0,config:cfg});peer=p;
-  p.on("open",()=>{if(peer!==p)return;netBar("");$("lobbyStatus").textContent="Mesa aberta. Manda o número ou o link pra galera.";$("copyLink").hidden=false;saveHost()});
+  const p=new Peer(PREFIX+roomCode+(hostSuffix||""),{debug:0,config:cfg});peer=p;
+  p.on("open",()=>{if(peer!==p)return;takingOver=false;netBar("");$("lobbyStatus").textContent="Mesa aberta. Chama a galera ou passa o número.";$("copyLink").hidden=false;saveHost()});
   p.on("connection",c=>{
     c.lastSeen=Date.now();
     c.on("data",d=>onHostData(c,d));
@@ -1136,6 +1145,13 @@ async function openHostPeer(tries,keepCode){
     if(peer!==p||MODE!=="host")return;
     if(e.type==="unavailable-id"){
       try{p.destroy()}catch(_){}
+      if(takingOver){
+        /* someone already holds this seat: try the next one, or go back to being a guest */
+        const i=SUFFIXES.indexOf(hostSuffix||"");
+        if(i<SUFFIXES.length-1){hostSuffix=SUFFIXES[i+1];openHostPeer(tries+1,true)}
+        else{takingOver=false;const n=S.name;teardown();startGuest(n,roomCode,true)}
+        return;
+      }
       if(keepCode){
         if(tries<20){netBar("Reabrindo a mesa "+roomCode+"…");setTimeout(()=>{if(MODE==="host"&&peer===p)openHostPeer(tries+1,true)},2000)}
         else netBar("Não consegui reabrir a mesa "+roomCode+". Toque em Sair e abra outra.");
@@ -1152,7 +1168,7 @@ function saveHost(){
   if(MODE!=="host")return;
   let g=null;
   if(G){g=JSON.parse(JSON.stringify(G));if(G.state==="run"){g.state="pause";g.pausedLeft=Math.max(0,G.end-performance.now())}}
-  lsSet(HOST_KEY,{code:roomCode,lobby:lobbyPl,G:g,name:S.name,t:Date.now()});
+  lsSet(HOST_KEY,{code:roomCode,suffix:hostSuffix||"",lobby:lobbyPl,G:g,name:S.name,t:Date.now()});
 }
 function onHostData(c,d){
   if(!d||typeof d!=="object")return;
@@ -1186,23 +1202,30 @@ function broadcastLobby(){
   conns.forEach(c=>{try{c.open&&c.send(msg)}catch(e){}});lobbyView();saveHost();
 }
 $("hostGo").onclick=()=>{if(lobbyPl.length<2)return;unlockAudio();newMatch(lobbyPl);sync()};
-$("roomTag").onclick=()=>{
+/* convite: compartilhar nativo do celular (WhatsApp etc.); se não tiver, copia o link */
+async function invite(btn,label){
   const url=location.origin+location.pathname+"#"+roomCode;
-  try{navigator.clipboard.writeText(url).then(()=>{$("roomTagHint").textContent="link copiado"},()=>{$("roomTagHint").textContent=url})}catch(e){$("roomTagHint").textContent=url}
-  setTimeout(()=>{$("roomTagHint").textContent="copiar link"},2500);
+  const text="Bora jogar Tecla Stop? Senta na mesa "+roomCode+": "+url;
+  if(navigator.share){try{await navigator.share({title:"Tecla Stop",text,url});return}catch(e){if(e&&e.name==="AbortError")return}}
+  try{await navigator.clipboard.writeText(text);btn.textContent=label;setTimeout(()=>{btn.textContent=btn.dataset.l||btn.textContent},2500)}catch(e){$("lobbyStatus").textContent=url}
+}
+$("takeBtn").onclick=()=>{
+  if(!lastFull)return;const full=lastFull,code=roomCode,name=guestName||S.name;
+  $("takeover").hidden=true;teardown();hostSuffix="b";
+  startHost(name,{code,G:full,lobby:[]},true);
 };
-$("copyLink").onclick=()=>{
-  const url=location.origin+location.pathname+"#"+roomCode;
-  const done=()=>{$("copyLink").textContent="Link copiado"};
-  try{navigator.clipboard.writeText(url).then(done,()=>{$("lobbyStatus").textContent=url})}catch(e){$("lobbyStatus").textContent=url}
-};
+$("copyLink").dataset.l="Chamar a galera";
+$("copyLink").onclick=()=>invite($("copyLink"),"Convite copiado");
+$("roomTag").onclick=()=>invite($("roomTagHint"),"copiado");
 
 /* guest */
 $("joinForm").onsubmit=e=>{e.preventDefault();const n=needName();if(!n||!peerOk())return;
   const code=$("joinCode").value.trim().toUpperCase();if(!/^[A-Z]{4}$/.test(code)){homeErr("O número da mesa tem 4 letras.");return}
   unlockAudio();keepAwake();startGuest(n,code,false)};
+const SUFFIXES=["","b","c"];let hostSuffix="",takingOver=false,seatIdx=0,seatMisses=0,lastFull=null;
 let guestName="",everConnected=false,rcTimer=null,rcStart=0,rcN=0,lastHostMsg=0;
 function startGuest(name,code,auto){
+  seatIdx=0;seatMisses=0;lastFull=null;$("takeover").hidden=true;
   MODE="guest";ME=S.key;roomCode=code;guestName=name;G=null;V=null;lastLetters="";
   everConnected=!!auto;rcStart=Date.now();rcN=0;
   $("lobbyRole").textContent="Mesa de outra pessoa";$("lobbyStatus").textContent=auto?"Voltando pra mesa…":"Entrando…";$("copyLink").hidden=true;$("hostSettings").innerHTML="";
@@ -1217,13 +1240,13 @@ async function attempt(){
   const cfg=await iceConfig();if(MODE!=="guest")return;
   const p=new Peer({debug:0,config:cfg});peer=p;
   /* relayed connections can take a few seconds longer to set up */
-  const guard=setTimeout(()=>{if(peer===p&&!(hostConn&&hostConn.open))retryLater()},15000);
+  const guard=setTimeout(()=>{if(peer===p&&!(hostConn&&hostConn.open)){if(everConnected)seatIdx=(seatIdx+1)%SUFFIXES.length;retryLater()}},15000);
   p.on("open",()=>{
     if(peer!==p)return;
-    const c=p.connect(PREFIX+roomCode,{reliable:true});
+    const c=p.connect(PREFIX+roomCode+SUFFIXES[seatIdx],{reliable:true});
     c.on("open",()=>{
       if(peer!==p||MODE!=="guest")return;
-      clearTimeout(guard);hostConn=c;lastHostMsg=Date.now();everConnected=true;rcStart=0;rcN=0;netBar("");
+      clearTimeout(guard);hostConn=c;lastHostMsg=Date.now();everConnected=true;rcStart=0;rcN=0;seatMisses=0;netBar("");$("takeover").hidden=true;
       $("lobbyStatus").textContent="Você entrou.";
       c.send({t:"join",name:guestName,key:S.key});
       lsSet(ROOM_KEY,{code:roomCode,name:guestName,t:Date.now()});
@@ -1235,7 +1258,11 @@ async function attempt(){
   p.on("error",e=>{
     if(peer!==p||MODE!=="guest")return;
     clearTimeout(guard);
-    if(e.type==="peer-unavailable"&&!everConnected){guestFail("Mesa "+roomCode+" não encontrada. Confere o número.");return}
+    if(e.type==="peer-unavailable"){
+      seatIdx=(seatIdx+1)%SUFFIXES.length;seatMisses++;
+      if(!everConnected&&seatMisses>=SUFFIXES.length){guestFail("Mesa "+roomCode+" não encontrada. Confere o número.");return}
+      if(seatIdx!==0){retryLater(150);return}
+    }
     retryLater();
   });
 }
@@ -1250,6 +1277,8 @@ function retryLater(ms){
     return;
   }
   rcN++;
+  /* the table phone has been gone a while: offer to take over with the last game state */
+  if(everConnected&&lastFull&&Date.now()-rcStart>15000)$("takeover").hidden=false;
   netBar(everConnected?"Conexão caiu. Reconectando… (tentativa "+rcN+")":"Procurando a mesa "+roomCode+"… (tentativa "+rcN+" de 3)");
   if(!everConnected)$("lobbyStatus").textContent="Ainda tentando. Pode levar uns segundos quando vocês estão em redes diferentes.";
   rcTimer=setTimeout(attempt,ms!=null?ms:Math.min(1000*rcN,5000));
@@ -1257,7 +1286,7 @@ function retryLater(ms){
 function onGuestData(d){
   if(!d||typeof d!=="object"||d.t==="pong")return;
   if(d.t==="lobby"){show("lobby");$("ov").hidden=true;V={lobby:d.players};lobbyView();V=null;return}
-  if(d.t==="state")applyView(d);
+  if(d.t==="state"){if(d.full)lastFull=d.full;applyView(d)}
 }
 function guestFail(msg){
   clearTimeout(rcTimer);lsDel(ROOM_KEY);
@@ -1277,7 +1306,9 @@ setInterval(()=>{
   }
 },4000);
 document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="hidden"&&MODE==="host"&&G&&G.state==="run"){G.hostAway=true;act(ME,{t:"pause"})}
   if(document.visibilityState!=="visible")return;
+  if(MODE==="host"&&G&&G.hostAway){G.hostAway=false;sync()}
   if(MODE==="guest"&&!(hostConn&&hostConn.open)){rcN=0;if(!rcStart)rcStart=Date.now();attempt()}
   if(MODE==="host"&&peer&&peer.disconnected&&!peer.destroyed){try{peer.reconnect()}catch(e){}}
 });
