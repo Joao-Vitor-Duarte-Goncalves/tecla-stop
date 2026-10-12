@@ -201,6 +201,17 @@ details.how[open] summary::after{content:"−"}
 .rkbtn{background:var(--chalk-bg);color:var(--chalk);font-family:var(--hand);font-size:.95rem;border-radius:8px;padding:5px 12px;
   box-shadow:inset 0 0 0 3px #3b4a42,0 3px 0 rgba(0,0,0,.35)}
 .rkbtn.locked{color:var(--chalk-dim)}
+.game.hk .board{width:clamp(240px,calc(100dvh - 358px),460px)}
+.heckles{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;font-size:.82rem;font-weight:700;color:var(--muted)}
+.hkrow{display:flex;gap:6px}
+.hkrow button{background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:6px 10px;font-weight:800;font-size:.85rem}
+.hkrow button:active{transform:scale(.94)}
+.hkpop{position:absolute;left:50%;top:50%;z-index:7;transform:translate(-50%,-50%);pointer-events:none;text-align:center;background:var(--surface);border:2px solid var(--red);border-radius:16px;padding:8px 14px;box-shadow:0 8px 20px rgba(0,0,0,.35);animation:hkpop 1.6s ease-out forwards}
+.hkpop b{display:block;font-family:var(--sign);font-weight:400;font-size:1.5rem;color:var(--red)}
+.hkpop span{font-size:.8rem;font-weight:700;color:var(--muted)}
+@keyframes hkpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%) scale(1)}}
+.ptsline{font-size:.95rem}
+.ptsline b{color:var(--ink)}
 .tools{display:flex;gap:6px;justify-content:center}
 .tools .btn,.tools .rkbtn{flex:0 1 auto;padding:8px 14px;min-width:0;font-size:.85rem;border-radius:999px;line-height:1.2}
 
@@ -410,6 +421,7 @@ body.bottled .top .lbl{background:var(--surface)}
     <button class="btn ghost small" id="pause">Pausar</button>
     <button class="rkbtn" id="rkBtn" type="button">Placar</button>
   </nav>
+  <div class="heckles" id="heckles" hidden><span>Você saiu. Atrapalha:</span><div class="hkrow"><button type="button" data-k="tic">⏰ Tic-tac</button><button type="button" data-k="bebe">🍺 Vai beber</button><button type="button" data-k="ri">😂 Hahaha</button></div></div>
 </div>
 
 <button class="themebtn" id="themeBtn" type="button" aria-label="Mudar para modo escuro"></button>
@@ -551,6 +563,13 @@ function act(from,a){
       G.used.push(a.l);G.hist.push({l:a.l,who:G.cur,at:performance.now(),left:Math.max(1500,G.end-performance.now())});G.seq++;
       if(G.used.length===G.letters.length){G.state="ov";G.dur=Math.max(4,G.dur-2);G.ov={kind:"reset",dur:G.dur};break}
       G.cur=nextAliveFrom(G.cur);resetTimer();break;
+    case "heckle":{
+      /* quem já saiu da rodada pode apressar quem está na vez */
+      if(MODE==="local"||G.state!=="run")break;
+      const p=G.pl.find(x=>x.id===from),cur=G.pl[G.cur];
+      if(!p||p.alive||!cur||cur.id===from||!HECKLES[a.k])break;
+      const now=Date.now();if(p.hkAt&&now-p.hkAt<2500)break;p.hkAt=now;
+      G.hk={k:a.k,by:p.name,to:cur.id,n:(G.hk?G.hk.n:0)+1};break}
     case "oops":{
       /* the player who just tapped can take it back for a moment and gets back the time they had */
       const h=G.hist[G.hist.length-1];
@@ -590,15 +609,16 @@ function act(from,a){
 }
 function timeout(){
   const p=G.pl[G.cur],gain=G.outs?G.outs:-1;p.drinks++;p.pts+=gain;G.outs++;p.alive=false;p.lost=true;G.state="ov";
-  if(!endIfLastStanding()){G.ov={kind:"drink",name:p.name,gain,next:G.pl[nextAliveFrom(G.cur)].name}}
-  else{G.ov.loser=p.name;G.ov.loserGain=gain}
+  const place=G.outs-1;
+  if(!endIfLastStanding()){G.ov={kind:"drink",name:p.name,gain,place,next:G.pl[nextAliveFrom(G.cur)].name}}
+  else{G.ov.loser=p.name;G.ov.loserGain=gain;G.ov.loserPlace=place}
   G.seq++;sync();
 }
 
 /* ---------- sync ---------- */
 function snapshot(){
   const left=G.state==="run"?Math.max(0,G.end-performance.now()):G.state==="pause"?G.pausedLeft:null;
-  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,seq:G.seq};
+  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,seq:G.seq};
 }
 function sync(){
   const snap=snapshot();
@@ -631,7 +651,16 @@ function buildKeys(letters){
     $("ring").appendChild(b)});
 }
 /* ---------- tapping the table: the whole wedge around each cap counts, so a near miss still picks the letter you aimed at ---------- */
-const OOPS_MS=2200;let oopsTimer=null;
+const OOPS_MS=2200;
+const HECKLES={tic:"TIC-TAC!",bebe:"VAI BEBER!",ri:"HAHAHA"};
+let lastHk=-1;
+function showHeckle(h){
+  const el=document.createElement("div");el.className="hkpop";el.innerHTML=`<b>${HECKLES[h.k]}</b><span>${esc(h.by)}</span>`;
+  $("board").appendChild(el);setTimeout(()=>el.remove(),1700);
+  if(h.to===ME){try{navigator.vibrate&&navigator.vibrate([70,50,70])}catch(e){};beep(1200,.06,"square",.06);setTimeout(()=>beep(900,.06,"square",.06),110);
+    try{$("board").animate([{transform:"translateX(0)"},{transform:"translateX(-6px)"},{transform:"translateX(6px)"},{transform:"translateX(0)"}],{duration:260})}catch(e){}}
+}
+document.addEventListener("click",e=>{const b=e.target.closest("#heckles button");if(!b)return;dispatch({t:"heckle",k:b.dataset.k});b.disabled=true;setTimeout(()=>b.disabled=false,2500)});let oopsTimer=null;
 function letterAt(cx,cy){
   const r=$("board").getBoundingClientRect(),x=cx-(r.left+r.width/2),y=cy-(r.top+r.height/2),d=Math.hypot(x,y)/(r.width/2);
   if(d<.5||d>1.06||!V)return null;
@@ -725,7 +754,10 @@ function render(prev){
   $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}"><span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.on===false?" (caiu)":""}</span></span>`).join("");
   const lk=isLocked();$("rkBtn").textContent=lk?"🔒 Placar":"Placar";$("rkBtn").classList.toggle("locked",lk);
   renderSheet();
-  $("undo").hidden=!hostish;$("pause").hidden=!hostish;$("newCat").hidden=!hostish;$("catSpacer").hidden=hostish;
+  $("undo").hidden=!hostish;$("pause").hidden=!hostish;
+  const meP=V.pl.find(p=>p.id===ME);$("heckles").hidden=!(MODE!=="local"&&V.state==="run"&&meP&&!meP.alive&&meP.on!==false);
+  {const n=V.hk?V.hk.n:0;if(lastHk<0)lastHk=n;else if(n!==lastHk){lastHk=n;if(V.hk)showHeckle(V.hk)}}
+  $("game").classList.toggle("hk",!$("heckles").hidden);$("newCat").hidden=!hostish;$("catSpacer").hidden=hostish;
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");
   $("newCat").disabled=V.state!=="idle";
@@ -746,8 +778,8 @@ function renderOverlay(){
   const key=V.seq+":"+o.kind+":"+V.round;
   if(key===lastOvKey)return;lastOvKey=key;
   let html="";
-  if(o.kind==="drink")html=`<div class="big">${esc(o.name)} bebe!</div><p>Estourou o tempo e sai da rodada${isLocked()?"":` com <span class="name">${ptsTxt(o.gain)}</span>`}. Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
-  else if(o.kind==="win")html=(o.loser?`<div class="big">${esc(o.loser)} bebe!</div>${isLocked()?"":`<p>${esc(o.loser)} sai com <span class="name">${ptsTxt(o.loserGain)}</span>.</p>`}`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div><p>${isLocked()?"Escolhe":`Leva <span class="name">${ptsTxt(o.gain)}</span> e escolhe`} alguém pra dar um gole.</p>`;
+  if(o.kind==="drink")html=`<div class="big">${esc(o.name)} bebe!</div>${isLocked()?"":outLine(o.place,o.gain)}<p>Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
+  else if(o.kind==="win")html=(o.loser?`<div class="big">${esc(o.loser)} bebe!</div>${isLocked()?"":outLine(o.loserPlace,o.loserGain)}`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div>${isLocked()?"":`<p class="ptsline"><b>${ptsTxt(o.gain)}</b> por ficar até o fim, 1 por cada um que saiu antes</p>`}<p>Escolhe alguém pra dar um gole.</p>`;
   else if(o.kind==="reset")html=`<div class="big win">Zerou o tabuleiro</div><p>As letras voltam e o tempo cai para <span class="name">${o.dur}s</span>. Mesmo tema.</p>`;
   else if(o.kind==="few")html=`<div class="big win mid">Esperando a galera</div><p>Precisa de pelo menos 2 pessoas conectadas. A rodada começa sozinha quando alguém voltar.</p>`;
   else if(o.kind==="final")html=finalHtml();
@@ -768,13 +800,19 @@ function renderOverlay(){
 }
 
 function ptsTxt(n){n=n||0;return (n>0?"+":n<0?"−":"")+Math.abs(n)+" ponto"+(Math.abs(n)===1?"":"s")}
+/* the scoring rule shown at the moment it applies */
+function outLine(place,gain){
+  const pos=(place||0)+1;
+  return `<p class="ptsline">${pos}º a sair: <b>${ptsTxt(gain)}</b>${pos===1?", quem sai primeiro perde 1":", 1 por cada um que saiu antes"}</p>`;
+}
+const RULE_LINE="Quanto mais você dura na rodada, mais ganha: +1 ponto por cada pessoa que sai antes de você. Quem sai primeiro perde 1.";
 function rankList(reveal){
   const rk=V.pl.slice().sort((a,b)=>(b.pts||0)-(a.pts||0)||(b.wins||0)-(a.wins||0)||a.drinks-b.drinks||a.name.localeCompare(b.name));
   let pos=0,prevKey=null;const n=rk.length;
   const rows=rk.map((p,i)=>{const k=(p.pts||0)+":"+(p.wins||0)+":"+p.drinks;if(k!==prevKey){pos=i+1;prevKey=k}
     /* on the final reveal, rows appear from last place up to the champion */
     const st=reveal?` style="animation-delay:${(n-1-i)*0.6}s"`:"";
-    return `<li class="rk${pos===1?" first":""}${reveal?" reveal":""}"${st}><span class="rkpos">${pos}º</span><span class="rkname">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}</span><span class="rkstat"><span class="rkpts">${p.pts||0} pt${Math.abs(p.pts||0)===1?"":"s"}</span>${p.wins||0} vitória${(p.wins||0)===1?"":"s"}, ${p.drinks} gole${p.drinks===1?"":"s"}</span></li>`}).join("");
+    return `<li class="rk${pos===1?" first":""}${reveal?" reveal":""}"${st}><span class="rkpos">${pos}º</span><span class="rkname">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}</span><span class="rkstat"><span class="rkpts">${p.pts||0} pt${Math.abs(p.pts||0)===1?"":"s"}</span>${p.drinks} gole${p.drinks===1?"":"s"}</span></li>`}).join("");
   return {rk,html:`<ol class="ranking">${rows}</ol>`,revealTime:(n-1)*0.6};
 }
 function finalHtml(){
@@ -794,7 +832,7 @@ function renderSheet(){
   if($("rkov").hidden||!V)return;
   let body;
   if(isLocked())body=`<div class="lockbig" aria-hidden="true">🔒</div><div class="big win mid">Suspense</div><p>${lockMsg()}</p>`;
-  else body=`<span class="lbl">Placar até a rodada ${V.round}${V.maxRounds?" de "+V.maxRounds:""}</span>${rankList(false).html}${V.maxRounds>3?`<p class="note">Nas últimas 3 rodadas a lousa fica coberta até o fim.</p>`:""}`;
+  else body=`<span class="lbl">Placar até a rodada ${V.round}${V.maxRounds?" de "+V.maxRounds:""}</span><p class="note">${RULE_LINE}</p>${rankList(false).html}${V.maxRounds>3?`<p class="note">Nas últimas 3 rodadas a lousa fica coberta até o fim.</p>`:""}`;
   $("rkbox").innerHTML=body+`<button class="btn ghost" id="rkclose">Voltar pro jogo</button>`;
   $("rkclose").onclick=()=>{$("rkov").hidden=true};
 }
@@ -1251,7 +1289,7 @@ function teardown(){
   conns.forEach(c=>{try{c.close()}catch(e){}});conns.clear();
   try{peer&&peer.destroy()}catch(e){}
   peer=null;hostConn=null;G=null;V=null;lastOvKey=null;wasMyTurn=false;
-  spinning=false;clearTimeout(spinTimer);spunRound=-1;shownCat=null;$("reel").classList.remove("spinning");
+  lastHk=-1;spinning=false;clearTimeout(spinTimer);spunRound=-1;shownCat=null;$("reel").classList.remove("spinning");
   if(introPlaying){introTimers.forEach(clearTimeout);introTimers=[];introPlaying=false;$("intro").hidden=true;$("intro").innerHTML="";$("tilt").style.opacity="";$("floor").style.opacity=""}
   $("ov").hidden=true;$("rkov").hidden=true;$("addov").hidden=true;$("catov").hidden=true;netBar("");
   try{wake&&wake.release()}catch(e){}
