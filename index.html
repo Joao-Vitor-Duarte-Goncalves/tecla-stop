@@ -422,8 +422,9 @@ body.bottled .top .lbl{background:var(--surface)}
 <div class="ov" id="rkov" hidden><div class="ovbox chalk" id="rkbox" role="dialog" aria-label="Placar"></div></div>
 
 <script>
-const CATS=["Marcas de cerveja","Coisas que se fala bêbado","Desculpas pra sair mais cedo","Coisas que tem num bar","Petiscos de boteco","Comidas","Frutas","Animais","Países","Cidades do Brasil","Times de futebol","Profissões","Nomes de mulher","Nomes de homem","Cantores brasileiros","Bandas","Filmes","Séries","Novelas","Personagens de desenho","Marcas","Coisas da cozinha","Partes do corpo","Coisas que levam pra praia","Esportes","Instrumentos musicais","Cores","Coisas verdes","Coisas redondas","Coisas que se encontra na bolsa","Apelidos de ex","Coisas de São João","Pratos do Nordeste","Palavrões leves","Doenças","Remédios","Carros","Objetos do quarto","Coisas que você não empresta","Lugares pra um primeiro encontro","Gírias","Super-heróis","Aplicativos","Jogos","Matérias da escola","Coisas que fazem barulho","Roupas","Sobremesas","Bebidas sem álcool","Drinks e coquetéis","Lugares de Teresina","Coisas que dão ressaca","Coisas que se faz no Carnaval","Peixes e frutos do mar","Verbos","Coisas geladas","Signos e coisas místicas","Coisas que se joga fora","Palavras em inglês","Famosos da internet"];
-const MOLEC=["Coisas com formato suspeito", "Coisas que ficam duras", "Coisas que ficam molhadas", "Coisas que se coloca na boca", "Coisas que se aperta", "Coisas que se lambe", "Frutas com duplo sentido", "Palavras com duplo sentido", "Coisas que fazem barulho de madrugada", "Coisas que se faz no escuro", "Cantadas ruins", "Mentiras de primeiro encontro", "Mentiras que todo mundo conta no Tinder", "Coisas que o crush não pode saber", "Coisas que você mandaria pro ex às 3 da manhã", "Motivos pra terminar um namoro", "Lugares estranhos pra dar um beijo", "Lugares pra dar uma escapada", "Coisas que não se fala pra sogra", "Coisas que sua mãe não pode ver no seu celular", "Coisas escondidas no histórico do navegador", "Coisas que tem na gaveta da cabeceira", "Emojis com segundas intenções", "Apelidos carinhosos ridículos", "Desculpas pra chegar em casa tarde", "Desculpas pra não pagar a conta", "Desculpas pra não ir pra academia", "Desculpas pra sair do grupo da família", "Desculpas de quem chegou atrasado", "Coisas que você faz bêbado e se arrepende", "Coisas que acontecem depois da meia-noite", "Coisas que se faz de ressaca", "Motivos pra ser expulso de um bar", "Coisas que se fala pro segurança da balada", "Coisas que se grita no Carnaval", "Coisas pra fazer numa despedida de solteiro", "Coisas que se faz na festa da firma e se arrepende", "Coisas que se faz escondido no trabalho", "Coisas que ninguém admite que faz", "Coisas que você faria por 1 milhão de reais", "Coisas que a vizinha fofoqueira comenta", "Xingamentos de criança", "Coisas que você fala quando topa o dedinho", "Músicas de sofrência", "Coisas que se faz no banheiro além do óbvio", "Partes do corpo com nome engraçado", "Coisas que dão vergonha alheia", "Coisas que se fala no áudio de 5 minutos", "Indiretas pra postar no status", "Coisas que alguém dessa roda já fez"];
+const CATS=["Comidas", "Frutas", "Animais", "Países", "Cidades do Brasil", "Profissões", "Nomes de mulher", "Nomes de homem", "Nomes de cachorro", "Cantores e cantoras brasileiros", "Bandas", "Filmes", "Séries", "Personagens de desenho", "Personagens famosos", "Famosos da internet", "Marcas", "Marcas de comida e bebida", "Carros e motos", "Times de futebol", "Esportes", "Instrumentos musicais", "Coisas da cozinha", "Coisas que tem numa geladeira", "Coisas que tem no supermercado", "Coisas que tem numa farmácia", "Coisas que se compra na feira", "Coisas que tem num bar", "Petiscos e comidas de boteco", "Comidas de festa", "Sobremesas e doces", "Pratos do Nordeste", "Partes do corpo", "Roupas e acessórios", "Objetos do quarto", "Objetos de escritório", "Coisas que tem na bolsa ou mochila", "Coisas que levam pra praia", "Coisas de São João", "Coisas que se faz no Carnaval", "Coisas que se faz no fim de semana", "Coisas verdes", "Coisas redondas", "Coisas geladas", "Coisas que voam", "Coisas que fazem barulho", "Coisas que dá pra quebrar", "Coisas que se joga fora", "Coisas que você não empresta", "Coisas que dão ressaca", "Coisas que tem numa festa", "Lugares pra um primeiro encontro", "Lugares de Teresina", "Lugares do mundo", "Aplicativos e sites", "Jogos e brincadeiras", "Gírias", "Verbos", "Palavras em inglês", "Adjetivos pra descrever alguém da roda", "Coisas que se fala bêbado", "Desculpas pra sair mais cedo", "Comidas que você odeia", "Coisas do Nordeste", "Coisas que tem numa escola"];
+/* Critério dos temas: dá pra achar palavra comum pra quase todas as letras. Os que esgotavam em poucas respostas (cores, signos, matérias, emojis...) saíram. */
+const MOLEC=["Coisas com formato suspeito", "Coisas que ficam duras", "Coisas que ficam molhadas", "Coisas que se coloca na boca", "Coisas que se aperta", "Coisas que se lambe", "Palavras com duplo sentido", "Coisas que fazem barulho de madrugada", "Coisas que se faz no escuro", "Cantadas ruins", "Mentiras de primeiro encontro", "Mentiras que todo mundo conta no Tinder", "Coisas que o crush não pode saber", "Coisas que você mandaria pro ex às 3 da manhã", "Motivos pra terminar um namoro", "Lugares estranhos pra dar um beijo", "Lugares pra dar uma escapada", "Coisas que não se fala pra sogra", "Coisas que sua mãe não pode ver no seu celular", "Coisas escondidas no histórico do navegador", "Coisas que tem na gaveta da cabeceira", "Apelidos carinhosos ridículos", "Desculpas pra chegar em casa tarde", "Desculpas pra não pagar a conta", "Desculpas pra não ir pra academia", "Desculpas de quem chegou atrasado", "Coisas que você faz bêbado e se arrepende", "Coisas que acontecem depois da meia-noite", "Coisas que se faz de ressaca", "Motivos pra ser expulso de um bar", "Coisas pra fazer numa despedida de solteiro", "Coisas que se faz na festa da firma e se arrepende", "Coisas que se faz escondido no trabalho", "Coisas que ninguém admite que faz", "Coisas que você faria por 1 milhão de reais", "Coisas que a vizinha fofoqueira comenta", "Coisas que dão vergonha alheia", "Coisas que se fala num áudio de 5 minutos", "Coisas que alguém dessa roda já fez", "Coisas que você fala quando topa o dedinho"];
 const BASE="ABCDEFGHIJLMNOPRSTUV".split(""), HARD=["Q","X","Z"];
 const PREFIX="teclastop-v1-";
 const $=id=>document.getElementById(id);
@@ -661,24 +662,27 @@ function maybeSpin(){
   if(!V||introPlaying)return;
   if(V.state!=="idle"||V.ov){if(!spinning&&shownCat!==V.cat){setCat(V.cat);shownCat=V.cat}return}
   if(spinning)return;
-  if(V.round!==spunRound){spunRound=V.round;spin(true)}
+  if(V.round!==spunRound){spunRound=V.round;spin(V.round===1?"full":"round")}
   else if(V.cat!==shownCat){if(V.catBy==="typed"){setCat(V.cat);shownCat=V.cat;popCat()}else spin(false)}
 }
 /* the comanda never changes size: long themes shrink their font until they fit in two lines */
 function setCat(t){const el=$("catTxt"),box=$("reel");el.textContent=t;let f=1.55;el.style.fontSize=f+"rem";while(el.offsetHeight>box.clientHeight&&f>.95){f-=.1;el.style.fontSize=f.toFixed(2)+"rem"}}
 function popCat(){const c=$("catTxt");c.classList.remove("pop");void c.offsetWidth;c.classList.add("pop")}
-function spin(full){
+function spin(mode){
+  /* full = 1ª rodada (mesa inclina e dá 3 voltas), round = rodadas seguintes (1 volta rápida), false = só troca de tema */
+  const full=mode==="full",quick=mode==="round";
   if(matchMedia("(prefers-reduced-motion: reduce)").matches){setCat(V.cat);shownCat=V.cat;return}
   spinning=true;$("reel").classList.add("spinning");$("catTxt").style.fontSize="";
-  const pool=CATS.concat(MOLEC),total=full?2400:1000;
+  const pool=CATS.concat(MOLEC),total=full?2400:quick?1100:900;
   if(full){try{
     /* the table tips toward the camera, spins three turns and settles back */
     const D=total+200;
-    $("tilt").animate([{transform:"rotateX(0deg)"},{transform:"rotateX(58deg) translateY(3%) scale(.94)",offset:.2},{transform:"rotateX(58deg) translateY(3%) scale(.94)",offset:.72},{transform:"rotateX(14deg)"}],{duration:D,easing:"ease-in-out"});
+    $("tilt").animate([{transform:"rotateX(0deg)"},{transform:"rotateX(58deg) translateY(3%) scale(.94)",offset:.2},{transform:"rotateX(58deg) translateY(3%) scale(.94)",offset:.72},{transform:"rotateX(0deg)"}],{duration:D,easing:"ease-in-out"});
     $("spinner").animate([{transform:"rotateZ(-1080deg)"},{transform:"rotateZ(0deg)"}],{duration:D,easing:"cubic-bezier(.2,.55,.12,1)"});
     $("floor").animate([{transform:"scale(1)",opacity:1},{transform:"scale(.8,1.25)",opacity:.7,offset:.2},{transform:"scale(.8,1.25)",opacity:.7,offset:.72},{transform:"scale(1)",opacity:1}],{duration:D,easing:"ease-in-out"});
   }catch(e){}}
-  let t=0,step=45;
+  if(quick){try{$("spinner").animate([{transform:"rotateZ(-360deg)"},{transform:"rotateZ(0deg)"}],{duration:total+100,easing:"cubic-bezier(.25,.6,.2,1)"})}catch(e){}}
+  let t=0,step=quick?38:45;
   const tick=()=>{
     if(!V||!spinning){spinning=false;return}
     if(t>=total-80){
@@ -831,6 +835,8 @@ function introSound(){
 }
 function playIntro(){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  /* a garrafa abrindo é a abertura da noite: depois de ver uma vez, some por 3 horas */
+  const seen=+(lsGet("tecla-intro")||0);if(Date.now()-seen<3*3600e3)return;lsSet("tecla-intro",Date.now());
   introPlaying=true;
   const ov=$("intro");ov.innerHTML=BOTTLE_SVG+`<div class="fallcap" id="fallcap"></div><span class="introskip">toque pra pular</span>`;ov.hidden=false;
   const svg=ov.querySelector(".bottle"),cap=ov.querySelector(".capg"),foam=ov.querySelector(".foam"),fall=$("fallcap");
