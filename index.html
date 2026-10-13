@@ -42,7 +42,9 @@
 [hidden]{display:none!important}
 html,body{height:100%;margin:0}
 body{color:var(--ink);font-family:var(--body);font-size:16px;background-color:var(--wall);
-  background-image:linear-gradient(var(--wall-wash),var(--wall-wash)),var(--tile);background-size:auto,72px 72px;background-attachment:fixed}
+  background-image:var(--floor,none);background-size:360px 360px;background-attachment:fixed}
+/* sombra suave nas bordas do chão, como luz de bar em cima da mesa */
+body.ingame::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(120% 80% at 50% 45%,transparent 40%,rgba(0,0,0,.45))}
 .wrap{max-width:460px;margin:0 auto;padding-inline:16px;padding-block:14px 28px;display:flex;flex-direction:column;gap:16px;min-height:100%}
 button{font-family:var(--body);cursor:pointer;border:0;color:inherit}
 button:disabled{cursor:default}
@@ -135,8 +137,8 @@ details.how[open] summary::after{content:"−"}
 /* comanda holding the theme */
 .comanda{position:relative;background:var(--paper);color:var(--paper-ink);border:1px solid var(--paper-line);border-radius:4px 4px 10px 10px;padding:14px 14px 8px;
   transform:rotate(-1deg);box-shadow:0 8px 18px rgba(10,20,45,.35)}
-.comanda::before{content:"";position:absolute;left:0;right:0;top:-6px;height:12px;
-  background:radial-gradient(circle at 8px 0, var(--wall) 5px, transparent 5.5px) repeat-x;background-size:16px 12px}
+.comanda::before{content:"";position:absolute;left:0;right:0;top:-7px;height:8px;
+  background:linear-gradient(135deg,var(--paper) 50%,transparent 50%) 0 0/10px 8px repeat-x,linear-gradient(-135deg,var(--paper) 50%,transparent 50%) 0 0/10px 8px repeat-x}
 .comanda .lbl{color:var(--paper-muted);display:flex;justify-content:space-between;align-items:center;height:28px;border-bottom:1px dashed var(--paper-line);padding-bottom:6px;font-weight:700}
 .reel{height:3.3rem;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;contain:layout paint}
 #catTxt{font-family:var(--hand);font-weight:400;font-size:1.55rem;line-height:1.2;text-wrap:balance;display:block;max-width:100%}
@@ -265,7 +267,7 @@ body.bottled #lobbyNote:not(:empty),body.bottled #homeErr{background:var(--surfa
 ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
 ::view-transition-new(root){z-index:9999}
 .themewipe{position:fixed;inset:0;z-index:30;pointer-events:none}
-.opening{position:fixed;inset:0;z-index:26;overflow:hidden;background-color:var(--wall);background-image:linear-gradient(var(--wall-wash),var(--wall-wash)),var(--tile);background-size:auto,72px 72px}
+.opening{position:fixed;inset:0;z-index:26;overflow:hidden;background-color:var(--wall);background-image:var(--floor,none);background-size:360px 360px}
 .opening .bottle{position:absolute;left:0;bottom:0;width:100%;height:400vw;will-change:transform}
 .opening .capg,.opening .foam{transform-box:fill-box;transform-origin:50% 100%}
 .opening .foam{opacity:0}
@@ -484,7 +486,7 @@ const MOON='<svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M
 function isDark(){return S.theme==="dark"||(S.theme!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches)}
 function applyTheme(){
   const r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",S.theme);
-  const d=isDark();$("themeBtn").innerHTML=d?SUN:MOON;$("themeBtn").setAttribute("aria-label",d?"Mudar para modo claro":"Mudar para modo escuro");
+  const d=isDark();$("themeBtn").innerHTML=d?SUN:MOON;applyFloor();$("themeBtn").setAttribute("aria-label",d?"Mudar para modo claro":"Mudar para modo escuro");
 }
 function toggleTheme(){
   const next=isDark()?"light":"dark";
@@ -1047,6 +1049,51 @@ function turnBottle(a,b,id,fromId){
 }
 addEventListener("resize",()=>{clearTimeout(CYL.rt);CYL.rt=setTimeout(paintLabel,200)});
 (document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>paintLabel());
+
+/* ---------- chão do boteco: piso de caquinho vermelho visto de cima, desenhado uma vez num canvas ----------
+   Cacos = células de Voronoi com bordas que se repetem sem emenda; rejunte claro entre eles;
+   por cima, umas tampinhas jogadas e marca de copo. */
+var floorCache;
+function makeFloor(dark){
+  floorCache=floorCache||{};const key=dark?"d":"l";if(floorCache[key])return floorCache[key];
+  const W=360,H=360,N=58,cv=document.createElement("canvas");cv.width=W;cv.height=H;
+  const g=cv.getContext("2d"),img=g.createImageData(W,H),d=img.data;
+  let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const pts=[];for(let i=0;i<N;i++){
+    const tone=rnd(),warm=rnd();
+    /* vermelho-tijolo com variação de caco pra caco; alguns cacos mais escuros, uns poucos amarelados como no piso de verdade */
+    let r=150+tone*55,gg=42+tone*22+(warm>.93?60:0),b=34+tone*16;
+    if(warm<.08){r*=.72;gg*=.72;b*=.72}
+    pts.push({x:rnd()*W,y:rnd()*H,r,g:gg,b});
+  }
+  const grout=dark?[46,40,42]:[222,214,203];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    let d1=1e9,d2=1e9,k=0;
+    for(let i=0;i<N;i++){
+      let dx=Math.abs(x-pts[i].x),dy=Math.abs(y-pts[i].y);if(dx>W/2)dx=W-dx;if(dy>H/2)dy=H-dy;
+      const dd=dx*dx+dy*dy;if(dd<d1){d2=d1;d1=dd;k=i}else if(dd<d2)d2=dd;
+    }
+    const edge=Math.sqrt(d2)-Math.sqrt(d1),o=(y*W+x)*4,p=pts[k],n=(rnd()-.5)*14;
+    let c=edge<2.4?grout.map(v=>v+n*.5):[p.r+n,p.g+n*.6,p.b+n*.6];
+    if(edge>=2.4&&edge<4){c=c.map(v=>v*.86)}            /* borda do caco levemente gasta */
+    if(dark)c=c.map((v,i)=>v*(edge<2.4?1:.5));
+    d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=255;
+  }
+  g.putImageData(img,0,0);
+  /* marca de copo e tampinhas */
+  const ring=(x,y,r)=>{g.strokeStyle=dark?"rgba(0,0,0,.35)":"rgba(70,20,10,.28)";g.lineWidth=5;g.beginPath();g.arc(x,y,r,.3,Math.PI*1.85);g.stroke()};
+  const cap=(x,y,r,rot)=>{g.save();g.translate(x,y);g.rotate(rot);
+    g.fillStyle="rgba(0,0,0,.35)";g.beginPath();g.arc(2,3,r+1,0,7);g.fill();
+    for(let i=0;i<21;i++){g.fillStyle=i%2?(dark?"#7e7a72":"#b9b5ab"):(dark?"#5c5952":"#8f8b82");g.beginPath();g.moveTo(0,0);g.arc(0,0,r,i*Math.PI*2/21,(i+1)*Math.PI*2/21);g.fill()}
+    g.fillStyle=dark?"#8a867d":"#e9e6df";g.beginPath();g.arc(0,0,r*.78,0,7);g.fill();
+    g.fillStyle=dark?"#7a2018":"#c0261c";g.font=`bold ${r*.9}px Georgia,serif`;g.textAlign="center";g.textBaseline="middle";g.fillText("TS",0,1);g.restore()};
+  ring(250,90,30);ring(80,270,24);
+  cap(60,70,14,.4);cap(300,250,13,2.1);cap(190,320,12,-.8);
+  return floorCache[key]=cv.toDataURL("image/png");
+}
+function applyFloor(){
+  try{document.body.style.setProperty("--floor",`url(${makeFloor(isDark())})`)}catch(e){}
+}
 
 /* ---------- frame loop ---------- */
 function frame(){
