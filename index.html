@@ -11,18 +11,18 @@
 <style>
 /* Boteco à noite: a mesa de plástico amarela é o tabuleiro, as letras são tampinhas de cerveja, o tema vem escrito numa comanda. Single dark look by choice. */
 :root{
-  --night:#17110d; --night-2:#211812; --night-3:#2c2018; --line:#3d2d21;
+  --night:#0b1226; --night-2:#121c36; --night-3:#1a2647; --line:#26355c;
   --yellow:#f6c21c; --yellow-hi:#ffd84a; --yellow-dk:#c99a05;
   --cap:#f3efe6; --cap-shade:#cfc7b6; --cap-rim:#b9b2a3; --cap-rim-dk:#8f887a; --cap-ink:#c0261c;
-  --cap-used:#3a2c22; --red:#e5402f; --paper:#fbf6ea; --paper-ink:#2a2018; --paper-line:#e4d9c3;
-  --ink:#f5ede1; --muted:#b8a691;
+  --cap-used:#2b3858; --red:#e5402f; --paper:#fbf6ea; --paper-ink:#2a2018; --paper-line:#e4d9c3;
+  --ink:#eef2fa; --muted:#a3b0c9;
   --display:"Bowlby One","Arial Black",Impact,sans-serif;
   --hand:"Permanent Marker","Comic Sans MS","Segoe Print",cursive;
   --body:"Barlow","Segoe UI",system-ui,sans-serif;
   --surface:var(--night-2); --surface-2:var(--night); --sign:var(--display); --accent-text:var(--yellow);
-  --red-dk:#8e2117; --paper-muted:#9a8a70; --wall:var(--night); --scrim:rgba(10,7,5,.86);
-  --cap-ink:#c0261c; --used-face:#3a2c22; --used-rim:#4a3a2e; --used-rim-dk:#33271e; --used-ink:#6e5a48; --yellow-edge:#a77f00;
-  --glow:#2a1d14;
+  --red-dk:#8e2117; --paper-muted:#9a8a70; --wall:var(--night); --scrim:rgba(4,8,20,.86);
+  --cap-ink:#c0261c; --used-face:#2b3858; --used-rim:#3a4a70; --used-rim-dk:#25304d; --used-ink:#7584a6; --yellow-edge:#a77f00;
+  --glow:#1b2a52;
   color-scheme:dark;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -469,7 +469,7 @@ function toggleTheme(){
     return;
   }
   /* older browsers: a circle of the new background grows from the button, then the theme switches under it */
-  const w=document.createElement("div");w.className="themewipe";w.style.background=next==="dark"?"#17110d":"#efe9e1";document.body.appendChild(w);
+  const w=document.createElement("div");w.className="themewipe";w.style.background=next==="dark"?"#0b1226":"#efe9e1";document.body.appendChild(w);
   const a=w.animate({clipPath:[from,to]},{duration:550,easing:"cubic-bezier(.65,0,.35,1)",fill:"forwards"});
   a.onfinish=()=>{set();w.animate({opacity:[1,0]},{duration:220}).onfinish=()=>w.remove()};
 }
