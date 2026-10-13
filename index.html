@@ -546,7 +546,18 @@ function newMatch(players){
      letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],molec:S.molec,cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
   newRound();
 }
-function pickCat(){const pool=CATS.concat(G.molec?MOLEC:[],G.custom);let c;do{c=pool[Math.floor(Math.random()*pool.length)]}while(c===G.lastCat&&pool.length>1);G.lastCat=c;G.cat=c;G.catBy="draw"}
+/* temas saem como cartas de um baralho: nenhum repete até todos terem saído.
+   O baralho fica guardado no celular do juiz por 12 h, então vale entre partidas da mesma noite. */
+function pickCat(){
+  const pool=CATS.concat(G.molec?MOLEC:[],G.custom);
+  let deck=lsGet("tecla-deck");
+  if(!deck||Date.now()-deck.t>12*3600e3)deck={t:Date.now(),seen:[]};
+  let left=pool.filter(c=>!deck.seen.includes(c));
+  if(!left.length){deck.seen=G.lastCat?[G.lastCat]:[];left=pool.filter(c=>c!==G.lastCat);if(!left.length)left=pool}
+  const c=left[Math.floor(Math.random()*left.length)];
+  deck.seen.push(c);deck.t=Date.now();lsSet("tecla-deck",deck);
+  G.lastCat=c;G.cat=c;G.catBy="draw";
+}
 function joinable(){return !(G.ov&&(G.ov.kind==="win"||G.ov.kind==="few"||G.ov.kind==="final"))}
 function newRound(){
   /* the round only counts once it can actually be played: waiting for people never burns a round */
