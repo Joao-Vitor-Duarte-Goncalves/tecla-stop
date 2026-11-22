@@ -101,7 +101,8 @@ function act(from,a){
       if(MODE==="local"||G.state!=="run"||G.heckle===false)break;
       const p=G.pl.find(x=>x.id===from),cur=G.pl[G.cur];
       if(!p||p.alive||!cur||cur.id===from||!HECKLES[a.k])break;
-      const now=Date.now();if(p.hkAt&&now-p.hkAt<2500)break;p.hkAt=now;
+      /* cada um a cada 2,5 s, e a mesa toda no máximo uma a cada 1,5 s (pra não virar chuva em mesa grande) */
+      const now=Date.now();if(p.hkAt&&now-p.hkAt<2500)break;if(G.hkAt&&now-G.hkAt<1500)break;p.hkAt=now;G.hkAt=now;
       G.hk={k:a.k,by:p.name,to:cur.id,n:(G.hk?G.hk.n:0)+1};break}
     case "oops":{
       /* the player who just tapped can take it back for a moment and gets back the time they had */
@@ -109,7 +110,10 @@ function act(from,a){
       if(!h||h.l!==a.l||G.state!=="run"||performance.now()-h.at>OOPS_MS+800)break;
       const p=G.pl[h.who];if(!p||!p.alive)break;
       if(MODE!=="local"&&from!==p.id)break;
-      G.hist.pop();G.used=G.used.filter(x=>x!==h.l);G.cur=h.who;G.end=performance.now()+h.left;G.seq++;break}
+      G.hist.pop();G.used=G.used.filter(x=>x!==h.l);G.cur=h.who;G.end=performance.now()+h.left;G.seq++;
+      /* no online, os outros veem a letra voltar: avisa o porquê */
+      if(MODE!=="local")G.note={text:`${p.name} corrigiu a letra ${h.l}.`,n:(G.note?G.note.n:0)+1};
+      break}
     case "undo":{
       if(!isHostish(from)||(G.state!=="run"&&G.state!=="pause"))break;
       const h=G.hist.pop();if(!h)break;G.used=G.used.filter(x=>x!==h.l);

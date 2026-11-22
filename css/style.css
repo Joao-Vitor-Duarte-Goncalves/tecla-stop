@@ -237,12 +237,16 @@ details.how[open] summary::after{content:"−"}
 }
 
 .tapnote{position:absolute;left:50%;top:-6px;transform:translate(-50%,-100%);z-index:6;display:flex;align-items:center;gap:8px;background:var(--night-2);border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 12px;font-weight:700;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.3)}
+.tapnote{overflow:hidden}
+.oopsbar{position:absolute;left:14px;right:14px;bottom:2px;height:2px;border-radius:2px;background:var(--accent-text);transform-origin:left;animation:oopsbar linear forwards}
+@keyframes oopsbar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 .tapnote b{font-family:var(--display);font-weight:400;font-size:1.2rem;color:var(--accent-text)}
 .tapnote button{background:var(--cap-ink);color:#fff;border-radius:999px;padding:6px 12px;font-weight:800;font-size:.85rem}
-.hkpop{position:absolute;left:50%;top:50%;z-index:7;transform:translate(-50%,-50%);pointer-events:none;text-align:center;background:var(--night-2);border:2px solid var(--red);border-radius:16px;padding:8px 14px;box-shadow:0 8px 20px rgba(0,0,0,.35);animation:hkpop 1.6s ease-out forwards}
+.hkpop{position:absolute;left:50%;top:100%;z-index:7;transform:translate(-50%,4px);pointer-events:none;text-align:center;background:var(--night-2);border:2px solid var(--red);border-radius:16px;padding:8px 14px;box-shadow:0 8px 20px rgba(0,0,0,.35);animation:hkpop 1.6s ease-out forwards}
 .hkpop b{display:block;font-family:var(--display);font-weight:400;font-size:1.5rem;color:var(--red)}
 .hkpop span{font-size:.8rem;font-weight:700;color:var(--muted)}
-@keyframes hkpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%) scale(1)}}
+/* a provocação aparece embaixo da mesa, nunca em cima do cronômetro de quem está na vez */
+@keyframes hkpop{0%{opacity:0;transform:translate(-50%,14px) scale(.6)}15%{opacity:1;transform:translate(-50%,4px) scale(1.08)}25%{transform:translate(-50%,4px) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-12px) scale(1)}}
 
 /* roda de jogadores e ferramentas */
 .roda{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px}

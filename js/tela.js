@@ -48,7 +48,9 @@ function pressLetter(l){
 }
 function showOops(l){
   clearTimeout(oopsTimer);let n=$("tapnote");if(n)n.remove();
-  n=document.createElement("div");n.id="tapnote";n.className="tapnote";n.innerHTML=`<span>Tocou <b>${l}</b></span><button type="button">Errei a letra</button>`;
+  n=document.createElement("div");n.id="tapnote";n.className="tapnote";n.setAttribute("role","status");n.setAttribute("aria-live","polite");
+  /* a barrinha encolhe no tempo que dá pra corrigir */
+  n.innerHTML=`<span>Tocou <b>${l}</b></span><button type="button">Errei a letra</button><i class="oopsbar" style="animation-duration:${OOPS_MS}ms" aria-hidden="true"></i>`;
   $("board").appendChild(n);
   n.querySelector("button").onclick=e=>{e.stopPropagation();dispatch({t:"oops",l});n.remove();clearTimeout(oopsTimer)};
   oopsTimer=setTimeout(()=>n.remove(),OOPS_MS);

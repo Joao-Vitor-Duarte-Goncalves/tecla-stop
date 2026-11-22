@@ -32,7 +32,7 @@ Se todas as letras forem usadas, as letras voltam, o tempo cai 2 s (mínimo 4 s)
 
 ### Errei a letra
 
-Por 2,2 s depois de tocar, quem tocou pode desfazer ("Errei a letra") e recupera o tempo que tinha.
+Por 2,2 s depois de tocar, quem tocou pode desfazer ("Errei a letra") e recupera o tempo que tinha. Uma barrinha no aviso mostra o tempo que resta; no online, todo mundo recebe "Ana corrigiu a letra A.".
 
 ### Comandos do juiz (host ou modo local)
 
@@ -48,7 +48,7 @@ Por 2,2 s depois de tocar, quem tocou pode desfazer ("Errei a letra") e recupera
 
 ### Provocações
 
-Se estiverem ligadas (opção de quem abre a mesa, `G.heckle`), no online quem já saiu da rodada pode mandar "TIC-TAC!", "VAI BEBER!" ou "HAHAHA" pra quem está na vez (1 a cada 2,5 s). O alvo sente vibração e som.
+Se estiverem ligadas (opção de quem abre a mesa, `G.heckle`), no online quem já saiu da rodada pode mandar "TIC-TAC!", "VAI BEBER!" ou "HAHAHA" pra quem está na vez (cada um a cada 2,5 s e a mesa toda no máximo uma a cada 1,5 s; o balão aparece embaixo da mesa, sem cobrir o cronômetro). O alvo sente vibração e som.
 
 ## Pontos
 
