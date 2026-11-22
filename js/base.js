@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ---------- prefs ---------- */
-let S={players:[],dur:10,rounds:10,molec:true,theme:"auto",hard:false,sound:true,name:"",key:""};
+let S={players:[],dur:10,rounds:10,molec:true,heckle:true,theme:"auto",hard:false,sound:true,name:"",key:""};
 try{const s=JSON.parse(localStorage.getItem("tecla-stop")||"null");if(s)S=Object.assign(S,s)}catch(e){}
 if(!S.key)S.key=Math.random().toString(36).slice(2,10);
 const save=()=>{try{localStorage.setItem("tecla-stop",JSON.stringify(S))}catch(e){}};
@@ -57,13 +57,15 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(S.t
 applyTheme();
 $("molec").checked=S.molec;$("molec").onchange=e=>{S.molec=e.target.checked;save()};
 $("face").checked=S.face!==false;$("face").onchange=e=>{S.face=e.target.checked;save()};
+$("heckle").checked=S.heckle!==false;$("heckle").onchange=e=>{S.heckle=e.target.checked;save()};
 $("hard").checked=S.hard;$("hard").onchange=e=>{S.hard=e.target.checked;save()};
 function renderSeg(){$("seg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.s===S.dur))}
 $("seg").onclick=e=>{const b=e.target.closest("button");if(b){S.dur=+b.dataset.s;save();renderSeg()}};
-function renderSegR(){$("segR").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.r===S.rounds))}
+function renderSegR(){$("segR").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.r===S.rounds));$("livreNote").hidden=S.rounds!==0}
 $("segR").onclick=e=>{const b=e.target.closest("button");if(b){S.rounds=+b.dataset.r;save();renderSegR()}};
 renderSeg();renderSegR();
-function mountSettings(where){$(where).appendChild($("settings"));$("settings").hidden=false}
+/* provocações só existem no online: a chave some na preparação do "Um celular só" */
+function mountSettings(where){$(where).appendChild($("settings"));$("settings").hidden=false;$("heckleRow").hidden=where==="localSettings"||MODE==="local"}
 document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>leave());
 const hashCode=(location.hash||"").replace("#","").toUpperCase();
 /* modo convite: quem chega pelo link vê só o nome e "Sentar na mesa ABCD", pra não abrir uma mesa própria sem querer */

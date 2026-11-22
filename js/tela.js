@@ -149,7 +149,7 @@ function render(prev){
   const lk=isLocked();$("rkBtn").textContent=lk?"🔒 Placar":"Placar";$("rkBtn").classList.toggle("locked",lk);
   renderSheet();
   $("undo").hidden=!hostish;$("pause").hidden=!hostish;
-  const meP=V.pl.find(p=>p.id===ME);$("heckles").hidden=!(MODE!=="local"&&V.state==="run"&&meP&&!meP.alive&&meP.on!==false);
+  const meP=V.pl.find(p=>p.id===ME);$("heckles").hidden=!(MODE!=="local"&&V.heckle!==false&&V.state==="run"&&meP&&!meP.alive&&meP.on!==false);
   {const n=V.hk?V.hk.n:0;if(lastHk<0)lastHk=n;else if(n!==lastHk){lastHk=n;if(V.hk)showHeckle(V.hk)}}
   $("game").classList.toggle("hk",!$("heckles").hidden);$("newCat").hidden=!hostish;renderSnd();
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";

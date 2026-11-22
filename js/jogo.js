@@ -8,7 +8,7 @@ let peer=null, hostConn=null, conns=new Map(), lobbyPl=[], roomCode="";
 /* ---------- engine (local / host only) ---------- */
 function newMatch(players){
   G={pl:players.map(p=>({id:p.id,name:p.name,drinks:0,wins:0,pts:0,alive:true,on:true})),round:0,maxRounds:S.rounds,starter:-1,
-     letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],molec:S.molec,cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
+     letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],molec:S.molec,heckle:S.heckle!==false,cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
   newRound();
 }
 /* temas saem como cartas de um baralho: nenhum repete até todos terem saído.
@@ -97,7 +97,7 @@ function act(from,a){
       G.cur=nextAliveFrom(G.cur);resetTimer();break;
     case "heckle":{
       /* quem já saiu da rodada pode apressar quem está na vez */
-      if(MODE==="local"||G.state!=="run")break;
+      if(MODE==="local"||G.state!=="run"||G.heckle===false)break;
       const p=G.pl.find(x=>x.id===from),cur=G.pl[G.cur];
       if(!p||p.alive||!cur||cur.id===from||!HECKLES[a.k])break;
       const now=Date.now();if(p.hkAt&&now-p.hkAt<2500)break;p.hkAt=now;
@@ -135,7 +135,7 @@ function act(from,a){
       if(!isHostish(from)||G.state!=="over")break;
       G.pl=G.pl.filter(p=>p.on);G.pl.forEach(p=>{p.wins=0;p.drinks=0;p.pts=0});G.round=0;G.maxRounds=S.rounds;G.starter=-1;
       /* "Nova partida" usa o que estiver escolhido agora (tempo, rodadas, molecagem, Q/X/Z) */
-      G.letters=BASE.concat(S.hard?HARD:[]);G.molec=S.molec;G.seq++;newRound();break}
+      G.letters=BASE.concat(S.hard?HARD:[]);G.molec=S.molec;G.heckle=S.heckle!==false;G.seq++;newRound();break}
     case "continue":{
       if(G.state!=="ov"&&!(G.ov&&G.ov.kind==="few"))break;
       const k=G.ov&&G.ov.kind;G.lastOut=null;
@@ -158,7 +158,7 @@ function timeout(){
 /* ---------- sync ---------- */
 function snapshot(){
   const left=G.state==="run"?Math.max(0,G.end-performance.now()):G.state==="pause"?G.pausedLeft:null;
-  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,hostAway:!!G.hostAway,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,canRedo:canRedo(),canSpare:!!G.lastOut&&G.state==="ov",seq:G.seq,full:fullCopy()};
+  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,hostAway:!!G.hostAway,heckle:G.heckle!==false,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,canRedo:canRedo(),canSpare:!!G.lastOut&&G.state==="ov",seq:G.seq,full:fullCopy()};
 }
 /* a copy of the whole game (without device clocks) so a guest can take over the table */
 function fullCopy(){const c=JSON.parse(JSON.stringify(G));if(G.state==="run"){c.state="pause";c.pausedLeft=Math.max(1500,G.end-performance.now())}c.end=0;(c.hist||[]).forEach(h=>{h.at=0});return c}

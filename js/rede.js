@@ -40,7 +40,7 @@ $("localGo").onclick=()=>{
 function randCode(){const A="ABCDEFGHJKLMNPRSTUVWXYZ";let s="";for(let i=0;i<4;i++)s+=A[Math.floor(Math.random()*A.length)];return s}
 function peerOk(){if(typeof Peer==="undefined"){homeErr("Não carregou a parte de rede. Confere a internet e recarrega a página.");return false}return true}
 let pickLobby=-1;
-function summaryText(s){return `${s.dur} s por vez, ${s.rounds?s.rounds+" rodadas":"rodadas livres"}${s.molec?", com molecagem":""}${s.hard?", com Q, X e Z":""}.`}
+function summaryText(s){return `${s.dur} s por vez, ${s.rounds?s.rounds+" rodadas":"rodadas livres"}${s.molec?", com molecagem":""}${s.hard?", com Q, X e Z":""}${s.heckle===false?", sem provocações":""}.`}
 function lobbyView(){
   $("roomCode").textContent=roomCode||"····";
   const host=MODE==="host",list=host?lobbyPl:(V&&V.lobby)||[];
@@ -205,7 +205,7 @@ function onLeave(c){
 }
 function broadcastLobby(){
   const me=lobbyPl.find(p=>p.id===ME);
-  const msg={t:"lobby",code:roomCode,players:lobbyPl,host:me?me.name:"",set:{dur:S.dur,rounds:S.rounds,molec:S.molec,hard:S.hard}};
+  const msg={t:"lobby",code:roomCode,players:lobbyPl,host:me?me.name:"",set:{dur:S.dur,rounds:S.rounds,molec:S.molec,hard:S.hard,heckle:S.heckle!==false}};
   conns.forEach(c=>{try{c.open&&c.send(msg)}catch(e){}});lobbyView();saveHost();
 }
 $("hostGo").onclick=()=>{if(lobbyPl.length<2)return;unlockAudio();newMatch(lobbyPl);sync()};

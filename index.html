@@ -60,18 +60,20 @@
 
 <!-- SETTINGS (moved into local setup or lobby) -->
 <div class="panel" id="settings" hidden>
-  <span class="lbl">Tempo por vez</span>
-  <div class="seg" id="seg">
-    <button type="button" data-s="6">6s</button><button type="button" data-s="8">8s</button>
-    <button type="button" data-s="10">10s</button><button type="button" data-s="15">15s</button>
+  <span class="lbl" id="segLbl">Tempo por vez</span>
+  <div class="seg" id="seg" role="group" aria-labelledby="segLbl">
+    <button type="button" data-s="6"><b>6s</b><small>puxado</small></button><button type="button" data-s="8"><b>8s</b><small>rápido</small></button>
+    <button type="button" data-s="10"><b>10s</b><small>normal</small></button><button type="button" data-s="15"><b>15s</b><small>tranquilo</small></button>
   </div>
-  <span class="lbl">Rodadas na partida</span>
-  <div class="seg" id="segR">
+  <span class="lbl" id="segRLbl">Rodadas na partida</span>
+  <div class="seg" id="segR" role="group" aria-labelledby="segRLbl">
     <button type="button" data-r="5">5</button><button type="button" data-r="10">10</button>
     <button type="button" data-r="15">15</button><button type="button" data-r="0">Livre</button>
   </div>
-  <div class="toggle"><span>Temas de molecagem</span><input type="checkbox" id="molec"></div>
-  <div class="toggle"><span>Incluir Q, X e Z (modo sofrência)</span><input type="checkbox" id="hard"></div>
+  <p class="note" id="livreNote" hidden>Termina quando vocês quiserem, pelo botão "Encerrar partida" no Placar.</p>
+  <label class="toggle" for="molec"><span>Temas de molecagem<small>Temas de duplo sentido, tipo "Coisas que se coloca na boca".</small></span><input type="checkbox" id="molec"></label>
+  <label class="toggle" for="hard"><span>Incluir Q, X e Z (modo sofrência)</span><input type="checkbox" id="hard"></label>
+  <label class="toggle" for="heckle" id="heckleRow"><span>Provocações de quem já saiu<small>No online, quem saiu da rodada pode mandar "TIC-TAC!" e "VAI BEBER!" pra quem está na vez.</small></span><input type="checkbox" id="heckle"></label>
 </div>
 
 <!-- LOCAL SETUP -->

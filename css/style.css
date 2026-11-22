@@ -130,6 +130,9 @@ details.how[open] summary::after{content:"−"}
 .summary{text-align:center}
 .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .seg button{background:var(--night);border:1px solid var(--line);border-radius:10px;padding:10px 0;font-weight:800;font-variant-numeric:tabular-nums}
+.seg button b{display:block;font-weight:800}
+.seg button small{display:block;font-size:.7rem;font-weight:600;color:var(--muted);margin-top:1px}
+.seg button[aria-pressed=true] small{color:var(--paper-ink)}
 .seg button[aria-pressed=true]{background:var(--yellow);color:var(--paper-ink);border-color:var(--yellow)}
 .roomcode{font-family:var(--display);font-size:3.2rem;letter-spacing:.2em;color:var(--accent-text);text-align:center;line-height:1;padding-left:.2em}
 #settings{gap:12px}

@@ -10,6 +10,7 @@ Como o motor em `js/jogo.js` funciona. Se o código mudar, atualize aqui.
 | Rodadas | 5, 10, 15 ou Livre (`0`, sem fim) | 10 |
 | Temas de molecagem | liga/desliga | ligado |
 | Letras difíceis (Q, X, Z) | liga/desliga | desligado |
+| Provocações de quem já saiu (só online) | liga/desliga | ligado |
 | Som | liga/desliga | ligado |
 
 Letras normais: `A B C D E F G H I J L M N O P R S T U V` (sem K, Q, W, X, Y, Z).
@@ -47,7 +48,7 @@ Por 2,2 s depois de tocar, quem tocou pode desfazer ("Errei a letra") e recupera
 
 ### Provocações
 
-No online, quem já saiu da rodada pode mandar "TIC-TAC!", "VAI BEBER!" ou "HAHAHA" pra quem está na vez (1 a cada 2,5 s). O alvo sente vibração e som.
+Se estiverem ligadas (opção de quem abre a mesa, `G.heckle`), no online quem já saiu da rodada pode mandar "TIC-TAC!", "VAI BEBER!" ou "HAHAHA" pra quem está na vez (1 a cada 2,5 s). O alvo sente vibração e som.
 
 ## Pontos
 
