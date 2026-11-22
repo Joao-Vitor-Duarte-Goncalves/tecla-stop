@@ -164,12 +164,51 @@ $("rkBtn").onclick=()=>openSheet();
 $("rkov").onclick=e=>{if(e.target===$("rkov"))closeSheet()};
 $("pause").onclick=()=>dispatch({t:V&&V.state==="pause"?"resume":"pause"});
 $("newCat").onclick=()=>dispatch({t:"newcat"});
-$("catOpen").onclick=()=>{$("catov").hidden=false;$("catIn").value="";$("catIn").focus()};
-$("catCancel").onclick=()=>{$("catov").hidden=true};
-$("catForm").onsubmit=e=>{e.preventDefault();const c=$("catIn").value.trim();if(!c){$("catIn").focus();return}$("catov").hidden=true;$("catIn").blur();dispatch({t:"setcat",cat:c})};
-$("addOpen").onclick=()=>{$("addov").hidden=false;$("addMidIn").value="";$("addMidIn").focus()};
-$("addCancel").onclick=()=>{$("addov").hidden=true};
-$("addMid").onsubmit=e=>{e.preventDefault();const n=$("addMidIn").value.trim();if(!n){$("addMidIn").focus();return}$("addov").hidden=true;$("addMidIn").blur();dispatch({t:"addlocal",name:n})};
+/* ---------- Escrever tema: os últimos temas escritos ficam guardados neste celular como atalho ---------- */
+const RECENT_KEY="tecla-temas";
+function recentThemes(){const r=lsGet(RECENT_KEY);return Array.isArray(r)?r:[]}
+function useTheme(c){
+  closeCat();dispatch({t:"setcat",cat:c});
+  lsSet(RECENT_KEY,[c].concat(recentThemes().filter(x=>x.toLowerCase()!==c.toLowerCase())).slice(0,8));
+}
+function closeCat(){$("catov").hidden=true;$("catIn").blur()}
+$("catOpen").onclick=()=>{
+  const r=recentThemes().filter(x=>!V||x!==V.cat);
+  $("catRecentList").innerHTML=r.map((t,i)=>`<button type="button" class="chip" data-i="${i}">${esc(t)}</button>`).join("");
+  $("catRecent").hidden=!r.length;$("catRecentList").onclick=e=>{const b=e.target.closest("button");if(b)useTheme(r[+b.dataset.i])};
+  $("catov").hidden=false;$("catIn").value="";$("catIn").focus();
+};
+$("catCancel").onclick=closeCat;
+$("catForm").onsubmit=e=>{e.preventDefault();const c=$("catIn").value.trim().slice(0,40);if(!c){$("catIn").focus();return}useTheme(c)};
+
+/* ---------- Chegou alguém? (um celular só) ----------
+   Com a rodada rolando, a janela cobre a mesa: o tempo pausa enquanto ela está aberta */
+let addPaused=false;
+function closeAdd(){
+  if($("addov").hidden)return;$("addov").hidden=true;$("addMidIn").blur();
+  if(addPaused&&V&&V.state==="pause")dispatch({t:"resume"});addPaused=false;
+}
+$("addOpen").onclick=()=>{
+  if(!V)return;
+  addPaused=MODE==="local"&&V.state==="run";if(addPaused)dispatch({t:"pause"});
+  const later=!!(V.ov&&["win","few","final"].includes(V.ov.kind));
+  $("addWhen").textContent=later?"A pessoa entra na próxima rodada.":"A pessoa entra na rodada que está rolando.";
+  $("addAfter").innerHTML=V.pl.map((p,i)=>`<option value="${i}"${i===V.pl.length-1?" selected":""}>${esc(p.name)}</option>`).join("");
+  $("addMsg").hidden=true;$("addov").hidden=false;$("addMidIn").value="";$("addMidIn").focus();
+};
+$("addCancel").onclick=closeAdd;
+$("addMid").onsubmit=e=>{
+  e.preventDefault();const n=$("addMidIn").value.trim();if(!n){$("addMidIn").focus();return}
+  if(V&&V.pl.length>=MAX_PLAYERS){$("addMsg").textContent=`A roda já tem ${MAX_PLAYERS} pessoas, o máximo.`;$("addMsg").hidden=false;return}
+  const after=+$("addAfter").value;closeAdd();dispatch({t:"addlocal",name:n,after:Number.isInteger(after)?after:undefined});
+};
+/* as duas janelas fecham tocando fora ou com Esc, como as outras */
+$("catov").onclick=e=>{if(e.target===$("catov"))closeCat()};
+$("addov").onclick=e=>{if(e.target===$("addov"))closeAdd()};
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape")return;
+  if(!$("catov").hidden)closeCat();else if(!$("addov").hidden)closeAdd();else if(!$("plov").hidden)$("plov").hidden=true;
+});
 
 
 /* tampinhas da mesa da home: tocar faz barulho de tampinha */

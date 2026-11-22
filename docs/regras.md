@@ -38,8 +38,8 @@ Por 2,2 s depois de tocar, quem tocou pode desfazer ("Errei a letra") e recupera
 
 - **Desfazer**: volta a última letra.
 - **Pausar / Voltar**.
-- **Outro tema** / **Escrever tema** (só antes do "Valendo").
-- **+ Adicionar** (só no modo local, até 16): entra na rodada atual se ela ainda está aberta. Nome repetido ganha número ("João 2"), aqui e na lista antes da partida, que também tem o limite de 16.
+- **Outro tema** / **Escrever tema** (só antes do "Valendo"). Os últimos 8 temas escritos ficam guardados no celular do juiz e aparecem como atalho.
+- **+ Adicionar** (só no modo local, até 16): entra na rodada atual se ela ainda está aberta. A janela pergunta "Senta depois de" (`after`), pra pessoa entrar no lugar certo da roda, e pausa o tempo enquanto está aberta. Nome repetido ganha número ("João 2"), aqui e na lista antes da partida, que também tem o limite de 16.
 - **Virar o nome pra quem está na vez** (modo local, ligado por padrão): com o celular deitado no meio da roda, o centro da mesa gira pro lugar de quem joga. O lugar *i* de *n* fica a *i*·360/*n* graus, em sentido horário a partir da base do celular.
 - **Refazer rodada** (segundo toque confirma): do Valendo até alguém tocar "Próxima rodada", volta tudo pro momento antes do Valendo: letras, quem saiu, pontos, goles e vitória da rodada. O tema e quem começa ficam, e o número da rodada não avança. Dá pra trocar o tema em seguida. Funciona com a rodada rolando, pausada ou com a tela de "bebe"/"venceu" aberta. A foto do placar fica em `G.roundSnap`, tirada no `start`.
 - **Não valeu** (na tela de quem bebeu): quem acabou de estourar o tempo volta pra roda sem gole nem ponto e joga de novo com o tempo cheio. Se tinha encerrado a rodada, a vitória também é desfeita. Usa `G.lastOut`.
@@ -93,7 +93,7 @@ Além dos pontos, conta `wins` (rodadas vencidas) e `drinks` (goles).
 | `pause` / `resume` | juiz | Pausa e volta |
 | `newcat` / `setcat` `{cat}` | juiz | Sorteia outro tema / usa tema escrito (até 40 caracteres) |
 | `heckle` `{k}` | eliminado (online) | Provocação |
-| `addlocal` `{name}` | modo local | Adiciona jogador |
+| `addlocal` `{name, after}` | modo local | Adiciona jogador depois do índice `after` (sem ele, no fim da roda) |
 | `continue` | bebe e zerou: quem vem depois ou o juiz (no local, qualquer um); venceu e esperando: qualquer um | Fecha o overlay e segue. Em bebe/zerou o tempo de quem vem depois começa na hora, por isso só essa pessoa ("Tô pronto, valendo") ou o juiz dão o valendo |
 | `rematch` | juiz | Nova partida |
 

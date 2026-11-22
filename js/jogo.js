@@ -129,7 +129,14 @@ function act(from,a){
     case "addlocal":{
       const n=uniqueName(String(a.name||"").trim().slice(0,16),G.pl.map(p=>p.name));
       if(MODE!=="local"||!n||G.pl.length>=MAX_PLAYERS)break;
-      G.pl.push({id:"p"+Date.now(),name:n,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});break}
+      /* senta depois de quem a pessoa escolheu (after = índice); sem isso, no fim da roda.
+         Inserir no meio desloca os índices guardados (vez, quem começa, histórico, último que bebeu) */
+      const at=Number.isInteger(a.after)&&a.after>=-1&&a.after<G.pl.length?a.after+1:G.pl.length;
+      G.pl.splice(at,0,{id:"p"+Date.now(),name:n,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});
+      const sh=i=>i>=at?i+1:i;
+      G.cur=sh(G.cur);G.starter=sh(G.starter);(G.hist||[]).forEach(h=>{h.who=sh(h.who)});
+      if(G.lastOut){G.lastOut.i=sh(G.lastOut.i);if(G.lastOut.w!=null)G.lastOut.w=sh(G.lastOut.w)}
+      break}
     case "finish":{
       /* Encerrar partida: vai direto pro ranking final (o único jeito de terminar o modo Livre).
          Uma rodada que ainda não teve Valendo não conta. */
