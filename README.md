@@ -16,3 +16,5 @@ js/rede.js      um celular só, mesa online (PeerJS) e reconexão
 ```
 
 A ordem dos `<script>` no `index.html` importa: cada arquivo usa o que foi declarado nos anteriores. Funciona em qualquer hospedagem estática (Vercel, Netlify, GitHub Pages).
+
+Documentação completa em [`docs/`](docs/README.md): arquitetura, regras, rede e deploy.
