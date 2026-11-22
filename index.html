@@ -4,6 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Tecla Stop do Bar</title>
+<meta name="description" content="Jogo de roda pro bar: sai um tema, cada um fala uma palavra e toca a letra antes do tempo acabar. Estourou, bebe.">
+<meta name="theme-color" content="#0b1226">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/icon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tecla Stop">
+<!-- prévia do link (WhatsApp, Telegram, redes): o convite com #ABCD usa a mesma -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tecla Stop do Bar">
+<meta property="og:title" content="Tecla Stop do Bar: te chamaram pra mesa">
+<meta property="og:description" content="Sai um tema, cada um fala uma palavra e toca a tampinha antes do tempo acabar. Abre o link e senta na mesa.">
+<meta property="og:url" content="https://tecla-stop.vercel.app/">
+<meta property="og:image" content="https://tecla-stop.vercel.app/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A mesa amarela do Tecla Stop com tampinhas de letras e a comanda com o tema">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Barlow:wght@500;600;700;800&family=Permanent+Marker&display=swap">
 <!-- integrity: se o CDN servir um arquivo diferente do que foi conferido, o navegador não roda. Ao trocar a versão, gere o hash de novo (docs/deploy.md) -->
@@ -53,6 +73,11 @@
       <li>No fim das rodadas sai o placar por pontos.</li>
     </ul>
   </details>
+  <!-- instalar como app: Android mostra o botão (beforeinstallprompt); no iPhone, o caminho pelo Compartilhar -->
+  <div class="install" id="installBox" hidden>
+    <button class="linkbtn" id="installBtn" type="button" hidden>Instalar no celular</button>
+    <p class="note" id="iosHint" hidden>Pra instalar no iPhone: toque em Compartilhar e depois em "Adicionar à Tela de Início". Assim o "Um celular só" abre até sem internet.</p>
+  </div>
   <!-- a mesa aparecendo na borda de baixo; as tampinhas fazem barulho quando tocadas -->
   <div class="homemesa" aria-hidden="true"><div class="mesa" id="homeMesa">
     <span class="cap" style="--a:-54deg">T</span><span class="cap" style="--a:-36deg">U</span><span class="cap" style="--a:-18deg">V</span><span class="cap" style="--a:0deg">A</span><span class="cap" style="--a:18deg">B</span><span class="cap" style="--a:36deg">C</span><span class="cap" style="--a:54deg">D</span>

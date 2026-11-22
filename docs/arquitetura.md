@@ -11,6 +11,10 @@ js/jogo.js      estado global e motor do jogo: newMatch, newRound, act, timeout,
 js/tela.js      desenho: applyView, render, teclado de letras, roleta de tema, overlays, placar
 js/cena.js      abertura da garrafa (e a versão curta da revanche), parallax, loop de frame (timer)
 js/rede.js      modo "um celular só", mesa online (host/convidado), reconexão, restauração após recarregar
+sw.js           service worker: deixa o jogo abrir sem internet depois da 1ª visita
+manifest.webmanifest  app instalável (nome, cores, ícones)
+icons/          ícone (SVG e PNGs) e og.png, a prévia do link; og-source.html gera a og.png
+vercel.json     cabeçalhos de segurança (CSP etc.)
 ```
 
 Dependências externas (CDN, no `<head>`):
@@ -18,6 +22,7 @@ Dependências externas (CDN, no `<head>`):
 - [PeerJS 1.5.4](https://peerjs.com/): conexão P2P (WebRTC) entre celulares.
 - [NoSleep.js 0.12.0](https://github.com/richtr/NoSleep.js): mantém a tela acesa onde não há Wake Lock API.
 - Google Fonts: Bowlby One, Barlow, Permanent Marker.
+- [qrcodejs 1.0.0](https://github.com/davidshimjs/qrcodejs): QR code do convite na sala.
 
 ## Ordem dos scripts importa
 

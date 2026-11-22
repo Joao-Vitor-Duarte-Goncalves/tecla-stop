@@ -102,3 +102,16 @@ function keepAwake(){
 document.addEventListener("click",()=>{if(MODE)keepAwake()},{capture:true});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&MODE)keepAwake()});
 
+
+/* ---------- app instalável e offline ---------- */
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))
+  addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});
+{
+  const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!/crios|fxios|edgios/i.test(navigator.userAgent);
+  let deferred=null;
+  if(!standalone&&ios){$("installBox").hidden=false;$("iosHint").hidden=false}
+  addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;$("installBox").hidden=false;$("installBtn").hidden=false});
+  $("installBtn").onclick=async()=>{if(!deferred)return;deferred.prompt();try{await deferred.userChoice}catch(e){}deferred=null;$("installBox").hidden=true};
+  addEventListener("appinstalled",()=>{$("installBox").hidden=true});
+}

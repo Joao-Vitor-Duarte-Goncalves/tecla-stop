@@ -13,6 +13,10 @@ js/jogo.js      regras: rodada, timer, pontos, sorteio de tema
 js/tela.js      desenha o jogo, teclado de letras, roleta, placar
 js/cena.js      abertura da garrafa, parallax e loop do timer
 js/rede.js      um celular só, mesa online (PeerJS) e reconexão
+sw.js           service worker: deixa o jogo abrir sem internet depois da 1ª visita
+manifest.webmanifest  app instalável (nome, cores, ícones)
+icons/          ícone (SVG e PNGs) e og.png, a prévia do link; og-source.html gera a og.png
+vercel.json     cabeçalhos de segurança (CSP etc.)
 ```
 
 A ordem dos `<script>` no `index.html` importa: cada arquivo usa o que foi declarado nos anteriores. Funciona em qualquer hospedagem estática (Vercel, Netlify, GitHub Pages).

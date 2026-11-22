@@ -50,3 +50,20 @@ Depois de mexer, confira no celular:
 - [ ] Sala: QR code abre o convite; trocar dois nomes de lugar e embaralhar; tirar alguém (ele volta pra home com aviso); Sair com gente na mesa pede confirmação.
 - [ ] Recarregar a página no meio da partida (host e convidado voltam).
 - [ ] Fim da partida: ranking revelado e "Nova partida".
+
+## App instalável e offline
+
+- `sw.js` guarda os arquivos do site e os scripts/fontes dos CDNs. Os arquivos do site vêm da rede primeiro, então um deploy novo aparece na hora pra quem está online; sem rede (ou com rede travada por mais de 2,5 s), usa a cópia guardada. Ao adicionar um arquivo novo em `js/` ou `css/`, ponha ele na lista `SHELL` do `sw.js` e troque `VERSION` (ex.: `ts-v2`), pra que a cópia offline inclua o arquivo.
+- O "Um celular só" funciona sem internet depois de abrir o site uma vez com internet. A mesa online continua precisando de rede.
+- Android mostra "Instalar no celular" na home; no iPhone aparece a dica de usar Compartilhar > Adicionar à Tela de Início.
+
+## Ícone e prévia do link
+
+- `icons/icon.svg` é o ícone (a mesa amarela com a tampinha do T). Os PNGs (`icon-32`, `icon-192`, `icon-512`, `apple-touch-icon`) são ele renderizado.
+- `icons/og.png` (1200×630) é a imagem que aparece quando o link é mandado no WhatsApp e afins. Ela é gerada a partir de `icons/og-source.html`: abra no navegador com a janela em 1200×630 e tire um print, ou rode o Edge/Chrome em modo headless:
+
+```bash
+msedge --headless=new --hide-scrollbars --force-device-scale-factor=1 --window-size=1200,630 --virtual-time-budget=8000 --screenshot=og.png icons/og-source.html
+```
+
+- O WhatsApp guarda a prévia por um tempo; depois de trocar a imagem, pode demorar pra aparecer a nova.
