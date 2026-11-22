@@ -1,12 +1,25 @@
 /* ---------- local mode ---------- */
-function renderChips(){
-  $("chips").innerHTML="";
-  S.players.forEach((n,i)=>{const c=document.createElement("span");c.className="chip";c.textContent=n;
-    const b=document.createElement("button");b.type="button";b.setAttribute("aria-label","Tirar "+n);b.textContent="×";
-    b.onclick=()=>{S.players.splice(i,1);save();renderChips()};c.appendChild(b);$("chips").appendChild(c)});
+/* ordem da roda (local e sala): a vez passa na ordem da lista. Toca num nome e depois em outro pra trocar os dois de lugar */
+const SEAT_HINT="A vez passa nessa ordem. Toque num nome e depois em outro pra trocar os dois de lugar.";
+function seatChip(name,i,picked,removeLabel){
+  return `<span class="chip${picked?" picked":""}${removeLabel?"":" noclose"}"><button type="button" class="seat" data-i="${i}" aria-pressed="${picked}"><i>${i+1}</i>${esc(name)}</button>${removeLabel?`<button type="button" class="x" data-x="${i}" aria-label="${esc(removeLabel)}">×</button>`:""}</span>`;
 }
+function seatTap(list,i,pick){if(pick<0)return i;if(pick===i)return -1;const t=list[pick];list[pick]=list[i];list[i]=t;return -1}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+let pickLocal=-1;
+function renderChips(){
+  const L=S.players;if(pickLocal>=L.length)pickLocal=-1;
+  $("chips").innerHTML=L.map((n,i)=>seatChip(n,i,i===pickLocal,"Tirar "+n)).join("");
+  $("localHint").textContent=L.length<2?"Ponha os nomes na ordem em que vocês estão sentados na roda.":pickLocal>=0?`Agora toque em quem vai trocar de lugar com ${L[pickLocal]}.`:SEAT_HINT;
+  $("localShuffle").hidden=L.length<3;
+}
+$("chips").onclick=e=>{
+  const x=e.target.closest(".x");if(x){S.players.splice(+x.dataset.x,1);pickLocal=-1;save();renderChips();return}
+  const b=e.target.closest(".seat");if(!b)return;pickLocal=seatTap(S.players,+b.dataset.i,pickLocal);save();renderChips();
+};
+$("localShuffle").onclick=()=>{shuffle(S.players);pickLocal=-1;save();renderChips()};
 $("addForm").onsubmit=e=>{e.preventDefault();const v=$("nameIn").value.trim();if(v&&S.players.length<12){S.players.push(v);save();renderChips()}$("nameIn").value="";$("nameIn").focus()};
-$("mLocal").onclick=()=>{homeErr("");MODE=null;renderChips();mountSettings("localSettings");show("local")};
+$("mLocal").onclick=()=>{homeErr("");MODE=null;pickLocal=-1;renderChips();mountSettings("localSettings");show("local");if(!S.players.length)$("nameIn").focus()};
 $("localGo").onclick=()=>{
   if(S.players.length<2){$("nameIn").placeholder="Precisa de pelo menos 2";$("nameIn").focus();return}
   unlockAudio();keepAwake();MODE="local";ME=null;lastLetters="";
@@ -16,14 +29,55 @@ $("localGo").onclick=()=>{
 /* ---------- network ---------- */
 function randCode(){const A="ABCDEFGHJKLMNPRSTUVWXYZ";let s="";for(let i=0;i<4;i++)s+=A[Math.floor(Math.random()*A.length)];return s}
 function peerOk(){if(typeof Peer==="undefined"){homeErr("Não carregou a parte de rede. Confere a internet e recarrega a página.");return false}return true}
+let pickLobby=-1;
+function summaryText(s){return `${s.dur} s por vez, ${s.rounds?s.rounds+" rodadas":"rodadas livres"}${s.molec?", com molecagem":""}${s.hard?", com Q, X e Z":""}.`}
 function lobbyView(){
   $("roomCode").textContent=roomCode||"····";
-  const list=MODE==="host"?lobbyPl:(V&&V.lobby)||[];
-  $("lobbyPlayers").innerHTML=list.map(p=>`<span class="chip noclose">${esc(p.name)}${p.id===ME?" (você)":""}</span>`).join("")||`<span class="note">Ninguém ainda.</span>`;
-  if(MODE==="host"){$("hostGo").hidden=false;$("hostGo").disabled=list.length<2;$("lobbyNote").textContent=list.length<2?"Esperando pelo menos mais 1 pessoa entrar.":""}
-  else{$("hostGo").hidden=true;$("lobbyNote").textContent="Esperando quem abriu a mesa começar."}
-  $("judgeNote").hidden=MODE!=="host";
+  const host=MODE==="host",list=host?lobbyPl:(V&&V.lobby)||[];
+  if(pickLobby>=list.length)pickLobby=-1;
+  $("lobbyPlayers").innerHTML=list.map((p,i)=>host
+    ?seatChip(p.name+(p.id===ME?" (você)":""),i,i===pickLobby,p.id===ME?"":"Tirar "+p.name+" da mesa")
+    :`<span class="chip noclose"><span class="seat"><i>${i+1}</i>${esc(p.name)}${p.id===ME?" (você)":""}</span></span>`).join("")||`<span class="note">Ninguém ainda.</span>`;
+  $("lobbyHint").hidden=!host||list.length<2;
+  $("lobbyHint").textContent=pickLobby>=0?`Agora toque em quem vai trocar de lugar com ${list[pickLobby].name}.`:SEAT_HINT;
+  $("lobbyShuffle").hidden=!host||list.length<3;
+  if(host){$("hostGo").hidden=false;$("hostGo").disabled=list.length<2;$("lobbyNote").textContent=list.length<2?"Esperando pelo menos mais 1 pessoa entrar.":""}
+  else{
+    const owner=V&&V.host;$("hostGo").hidden=true;
+    $("lobbyNote").textContent=owner?`Esperando ${owner} começar.`:"Esperando quem abriu a mesa começar.";
+    if(owner)$("lobbyRole").textContent="Mesa de "+owner;
+  }
+  /* quem entrou vê como vai ser a partida; quem abriu vê o painel de opções */
+  const st=!host&&V&&V.set;$("lobbySummary").hidden=!st;if(st)$("lobbySummary").textContent=summaryText(st);
+  $("judgeNote").hidden=!host;
+  renderQR();
 }
+/* QR code com o link de convite (biblioteca qrcodejs; sem ela, a sala segue sem o QR) */
+let qrFor="";
+function inviteUrl(){return location.origin+location.pathname+"#"+roomCode}
+function renderQR(){
+  const ready=/^[A-Z]{4}$/.test(roomCode)&&typeof QRCode!=="undefined"&&(MODE==="host"?!$("copyLink").hidden:MODE==="guest");
+  $("qrWrap").hidden=!ready;if(!ready||qrFor===roomCode)return;
+  qrFor=roomCode;$("qr").innerHTML="";
+  try{new QRCode($("qr"),{text:inviteUrl(),width:336,height:336,colorDark:"#2a2018",colorLight:"#fbf6ea",correctLevel:QRCode.CorrectLevel.M})}catch(e){qrFor="";$("qrWrap").hidden=true}
+}
+/* alguém sentou: tic de tampinha e uma vibração curta pra quem abriu a mesa */
+function seatSound(){beep(700,.05,"triangle",.06);setTimeout(()=>beep(1000,.07,"triangle",.06),70);try{navigator.vibrate&&navigator.vibrate(40)}catch(e){}}
+function kick(p){
+  if(!p||p.id===ME)return;
+  lobbyPl=lobbyPl.filter(q=>q!==p);pickLobby=-1;
+  const c=conns.get(p.id);conns.delete(p.id);
+  if(c){c.pid=null;try{c.send({t:"kicked"})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400)}
+  broadcastLobby();
+}
+$("lobbyPlayers").onclick=e=>{
+  if(MODE!=="host"||G)return;
+  const x=e.target.closest(".x");if(x){kick(lobbyPl[+x.dataset.x]);return}
+  const b=e.target.closest(".seat");if(!b)return;pickLobby=seatTap(lobbyPl,+b.dataset.i,pickLobby);broadcastLobby();
+};
+$("lobbyShuffle").onclick=()=>{shuffle(lobbyPl);pickLobby=-1;broadcastLobby()};
+/* opções mudaram na sala: manda o resumo de novo pra quem já sentou */
+["click","change"].forEach(ev=>$("settings").addEventListener(ev,()=>{if(MODE==="host"&&!G)broadcastLobby()}));
 
 /* ---------- persistence helpers ---------- */
 const HOST_KEY="tecla-stop-host", ROOM_KEY="tecla-stop-room", MAX_AGE=3*3600e3;
@@ -72,7 +126,7 @@ function startHost(name,restore,takeover){
 async function openHostPeer(tries,keepCode){
   const cfg=await iceConfig();if(MODE!=="host")return;
   const p=new Peer(PREFIX+roomCode+(hostSuffix||""),{debug:0,config:cfg});peer=p;
-  p.on("open",()=>{if(peer!==p)return;takingOver=false;netBar("");$("lobbyStatus").textContent="Mesa aberta. Chama a galera ou passa o número.";$("copyLink").hidden=false;saveHost()});
+  p.on("open",()=>{if(peer!==p)return;takingOver=false;netBar("");$("lobbyStatus").textContent="Mesa aberta. Chama a galera ou passa o número.";$("copyLink").hidden=false;renderQR();saveHost()});
   p.on("connection",c=>{
     c.lastSeen=Date.now();
     c.on("data",d=>onHostData(c,d));
@@ -120,8 +174,8 @@ function onHostData(c,d){
     const id=String(d.key||"").slice(0,20)||Math.random().toString(36).slice(2),name=String(d.name||"Alguém").slice(0,16);
     const old=conns.get(id);if(old&&old!==c){old.pid=null;try{old.close()}catch(e){}}
     c.pid=id;conns.set(id,c);
-    if(!G){const ex=lobbyPl.find(p=>p.id===id);if(ex)ex.name=name;else lobbyPl.push({id,name});broadcastLobby()}
-    else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&!ex.bench&&joinable())ex.alive=true}else G.pl.push({id,name,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});if(G.ov&&G.ov.kind==="few")newRound();sync()}
+    if(!G){const ex=lobbyPl.find(p=>p.id===id);if(ex)ex.name=name;else{lobbyPl.push({id,name});seatSound()}broadcastLobby()}
+    else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&!ex.bench&&joinable())ex.alive=true}else{G.pl.push({id,name,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});seatSound()}if(G.ov&&G.ov.kind==="few")newRound();sync()}
     return;
   }
   if(c.pid)act(c.pid,d);
@@ -140,13 +194,14 @@ function onLeave(c){
   sync();
 }
 function broadcastLobby(){
-  const msg={t:"lobby",code:roomCode,players:lobbyPl};
+  const me=lobbyPl.find(p=>p.id===ME);
+  const msg={t:"lobby",code:roomCode,players:lobbyPl,host:me?me.name:"",set:{dur:S.dur,rounds:S.rounds,molec:S.molec,hard:S.hard}};
   conns.forEach(c=>{try{c.open&&c.send(msg)}catch(e){}});lobbyView();saveHost();
 }
 $("hostGo").onclick=()=>{if(lobbyPl.length<2)return;unlockAudio();newMatch(lobbyPl);sync()};
 /* convite: compartilhar nativo do celular (WhatsApp etc.); se não tiver, copia o link */
 async function invite(btn,label){
-  const url=location.origin+location.pathname+"#"+roomCode;
+  const url=inviteUrl();
   const text="Bora jogar Tecla Stop? Senta na mesa "+roomCode+": "+url;
   if(navigator.share){try{await navigator.share({title:"Tecla Stop",text,url});return}catch(e){if(e&&e.name==="AbortError")return}}
   try{await navigator.clipboard.writeText(text);btn.textContent=label;setTimeout(()=>{btn.textContent=btn.dataset.l||btn.textContent},2500)}catch(e){$("lobbyStatus").textContent=url}
@@ -170,7 +225,7 @@ function startGuest(name,code,auto){
   seatIdx=0;seatMisses=0;lastFull=null;$("takeover").hidden=true;
   MODE="guest";ME=S.key;roomCode=code;guestName=name;G=null;V=null;lastLetters="";
   everConnected=!!auto;rcStart=Date.now();rcN=0;
-  $("lobbyRole").textContent="Mesa de outra pessoa";$("lobbyStatus").textContent=auto?"Voltando pra mesa…":"Entrando…";$("copyLink").hidden=true;$("hostSettings").innerHTML="";
+  $("lobbyRole").textContent="Entrando na mesa";$("qrWrap").hidden=true;$("lobbySummary").hidden=true;$("lobbyStatus").textContent=auto?"Voltando pra mesa…":"Entrando…";$("copyLink").hidden=true;$("hostSettings").innerHTML="";
   show("lobby");$("roomCode").textContent=code;$("lobbyPlayers").innerHTML="";$("hostGo").hidden=true;$("lobbyNote").textContent="";
   if(auto)netBar("Voltando pra mesa "+code+"…");
   attempt();
@@ -227,7 +282,8 @@ function retryLater(ms){
 }
 function onGuestData(d){
   if(!d||typeof d!=="object"||d.t==="pong")return;
-  if(d.t==="lobby"){show("lobby");$("ov").hidden=true;V={lobby:d.players};lobbyView();V=null;return}
+  if(d.t==="kicked"){guestFail("Quem abriu a mesa te tirou dela. Se foi engano, é só sentar de novo.");return}
+  if(d.t==="lobby"){show("lobby");$("ov").hidden=true;V={lobby:d.players,host:d.host,set:d.set};lobbyView();V=null;return}
   if(d.t==="state"){if(d.full)lastFull=d.full;applyView(d)}
 }
 function guestFail(msg){
@@ -278,3 +334,7 @@ function leave(){lsDel(HOST_KEY);lsDel(ROOM_KEY);teardown();homeErr("");clearInv
   const r=lsGet(ROOM_KEY);
   if(r&&r.code&&r.name&&Date.now()-r.t<MAX_AGE&&(!/^[A-Z]{4}$/.test(hashCode)||hashCode===r.code)){keepAwake();startGuest(r.name,r.code,true)}
 })();
+
+/* Sair da sala: quem abriu a mesa com gente sentada precisa confirmar, porque fecha a mesa de todo mundo */
+armConfirm($("lobbyQuit"),()=>"Sair",()=>"Fechar a mesa?",()=>leave());
+{const b=$("lobbyQuit"),armed=b.onclick;b.onclick=e=>{if(MODE==="host"&&lobbyPl.length>1)armed(e);else leave()}}

@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ---------- prefs ---------- */
-let S={players:["Ana","Bruno","Carla"],dur:10,rounds:10,molec:true,theme:"auto",hard:false,sound:true,name:"",key:""};
+let S={players:[],dur:10,rounds:10,molec:true,theme:"auto",hard:false,sound:true,name:"",key:""};
 try{const s=JSON.parse(localStorage.getItem("tecla-stop")||"null");if(s)S=Object.assign(S,s)}catch(e){}
 if(!S.key)S.key=Math.random().toString(36).slice(2,10);
 const save=()=>{try{localStorage.setItem("tecla-stop",JSON.stringify(S))}catch(e){}};

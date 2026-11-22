@@ -33,5 +33,6 @@ Depois de mexer, confira no celular:
 - [ ] **Abrir mesa** num celular e **entrar** em outro pelo código e pelo link do convite.
 - [ ] Pelo link do convite, a home mostra só o nome e "Sentar na mesa ABCD"; "Abrir outra mesa ou jogar num celular só" volta pra home normal.
 - [ ] Botão Voltar/Sair em todas as telas.
+- [ ] Sala: QR code abre o convite; trocar dois nomes de lugar e embaralhar; tirar alguém (ele volta pra home com aviso); Sair com gente na mesa pede confirmação.
 - [ ] Recarregar a página no meio da partida (host e convidado voltam).
 - [ ] Fim da partida: ranking revelado e "Nova partida".

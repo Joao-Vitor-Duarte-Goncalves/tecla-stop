@@ -113,14 +113,27 @@ details.how[open] summary::after{content:"−"}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{background:var(--night);border:1px solid var(--line);border-radius:999px;padding:7px 8px 7px 13px;display:flex;align-items:center;gap:6px;font-weight:700}
 .chip.noclose{padding-right:13px}
-.chip button{position:relative;background:var(--line);width:24px;height:24px;border-radius:50%;font-size:.9rem;line-height:1}
-.chip button::after{content:"";position:absolute;inset:-10px}
+.chip .x{position:relative;background:var(--line);width:24px;height:24px;border-radius:50%;font-size:.9rem;line-height:1}
+.chip .x::after{content:"";position:absolute;inset:-10px}
+/* ordem da roda: toca num nome e depois em outro pra trocar os dois de lugar */
+.chip .seat{background:transparent;font-weight:700;font-size:1rem;padding:0;color:var(--ink);font-variant-numeric:tabular-nums}
+.chip .seat i{font-style:normal;color:var(--muted);font-weight:800;margin-right:6px;font-size:.85rem}
+.chip.picked{border-color:var(--yellow);background:var(--night-2);box-shadow:0 0 0 2px var(--yellow)}
+.shuffle{align-self:flex-start}
+/* Começar a partida sempre à vista no pé da tela */
+.stickygo{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:5;box-shadow:0 4px 0 var(--yellow-dk),0 10px 24px rgba(0,0,0,.35)}
+.qrwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.qr{background:var(--paper);padding:10px;border-radius:10px;line-height:0}
+.qr img,.qr canvas{width:168px;height:168px;display:block}
+.summary{text-align:center}
 .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .seg button{background:var(--night);border:1px solid var(--line);border-radius:10px;padding:10px 0;font-weight:800;font-variant-numeric:tabular-nums}
 .seg button[aria-pressed=true]{background:var(--yellow);color:var(--paper-ink);border-color:var(--yellow)}
 .roomcode{font-family:var(--display);font-size:3.2rem;letter-spacing:.2em;color:var(--accent-text);text-align:center;line-height:1;padding-left:.2em}
 #settings{gap:12px}
-.judge{margin:0;background:var(--yellow);color:var(--paper-ink);border-radius:12px;padding:10px 12px;font-size:.88rem;line-height:1.4}
+/* aviso do juiz: nota neutra com fio amarelo, pra não parecer botão */
+.judge{margin:0;border-left:3px solid var(--yellow);padding:4px 0 4px 12px;color:var(--muted);font-size:.88rem;line-height:1.45}
+.judge b{color:var(--ink)}
 
 /* JOGO: a tela tem altura fixa e a mesa ocupa o espaço que sobrar */
 .game{height:100%;gap:10px}

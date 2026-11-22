@@ -36,7 +36,8 @@ Host → convidado:
 
 | Mensagem | Quando |
 |---|---|
-| `{t:"lobby", code, players}` | Na sala de espera, a cada entrada ou saída |
+| `{t:"lobby", code, players, host, set}` | Na sala de espera, a cada entrada, saída, troca de ordem ou mudança de opção. `players` está na ordem da roda; `host` é o nome de quem abriu; `set` traz `dur`, `rounds`, `molec`, `hard` pro resumo |
+| `{t:"kicked"}` | Quem abriu a mesa tirou a pessoa da sala. O convidado volta pra home com o aviso e pode sentar de novo |
 | `{t:"state", …snapshot, full}` | A cada mudança no jogo. `full` é a cópia inteira do jogo (sem relógios), usada na troca de juiz |
 | `{t:"pong"}` | Resposta ao ping |
 
