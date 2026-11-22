@@ -94,7 +94,7 @@ Além dos pontos, conta `wins` (rodadas vencidas) e `drinks` (goles).
 | `newcat` / `setcat` `{cat}` | juiz | Sorteia outro tema / usa tema escrito (até 40 caracteres) |
 | `heckle` `{k}` | eliminado (online) | Provocação |
 | `addlocal` `{name}` | modo local | Adiciona jogador |
-| `continue` | qualquer um | Fecha o overlay e segue (bebe, zerou, venceu, esperando) |
+| `continue` | bebe e zerou: quem vem depois ou o juiz (no local, qualquer um); venceu e esperando: qualquer um | Fecha o overlay e segue. Em bebe/zerou o tempo de quem vem depois começa na hora, por isso só essa pessoa ("Tô pronto, valendo") ou o juiz dão o valendo |
 | `rematch` | juiz | Nova partida |
 
 Estados de `G.state`: `idle` (antes do Valendo), `run`, `pause`, `ov` (overlay na tela), `over` (fim da partida).

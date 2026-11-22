@@ -192,6 +192,12 @@ function openPlayer(id){
 }
 $("plov").onclick=e=>{if(e.target===$("plov"))$("plov").hidden=true};
 $("plist").addEventListener("click",e=>{const b=e.target.closest("button.pl");if(b)openPlayer(b.dataset.id)});
+/* a janela é anunciada como aviso e o foco vai pro botão principal (no fim da partida, pra própria lousa) */
+function focusOv(){
+  const b=$("ovbox"),t=b.querySelector(".slipname,.big"),go=$("ovgo");
+  b.setAttribute("aria-label",t?t.textContent+(b.querySelector(".stamp")?" bebe":""):"Aviso");
+  try{(V&&V.ov&&V.ov.kind!=="final"&&go?go:b).focus({preventScroll:true})}catch(e){}
+}
 /* o painel de configurações pode estar dentro da caixa do fim da partida: tira de lá antes de redesenhar a caixa */
 function parkSettings(){const s=$("settings");if(s&&$("ovbox").contains(s)){s.hidden=true;document.body.appendChild(s)}}
 function renderOverlay(){
@@ -203,10 +209,12 @@ function renderOverlay(){
   /* quem bebe sai numa comanda: o nome escrito à mão e o carimbo de "bebe" */
   const slip=o.kind==="drink"||(o.kind==="win"&&!!o.loser);
   $("ovbox").classList.toggle("slip",slip);$("ovbox").classList.toggle("lousa",o.kind==="final");
-  const drinker=n=>`<div class="slipname">${esc(n)}</div><div class="stamp">Bebe!</div>`;
+  /* no celular de quem bebeu, o nome vira "Você" e o celular vibra forte */
+  const meDrinks=MODE!=="local"&&((o.kind==="drink"&&o.id===ME)||(o.kind==="win"&&o.loserId===ME));
+  const drinker=n=>`<div class="slipname">${meDrinks?"Você":esc(n)}</div><div class="stamp">Bebe!</div>`;
   if(o.kind==="drink")html=`${drinker(o.name)}${isLocked()?"":outLine(o.place,o.gain)}<p>Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
   else if(o.kind==="win")html=(o.loser?`${drinker(o.loser)}${isLocked()?"":outLine(o.loserPlace,o.loserGain)}`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div>${isLocked()?"":`<p class="ptsline"><b>${ptsTxt(o.gain)}</b> por ficar até o fim, 1 por cada um que saiu antes</p>`}<p>Escolhe alguém pra dar um gole.</p>`;
-  else if(o.kind==="reset")html=`<div class="big win">Zerou o tabuleiro</div><p>As letras voltam e o tempo cai para <span class="name">${o.dur}s</span>. Mesmo tema.</p>`;
+  else if(o.kind==="reset")html=`<div class="big win">Zerou o tabuleiro</div><p>As letras voltam e o tempo cai para <span class="name">${o.dur}s</span>. Mesmo tema.</p>${o.next?`<p>Próxima vez: <span class="name">${esc(o.next)}</span></p>`:""}`;
   else if(o.kind==="few")html=`<div class="big win mid">Esperando a galera</div><p>Precisa de pelo menos 2 pessoas conectadas. A rodada começa sozinha quando alguém voltar.</p>`;
   if(o.kind==="final"){
     const host=MODE!=="guest";
@@ -218,16 +226,24 @@ function renderOverlay(){
     $("ov").hidden=false;wireQuit();
     if(host)$("ovgo").onclick=()=>{unlockAudio();dispatch({t:"rematch"})};
     $("ovshare").onclick=()=>shareResult($("ovshare"));
-    startReveal(V.pl.length);
+    startReveal(V.pl.length);focusOv();
     return;
   }
-  const btn=o.kind==="win"?(o.last?"Ver ranking":"Próxima rodada"):o.kind==="few"?"Tentar de novo":"Continuar";
-  /* correções de quem abriu a mesa: devolver quem bebeu injustamente, ou refazer a rodada inteira */
   const host=MODE!=="guest",who=o.kind==="drink"?o.name:o.loser;
+  /* bebe e zerou começam o tempo de quem vem depois: no online só essa pessoa (ou o juiz) vê o botão */
+  const starts=o.kind==="drink"||o.kind==="reset",imNext=MODE!=="local"&&o.nextId===ME;
+  const canGo=!starts||MODE==="local"||host||imNext;
+  const btn=o.kind==="win"?(o.last?"Ver ranking":"Próxima rodada"):o.kind==="few"?"Tentar de novo":imNext?"Tô pronto, valendo":starts&&o.next?`Valendo pra ${o.next}`:"Continuar";
+  /* correções de quem abriu a mesa: devolver quem bebeu injustamente, ou refazer a rodada inteira */
   const fix=host&&((slip&&V.canSpare)||V.canRedo)?`<div class="ovfix">${slip&&V.canSpare?`<button class="btn ghost small" id="ovspare" type="button">Não valeu: ${esc(who)} volta</button>`:""}${V.canRedo?`<button class="btn ghost small" id="ovredo" type="button">Refazer rodada</button>`:""}</div>`:"";
-  $("ovbox").innerHTML=html+`<button class="btn" id="ovgo">${btn}</button>`+fix+quitBtn();
+  /* sair não fica nas telas que aparecem toda hora (bebe, zerou): o Sair do topo está a um toque depois */
+  const go=canGo?`<button class="btn" id="ovgo">${esc(btn)}</button>`:`<p class="waitnext">Esperando ${esc(o.next||"a próxima pessoa")} dar o valendo.</p>`;
+  $("ovbox").innerHTML=html+go+fix+(starts?"":quitBtn());
   $("ov").hidden=false;wireQuit();
-  $("ovgo").onclick=()=>{unlockAudio();dispatch({t:"continue"})};
+  if($("ovgo"))$("ovgo").onclick=()=>{unlockAudio();dispatch({t:"continue"})};
+  if(imNext){try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}}
+  if(meDrinks){try{navigator.vibrate&&navigator.vibrate([220,90,220])}catch(e){}}
+  focusOv();
   if($("ovspare"))$("ovspare").onclick=()=>dispatch({t:"spare"});
   if($("ovredo"))armConfirm($("ovredo"),()=>"Refazer rodada",()=>"Apaga a rodada?",()=>dispatch({t:"redo"}));
   if(o.kind==="drink"||o.kind==="win"&&o.loser){beep(140,.6,"sawtooth",.12);const b=$("ovbox");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake")}

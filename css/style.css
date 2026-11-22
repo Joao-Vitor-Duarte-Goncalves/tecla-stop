@@ -286,6 +286,8 @@ button.pl::after{content:"";position:absolute;inset:-6px -2px}
 .ovset summary::after{content:"+";font-family:var(--display);color:var(--yellow)}
 .ovset[open] summary::after{content:"−"}
 .ovset #settings{margin-top:10px;background:var(--night)}
+.waitnext{font-weight:700}
+.ovbox:focus{outline:none}
 .ovfix{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .ovfix .btn{flex:1 1 auto}
 /* quem bebe: a caixa vira uma comanda de papel, com o nome à mão e um carimbo.

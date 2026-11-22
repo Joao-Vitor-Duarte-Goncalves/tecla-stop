@@ -93,7 +93,7 @@ function act(from,a){
       if(G.state!=="run"||G.used.includes(a.l)||!G.letters.includes(a.l))break;
       if(MODE!=="local"&&(!curP||from!==curP.id))break;
       G.used.push(a.l);G.hist.push({l:a.l,who:G.cur,at:performance.now(),left:Math.max(1500,G.end-performance.now())});G.seq++;
-      if(G.used.length===G.letters.length){G.state="ov";G.dur=Math.max(4,G.dur-2);G.ov={kind:"reset",dur:G.dur};break}
+      if(G.used.length===G.letters.length){G.state="ov";G.dur=Math.max(4,G.dur-2);const nx=G.pl[nextAliveFrom(G.cur)];G.ov={kind:"reset",dur:G.dur,next:nx.name,nextId:nx.id};break}
       G.cur=nextAliveFrom(G.cur);resetTimer();break;
     case "heckle":{
       /* quem já saiu da rodada pode apressar quem está na vez */
@@ -138,7 +138,10 @@ function act(from,a){
       G.letters=BASE.concat(S.hard?HARD:[]);G.molec=S.molec;G.heckle=S.heckle!==false;G.seq++;newRound();break}
     case "continue":{
       if(G.state!=="ov"&&!(G.ov&&G.ov.kind==="few"))break;
-      const k=G.ov&&G.ov.kind;G.lastOut=null;
+      const k=G.ov&&G.ov.kind;
+      /* bebe e zerou começam o tempo de quem vem depois: no online, só essa pessoa (ou o juiz) dá o "valendo" */
+      if((k==="drink"||k==="reset")&&MODE!=="local"&&!isHostish(from)&&G.ov.nextId!==from)break;
+      G.lastOut=null;
       if(k==="drink"){G.ov=null;G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()}
       else if(k==="reset"){G.ov=null;G.used=[];G.hist=[];G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()}
       else if(k==="win"&&isLastRound()){G.state="over";G.ov={kind:"final"};G.roundSnap=null;G.seq++}
@@ -150,8 +153,8 @@ function act(from,a){
 function timeout(){
   const p=G.pl[G.cur],gain=G.outs?G.outs:-1;G.lastOut={i:G.cur,gain};p.drinks++;p.pts+=gain;G.outs++;p.alive=false;p.lost=true;G.state="ov";
   const place=G.outs-1;
-  if(!endIfLastStanding()){G.ov={kind:"drink",name:p.name,gain,place,next:G.pl[nextAliveFrom(G.cur)].name}}
-  else{G.ov.loser=p.name;G.ov.loserGain=gain;G.ov.loserPlace=place;const wi=G.pl.findIndex(x=>x.alive);if(wi>=0){G.lastOut.w=wi;G.lastOut.wg=G.ov.gain}}
+  if(!endIfLastStanding()){const nx=G.pl[nextAliveFrom(G.cur)];G.ov={kind:"drink",id:p.id,name:p.name,gain,place,next:nx.name,nextId:nx.id}}
+  else{G.ov.loser=p.name;G.ov.loserId=p.id;G.ov.loserGain=gain;G.ov.loserPlace=place;const wi=G.pl.findIndex(x=>x.alive);if(wi>=0){G.lastOut.w=wi;G.lastOut.wg=G.ov.gain}}
   G.seq++;sync();
 }
 
