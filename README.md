@@ -11,7 +11,7 @@ js/temas.js     listas de temas (normal e molecagem)
 js/base.js      preferências, troca de tela, tema claro/escuro, som
 js/jogo.js      regras: rodada, timer, pontos, sorteio de tema
 js/tela.js      desenha o jogo, teclado de letras, roleta, placar
-js/cena.js      abertura, garrafa e chão do boteco
+js/cena.js      abertura da garrafa, parallax e loop do timer
 js/rede.js      um celular só, mesa online (PeerJS) e reconexão
 ```
 

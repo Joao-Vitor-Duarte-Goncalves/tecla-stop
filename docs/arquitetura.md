@@ -9,7 +9,7 @@ js/temas.js     CATS (temas normais) e MOLEC (temas de molecagem)
 js/base.js      constantes, preferências (S), troca de tela, tema claro/escuro, áudio, tela sempre acesa
 js/jogo.js      estado global e motor do jogo: newMatch, newRound, act, timeout, sync, dispatch
 js/tela.js      desenho: applyView, render, teclado de letras, roleta de tema, overlays, placar
-js/cena.js      abertura animada, garrafa 3D (cilindro), chão do boteco, loop de frame (timer)
+js/cena.js      abertura da garrafa (e a versão curta da revanche), parallax, loop de frame (timer)
 js/rede.js      modo "um celular só", mesa online (host/convidado), reconexão, restauração após recarregar
 ```
 

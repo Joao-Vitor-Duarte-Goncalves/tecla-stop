@@ -3,7 +3,7 @@ let lastOvKey=null, lastLetters="", wasMyTurn=false, lastBeep=null;
 function applyView(snap){
   const prev=V;V=snap;
   /* "Nova partida" no fim também abre a garrafa de novo */
-  if(prev&&prev.state==="over"&&snap.round===1&&!introPlaying){spunRound=-1;playIntro()}
+  if(prev&&prev.state==="over"&&snap.round===1&&!introPlaying){spunRound=-1;playIntro(true)}
   if(snap.state==="run")V.end=performance.now()+snap.left;
   if(snap.state==="pause")V.pausedLeft=snap.left;
   show("game");
@@ -68,17 +68,17 @@ function maybeSpin(){
 function setCat(t){const el=$("catTxt"),box=$("reel");el.textContent=t;let f=1.55;el.style.fontSize=f+"rem";while(el.offsetHeight>box.clientHeight&&f>.95){f-=.1;el.style.fontSize=f.toFixed(2)+"rem"}}
 function popCat(){const c=$("catTxt");c.classList.remove("pop");void c.offsetWidth;c.classList.add("pop")}
 function spin(mode){
-  /* full = 1ª rodada (mesa inclina e dá 3 voltas), round = rodadas seguintes (1 volta rápida), false = só troca de tema */
+  /* full = 1ª rodada (continua o giro da tampa que acabou de cair: 2 voltas freando e um quique), round = rodadas seguintes (1 volta rápida), false = só troca de tema */
   const full=mode==="full",quick=mode==="round";
   if(matchMedia("(prefers-reduced-motion: reduce)").matches){setCat(V.cat);shownCat=V.cat;return}
   spinning=true;$("reel").classList.add("spinning");$("catTxt").style.fontSize="";
-  const pool=CATS.concat(MOLEC),total=full?2400:quick?1100:900;
+  const pool=CATS.concat(MOLEC),total=full?1500:quick?1100:900;
   if(full){try{
-    /* the table tips toward the camera, spins three turns and settles back */
-    const D=total+200;
-    $("tilt").animate([{transform:"rotateX(0deg)"},{transform:"rotateX(58deg) translateY(3%) scale(.94)",offset:.2},{transform:"rotateX(58deg) translateY(3%) scale(.94)",offset:.72},{transform:"rotateX(0deg)"}],{duration:D,easing:"ease-in-out"});
-    $("spinner").animate([{transform:"rotateZ(-1080deg)"},{transform:"rotateZ(0deg)"}],{duration:D,easing:"cubic-bezier(.2,.55,.12,1)"});
-    $("floor").animate([{transform:"scale(1)",opacity:1},{transform:"scale(.8,1.25)",opacity:.7,offset:.2},{transform:"scale(.8,1.25)",opacity:.7,offset:.72},{transform:"scale(1)",opacity:1}],{duration:D,easing:"ease-in-out"});
+    /* a mesa recebe a tampa: quica de leve no pouso e freia as 2 últimas voltas */
+    const D=total+100;
+    $("tilt").animate([{transform:"rotateX(16deg) scale(1.03)"},{transform:"rotateX(-5deg) scale(.99)",offset:.18},{transform:"rotateX(2deg)",offset:.36},{transform:"rotateX(0deg)"}],{duration:900,easing:"ease-out"});
+    $("spinner").animate([{transform:"rotateZ(-720deg)"},{transform:"rotateZ(0deg)"}],{duration:D,easing:"cubic-bezier(.15,.6,.25,1)"});
+    $("floor").animate([{transform:"scale(1.15)",opacity:.5},{transform:"scale(1)",opacity:1}],{duration:500,easing:"ease-out"});
   }catch(e){}}
   if(quick){try{$("spinner").animate([{transform:"rotateZ(-360deg)"},{transform:"rotateZ(0deg)"}],{duration:total+100,easing:"cubic-bezier(.25,.6,.2,1)"})}catch(e){}}
   let t=0,step=quick?38:45;
