@@ -305,14 +305,37 @@ button.pl::after{content:"";position:absolute;inset:-6px -2px}
 .ovbox .name{color:var(--ink);font-weight:800}
 .ptsline{font-size:.95rem}
 .ptsline b{color:var(--ink)}
-.lockbig{font-size:3rem;line-height:1}
-.ranking{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;text-align:left}
-.rk{display:grid;grid-template-columns:2.4em 1fr auto;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--night);border:1px solid var(--line);font-variant-numeric:tabular-nums}
-.rk.first{background:var(--yellow);color:var(--paper-ink);border-color:var(--yellow)}
-.rkpos{font-family:var(--display);font-size:1.1rem}
-.rkname{font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rkstat{font-size:.85rem;font-weight:600;opacity:.85;text-align:right;line-height:1.25}
-.rkpts{display:block;font-weight:800}
+/* placar = lousa do bar: verde, giz e moldura de madeira. É um objeto, então fica igual nos dois modos */
+#rkbox,.ovbox.lousa{--chalk:#f1efe6;--chalk-dim:rgba(241,239,230,.7);--chalk-y:#ffe27a;
+  background:radial-gradient(120% 80% at 30% 15%,rgba(255,255,255,.07),transparent 60%),radial-gradient(90% 60% at 85% 95%,rgba(255,255,255,.05),transparent 60%),#1f3a2e;
+  color:var(--chalk);border:8px solid #7a5230;border-radius:10px;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.25),inset 0 0 34px rgba(0,0,0,.35),0 18px 40px rgba(0,0,0,.5)}
+#rkbox p,#rkbox .lbl,.ovbox.lousa p,.ovbox.lousa .lbl{color:var(--chalk-dim)}
+#rkbox .name,.ovbox.lousa .name{color:var(--chalk)}
+#rkbox .big.win,.ovbox.lousa .big.win{color:var(--chalk-y)}
+#rkbox .btn.ghost,.ovbox.lousa .btn.ghost{color:var(--chalk);border-color:rgba(241,239,230,.35)}
+.ranking{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;text-align:left}
+.rk{display:grid;grid-template-columns:2.2em 1fr auto;align-items:center;gap:8px;padding:8px 2px;border-bottom:1px dashed rgba(241,239,230,.25);font-variant-numeric:tabular-nums}
+.rk.first{color:var(--chalk-y)}
+.rkpos{font-family:var(--hand);font-size:1.2rem}
+.rkmain{display:flex;flex-direction:column;gap:3px;min-width:0}
+.rkname{font-family:var(--hand);font-size:1.2rem;line-height:1.1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tally{display:inline-flex;flex-wrap:wrap;gap:6px;color:var(--chalk-dim)}
+.tally svg{stroke:currentColor;stroke-width:1.8;stroke-linecap:round;fill:none}
+.tally.none{font-size:.75rem;font-weight:600}
+.rkstat{text-align:right;line-height:1.2;display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.rkpts{font-family:var(--hand);font-size:1.2rem}
+.rkwins{font-size:.75rem;font-weight:600;color:var(--chalk-dim)}
+.rkmove{font-size:.75rem;font-weight:800}
+.rkmove.up{color:#a6eea0}.rkmove.down{color:#ffaa9e}
+/* lousa coberta: só os nomes, e os pontos viram giz apagado */
+.covered .rkpos{color:var(--chalk-dim)}
+.smudge{width:64px;height:24px;border-radius:6px;background:repeating-linear-gradient(-18deg,rgba(241,239,230,.3) 0 3px,rgba(241,239,230,.08) 3px 8px);filter:blur(.7px)}
+.pointshow{text-align:left}
+.pointshow summary{cursor:pointer;font-weight:700;font-size:.85rem;color:var(--chalk-dim);list-style:none}
+.pointshow summary::after{content:" +";color:var(--chalk-y)}
+.pointshow[open] summary::after{content:" −"}
+.pointshow p{margin-top:6px}
 .net{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 8px) 16px 8px;background:var(--cap-ink);color:#fff;text-align:center;font-weight:700;font-size:.9rem;z-index:20}
 .takeover{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:21;background:var(--night-2);border:2px solid var(--red);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
 .takeover p{margin:0;font-size:.9rem;line-height:1.4}

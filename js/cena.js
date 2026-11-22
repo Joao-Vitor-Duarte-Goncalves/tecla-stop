@@ -296,8 +296,8 @@ function frame(){
 requestAnimationFrame(frame);
 
 $("undo").onclick=()=>dispatch({t:"undo"});
-$("rkBtn").onclick=()=>{$("rkov").hidden=false;renderSheet()};
-$("rkov").onclick=e=>{if(e.target===$("rkov"))$("rkov").hidden=true};
+$("rkBtn").onclick=()=>openSheet();
+$("rkov").onclick=e=>{if(e.target===$("rkov"))closeSheet()};
 $("pause").onclick=()=>dispatch({t:V&&V.state==="pause"?"resume":"pause"});
 $("newCat").onclick=()=>dispatch({t:"newcat"});
 $("catOpen").onclick=()=>{$("catov").hidden=false;$("catIn").value="";$("catIn").focus()};

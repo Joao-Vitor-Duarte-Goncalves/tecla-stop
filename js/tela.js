@@ -112,6 +112,7 @@ function nextUp(){const n=V.pl.length;for(let k=1;k<n;k++){const p=V.pl[(V.cur+k
 function myTurn(){return V&&V.state==="run"&&(MODE==="local"||(V.pl[V.cur]&&V.pl[V.cur].id===ME))}
 function render(prev){
   if(!V)return;
+  trackBase();
   buildKeys(V.letters);
   const hostish=MODE!=="guest", mine=myTurn(), curP=V.pl[V.cur];
   $("board").querySelectorAll(".key").forEach(k=>{const u=V.used.includes(k.dataset.l);k.classList.toggle("used",u);k.disabled=u||!mine});
@@ -201,7 +202,7 @@ function renderOverlay(){
   let html="";
   /* quem bebe sai numa comanda: o nome escrito à mão e o carimbo de "bebe" */
   const slip=o.kind==="drink"||(o.kind==="win"&&!!o.loser);
-  $("ovbox").classList.toggle("slip",slip);
+  $("ovbox").classList.toggle("slip",slip);$("ovbox").classList.toggle("lousa",o.kind==="final");
   const drinker=n=>`<div class="slipname">${esc(n)}</div><div class="stamp">Bebe!</div>`;
   if(o.kind==="drink")html=`${drinker(o.name)}${isLocked()?"":outLine(o.place,o.gain)}<p>Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
   else if(o.kind==="win")html=(o.loser?`${drinker(o.loser)}${isLocked()?"":outLine(o.loserPlace,o.loserGain)}`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div>${isLocked()?"":`<p class="ptsline"><b>${ptsTxt(o.gain)}</b> por ficar até o fim, 1 por cada um que saiu antes</p>`}<p>Escolhe alguém pra dar um gole.</p>`;
@@ -238,17 +239,47 @@ function outLine(place,gain){
   return `<p class="ptsline">${pos}º a sair: <b>${ptsTxt(gain)}</b>${pos===1?", quem sai primeiro perde 1":", 1 por cada um que saiu antes"}</p>`;
 }
 const RULE_LINE="Quanto mais você dura na rodada, mais ganha: +1 ponto por cada pessoa que sai antes de você. Quem sai primeiro perde 1.";
-function rankList(reveal){
+const TIE_LINE="Empate: quem venceu mais rodadas, depois quem bebeu menos.";
+const num=n=>(n<0?"−":"")+Math.abs(n);
+/* goles em risquinhos de giz, como a conta do bar: 4 em pé e o 5º cortando */
+function tally(n){
+  if(!n)return `<span class="tally none">nenhum gole</span>`;
+  let h="";
+  for(let g=0;g<Math.ceil(n/5);g++){
+    const k=Math.min(5,n-g*5),w=k===5?22:k*5+1;let l="";
+    for(let j=0;j<Math.min(k,4);j++){const x=3+j*5;l+=`<line x1="${x}" y1="2" x2="${x+.6}" y2="15"/>`}
+    if(k===5)l+=`<line x1="0" y1="12.5" x2="21" y2="4"/>`;
+    h+=`<svg viewBox="0 0 ${w} 17" width="${w}" height="17" aria-hidden="true">${l}</svg>`;
+  }
+  return `<span class="tally" role="img" aria-label="${n} gole${n===1?"":"s"}">${h}</span>`;
+}
+/* ordem: pontos, depois mais vitórias, depois menos goles; empate total divide a posição */
+function ranked(){
   const rk=V.pl.slice().sort((a,b)=>(b.pts||0)-(a.pts||0)||(b.wins||0)-(a.wins||0)||a.drinks-b.drinks||a.name.localeCompare(b.name));
-  let pos=0,prevKey=null;const n=rk.length;
-  const rows=rk.map((p,i)=>{const k=(p.pts||0)+":"+(p.wins||0)+":"+p.drinks;if(k!==prevKey){pos=i+1;prevKey=k}
-    /* on the final reveal, rows appear from last place up to the champion */
-    const st=reveal?` style="animation-delay:${(n-1-i)*0.6}s"`:"";
-    return `<li class="rk${pos===1?" first":""}${reveal?" reveal":""}"${st}><span class="rkpos">${pos}º</span><span class="rkname">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}</span><span class="rkstat"><span class="rkpts">${p.pts||0} pt${Math.abs(p.pts||0)===1?"":"s"}</span>${p.drinks} gole${p.drinks===1?"":"s"}</span></li>`}).join("");
-  return {rk,html:`<ol class="ranking">${rows}</ol>`,revealTime:(n-1)*0.6};
+  let pos=0,prev=null;
+  return rk.map((p,i)=>{const k=(p.pts||0)+":"+(p.wins||0)+":"+p.drinks;if(k!==prev){pos=i+1;prev=k}return {p,pos}});
+}
+/* posições no começo da rodada, pra mostrar quem subiu ou desceu desde a rodada anterior */
+let baseRound=-1,basePos={};
+function trackBase(){if(!V||!V.pl||V.round===baseRound)return;baseRound=V.round;basePos={};ranked().forEach(r=>{basePos[r.p.id]=r.pos})}
+function rowHtml({p,pos},o){
+  const me=p.id===ME&&MODE!=="local"?" (você)":"",w=p.wins||0;
+  let mv="";
+  if(o.moves&&basePos[p.id]){const d=basePos[p.id]-pos;if(d)mv=`<span class="rkmove ${d>0?"up":"down"}" aria-label="${d>0?"subiu":"desceu"} ${Math.abs(d)}">${d>0?"↑":"↓"}${Math.abs(d)}</span>`}
+  return `<li class="rk${pos===1?" first":""}${o.reveal?" reveal":""}"${o.st||""}><span class="rkpos">${pos}º</span><span class="rkmain"><span class="rkname">${esc(p.name)}${me}</span>${tally(p.drinks)}</span><span class="rkstat"><span class="rkpts">${num(p.pts||0)} pt${Math.abs(p.pts||0)===1?"":"s"}</span><span class="rkwins">${w} vitória${w===1?"":"s"}</span>${mv}</span></li>`;
+}
+function rankList(reveal,moves){
+  const r=ranked(),n=r.length;
+  const rows=r.map((x,i)=>rowHtml(x,{reveal,moves,st:reveal?` style="animation-delay:${(n-1-i)*0.6}s"`:""})).join("");
+  return {rk:r.map(x=>x.p),html:`<ol class="ranking">${rows}</ol>`,revealTime:(n-1)*0.6};
+}
+/* nas últimas 3 rodadas: a lousa mostra os nomes em ordem alfabética e os pontos ficam cobertos de giz apagado */
+function coveredList(){
+  const ps=V.pl.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  return `<ul class="ranking covered">${ps.map(p=>`<li class="rk"><span class="rkpos" aria-hidden="true">?</span><span class="rkmain"><span class="rkname">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}</span></span><span class="smudge" role="img" aria-label="pontos cobertos"></span></li>`).join("")}</ul>`;
 }
 function finalHtml(){
-  const {rk,html,revealTime}=rankList(true);
+  const {rk,html,revealTime}=rankList(true,false);
   const maxD=Math.max(...V.pl.map(p=>p.drinks));
   const sponge=maxD>0?V.pl.filter(p=>p.drinks===maxD).map(p=>p.name):[];
   const champ=rk[0],d=`style="animation-delay:${revealTime+0.5}s"`;
@@ -256,18 +287,36 @@ function finalHtml(){
     ${html}
     <div class="big win mid reveal" ${d}>${esc(champ?champ.name:"")} é o campeão</div>
     ${sponge.length?`<p class="reveal" ${d}>Esponja da noite: <span class="name">${sponge.map(esc).join(", ")}</span>, com ${maxD} gole${maxD===1?"":"s"}.</p>`:""}
-    <p class="note">Ordem por pontos. Empate: quem venceu mais rodadas, depois quem bebeu menos.</p>`;
+    <p class="note">Ordem por pontos. ${TIE_LINE}</p>`;
 }
 function isLocked(){return !!(V&&V.maxRounds>0&&V.round>V.maxRounds-3&&V.state!=="over")}
 function lockMsg(){return `A lousa fica coberta nas últimas 3 rodadas. O placar aparece quando acabar a rodada ${V.maxRounds}.`}
-function renderSheet(){
+/* só redesenha quando o placar muda de verdade: assim a lista não volta pro topo a cada letra
+   e o segundo toque do "Encerrar partida" não se perde */
+let sheetSig="",sheetPaused=false;
+function renderSheet(force){
   if($("rkov").hidden||!V)return;
-  let body;
-  if(isLocked())body=`<div class="lockbig" aria-hidden="true">🔒</div><div class="big win mid">Suspense</div><p>${lockMsg()}</p>`;
-  else body=`<span class="lbl">Placar até a rodada ${V.round}${V.maxRounds?" de "+V.maxRounds:""}</span><p class="note">${RULE_LINE}</p>${rankList(false).html}${V.maxRounds>3?`<p class="note">Nas últimas 3 rodadas a lousa fica coberta até o fim.</p>`:""}`;
-  const played=V.state==="idle"?V.round-1:V.round,canFinish=MODE!=="guest"&&V.state!=="over"&&played>=1;
-  $("rkbox").innerHTML=body+`<button class="btn" id="rkclose">Voltar pro jogo</button>`+(canFinish?`<button class="btn ghost small" id="rkfinish" type="button">Encerrar partida</button>`:"");
-  $("rkclose").onclick=()=>{$("rkov").hidden=true};
-  if(canFinish)armConfirm($("rkfinish"),()=>"Encerrar partida",()=>`Encerrar com ${played} rodada${played===1?"":"s"}?`,()=>{$("rkov").hidden=true;dispatch({t:"finish"})});
+  const lk=isLocked(),played=V.state==="idle"?V.round-1:V.round,canFinish=MODE!=="guest"&&V.state!=="over"&&played>=1;
+  const sig=JSON.stringify([lk,V.round,V.maxRounds,canFinish,played,V.pl.map(p=>[p.id,p.name,p.pts,p.wins,p.drinks])]);
+  if(!force&&sig===sheetSig)return;sheetSig=sig;
+  const body=lk
+    ?`<div class="big win mid">Suspense</div><p>${lockMsg()}</p>${coveredList()}`
+    :`<span class="lbl">Placar até a rodada ${V.round}${V.maxRounds?" de "+V.maxRounds:""}</span>${rankList(false,V.round>=2).html}<details class="pointshow"><summary>Como os pontos contam</summary><p class="note">${RULE_LINE} ${TIE_LINE}</p></details>${V.maxRounds>3?`<p class="note">Nas últimas 3 rodadas a lousa fica coberta até o fim.</p>`:""}`;
+  $("rkbox").innerHTML=body+`<button class="btn" id="rkclose" type="button">Voltar pro jogo</button>`+(canFinish?`<button class="btn ghost small" id="rkfinish" type="button">Encerrar partida</button>`:"");
+  $("rkclose").onclick=()=>closeSheet();
+  if(canFinish)armConfirm($("rkfinish"),()=>"Encerrar partida",()=>`Encerrar com ${played} rodada${played===1?"":"s"}?`,()=>{closeSheet(true);dispatch({t:"finish"})});
 }
+function openSheet(){
+  if(!V)return;
+  /* um celular só: o placar cobre a mesa, então o tempo pausa enquanto ele está aberto */
+  sheetPaused=MODE==="local"&&V.state==="run";if(sheetPaused)dispatch({t:"pause"});
+  $("rkov").hidden=false;renderSheet(true);$("rkclose").focus();
+}
+function closeSheet(noResume){
+  if($("rkov").hidden)return;
+  $("rkov").hidden=true;
+  if(sheetPaused&&!noResume&&V&&V.state==="pause")dispatch({t:"resume"});
+  sheetPaused=false;$("rkBtn").focus();
+}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("rkov").hidden)closeSheet()});
 

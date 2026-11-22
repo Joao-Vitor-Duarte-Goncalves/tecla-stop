@@ -63,7 +63,9 @@ Além dos pontos, conta `wins` (rodadas vencidas) e `drinks` (goles).
 
 **Ranking:** pontos → mais vitórias → menos goles → nome.
 
-**Suspense:** nas últimas 3 rodadas o placar fica coberto e as telas de "bebe" não mostram pontos. Tudo é revelado no fim, do último para o campeão, com o título de **Esponja da noite** pra quem mais bebeu.
+**Placar:** mostra pontos, vitórias (o primeiro desempate) e os goles em risquinhos; da rodada 2 em diante, uma seta indica quem subiu ou desceu desde o começo da rodada. No modo local, abrir o placar com o tempo correndo pausa a rodada, e fechar volta de onde parou.
+
+**Suspense:** nas últimas 3 rodadas o placar fica coberto (a lousa mostra só os nomes, em ordem alfabética) e as telas de "bebe" não mostram pontos. Tudo é revelado no fim, do último para o campeão, com o título de **Esponja da noite** pra quem mais bebeu.
 
 **Nova partida:** zera pontos, vitórias e goles e remove quem estiver desconectado. Na tela do fim, quem abriu a mesa pode abrir "Mudar tempo, rodadas e temas" e a nova partida já usa o que estiver escolhido (tempo, rodadas, molecagem e Q/X/Z).
 
