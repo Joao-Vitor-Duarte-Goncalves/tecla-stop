@@ -121,7 +121,7 @@ function onHostData(c,d){
     const old=conns.get(id);if(old&&old!==c){old.pid=null;try{old.close()}catch(e){}}
     c.pid=id;conns.set(id,c);
     if(!G){const ex=lobbyPl.find(p=>p.id===id);if(ex)ex.name=name;else lobbyPl.push({id,name});broadcastLobby()}
-    else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&joinable())ex.alive=true}else G.pl.push({id,name,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});if(G.ov&&G.ov.kind==="few")newRound();sync()}
+    else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&!ex.bench&&joinable())ex.alive=true}else G.pl.push({id,name,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});if(G.ov&&G.ov.kind==="few")newRound();sync()}
     return;
   }
   if(c.pid)act(c.pid,d);

@@ -130,6 +130,7 @@
     <button class="btn ghost small" id="addOpen" hidden type="button">+ Jogador</button>
     <button class="btn ghost small" id="undo">Desfazer</button>
     <button class="btn ghost small" id="pause">Pausar</button>
+    <button class="btn ghost small" id="redo" type="button" hidden>Refazer rodada</button>
     <button class="rkbtn" id="rkBtn" type="button">Placar</button>
   </nav>
   <div class="heckles" id="heckles" hidden><span>Você saiu. Atrapalha:</span><div class="hkrow"><button type="button" data-k="tic">⏰ Tic-tac</button><button type="button" data-k="bebe">🍺 Vai beber</button><button type="button" data-k="ri">😂 Hahaha</button></div></div>
@@ -143,6 +144,7 @@
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
 <div class="ov" id="addov" hidden><form class="ovbox" id="addMid"><span class="lbl">Chegou alguém?</span><div class="big win mid">Pôr na roda</div><p>A pessoa entra na rodada que está rolando.</p><input type="text" id="addMidIn" placeholder="Nome" maxlength="16" autocomplete="off" aria-label="Nome do novo jogador"><button class="btn" type="submit">Adicionar</button><button class="btn ghost small" type="button" id="addCancel">Cancelar</button></form></div>
 <div class="ov" id="catov" hidden><form class="ovbox" id="catForm"><span class="lbl">Tema de vocês</span><div class="big win mid">Escrever tema</div><input type="text" id="catIn" placeholder="Ex.: Coisas que o João fala bêbado" maxlength="40" autocomplete="off" aria-label="Tema personalizado"><button class="btn" type="submit">Usar esse tema</button><button class="btn ghost small" type="button" id="catCancel">Cancelar</button></form></div>
+<div class="ov" id="plov" hidden><div class="ovbox" id="plbox" role="dialog" aria-label="Jogador"></div></div>
 <div class="ov" id="rkov" hidden><div class="ovbox" id="rkbox" role="dialog" aria-label="Placar"></div></div>
 
 <script src="js/temas.js"></script>

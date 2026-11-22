@@ -200,8 +200,13 @@ details.how[open] summary::after{content:"−"}
 .pl.out{opacity:.45}
 .pl.out .nm{text-decoration:line-through}
 .pl.off{opacity:.35;font-style:italic}
+.pl.bench{opacity:.45;border-style:dashed}
+/* quem abriu a mesa toca no nome pra tirar da roda */
+button.pl{font-family:var(--body);color:var(--ink);cursor:pointer;position:relative}
+button.pl.cur{color:var(--paper-ink)}
+button.pl::after{content:"";position:absolute;inset:-6px -2px}
 .addform{max-width:340px;margin:0 auto;width:100%}
-.tools{display:flex;gap:6px;justify-content:center}
+.tools{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .rkbtn{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:800}
 .rkbtn.locked{border-style:dashed;color:var(--muted)}
 .tools .btn,.tools .rkbtn{flex:0 1 auto;padding:7px 12px;min-width:0;font-size:.85rem;border-radius:999px;line-height:1.2;box-shadow:none;white-space:nowrap;text-transform:none;letter-spacing:0}
@@ -212,11 +217,16 @@ details.how[open] summary::after{content:"−"}
 .tools .btn,.tools .rkbtn,.gbar .btn,.hkrow button{position:relative}
 .tools .btn::after,.tools .rkbtn::after,.gbar .btn::after,.catedit::after,.roomtag::after,.hkrow button::after{content:"";position:absolute;inset:-7px -3px}
 
+/* confirmação no segundo toque (Refazer rodada, Sair) */
+.btn.ghost.armed{background:var(--cap-ink);border-color:var(--cap-ink);color:#fff}
+
 /* sobreposições */
 .ov{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:20px;z-index:10}
 #rkov{z-index:11}
 .ovbox{background:var(--night-2);border:1px solid var(--line);border-radius:18px;padding:24px 20px;max-width:360px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;max-height:100%;overflow:auto}
 #addov input,#catov input{text-align:center;font-size:1.05rem}
+.ovfix{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.ovfix .btn{flex:1 1 auto}
 /* quem bebe: a caixa vira uma comanda de papel, com o nome à mão e um carimbo.
    rotate (e não transform) pra não brigar com a animação .shake */
 .ovbox.slip{background:var(--paper);color:var(--paper-ink);border:0;border-radius:4px 4px 10px 10px;padding-top:28px;
@@ -231,6 +241,8 @@ details.how[open] summary::after{content:"−"}
 .stamp{align-self:center;margin:-4px 0 4px;font-family:var(--display);font-size:2.4rem;line-height:1;text-transform:uppercase;letter-spacing:.04em;
   color:var(--cap-ink);border:4px solid currentColor;border-radius:8px;padding:4px 16px 2px;rotate:-7deg;opacity:.9;mix-blend-mode:multiply;
   animation:stamp .32s cubic-bezier(.3,1.5,.5,1) both}
+/* .slip .btn.ghost tem a mesma força e vem antes */
+.slip .btn.ghost.armed{background:var(--cap-ink);border-color:var(--cap-ink);color:#fff}
 @keyframes stamp{from{opacity:0;transform:scale(1.8)}to{opacity:.9;transform:scale(1)}}
 .big{font-family:var(--display);font-size:2.5rem;line-height:1;color:var(--red);text-wrap:balance}
 .big.win{color:var(--yellow)}

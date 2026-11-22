@@ -118,7 +118,12 @@ function render(prev){
   }
   if(mine&&!wasMyTurn&&MODE!=="local"){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){};beep(980,.08,"sine",.07)}
   wasMyTurn=mine;
-  $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}"><span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.on===false?" (caiu)":""}</span></span>`).join("");
+  const tapNames=hostish&&V.state!=="over";
+  $("plist").innerHTML=V.pl.map((p,i)=>{
+    const cls=`pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.bench?"bench":p.on===false?"off":p.alive?"":"out"}`;
+    const inner=`<span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.bench?" (fora)":p.on===false?" (caiu)":""}</span>`;
+    return tapNames?`<button type="button" class="${cls}" data-id="${esc(p.id)}" aria-label="${esc(p.name)}: opções">${inner}</button>`:`<span class="${cls}">${inner}</span>`}).join("");
+  $("redo").hidden=!hostish||!V.canRedo;
   const lk=isLocked();$("rkBtn").textContent=lk?"🔒 Placar":"Placar";$("rkBtn").classList.toggle("locked",lk);
   renderSheet();
   $("undo").hidden=!hostish;$("pause").hidden=!hostish;
@@ -135,20 +140,36 @@ function render(prev){
   renderOverlay();
 }
 function quitBtn(){return `<button class="btn ghost small" id="ovquit">${MODE==="host"?"Fechar a mesa":"Sair da partida"}</button>`}
-/* sair pede um segundo toque em até 3 s: quem abriu a mesa fecha a partida de todo mundo */
-function armQuit(b,label,armedLabel){
+/* ações que não têm volta pedem um segundo toque em até 3 s (sair fecha a partida de todo mundo; refazer apaga a rodada) */
+function armConfirm(b,label,armedLabel,onConfirm){
   let armed=false,t=null;
   b.onclick=()=>{
-    if(armed){clearTimeout(t);armed=false;b.classList.remove("armed");b.textContent=label();leave();return}
+    if(armed){clearTimeout(t);armed=false;b.classList.remove("armed");b.textContent=label();onConfirm();return}
     armed=true;b.classList.add("armed");b.textContent=armedLabel();
     t=setTimeout(()=>{armed=false;b.classList.remove("armed");if(b.isConnected)b.textContent=label()},3000);
   };
 }
 function wireQuit(){
   const b=$("ovquit");if(!b)return;
-  armQuit(b,()=>MODE==="host"?"Fechar a mesa":"Sair da partida",()=>"Toque de novo pra confirmar");
+  armConfirm(b,()=>MODE==="host"?"Fechar a mesa":"Sair da partida",()=>"Toque de novo pra confirmar",()=>leave());
 }
-armQuit($("gameQuit"),()=>"Sair",()=>MODE==="host"?"Fechar a mesa?":"Sair mesmo?");
+armConfirm($("gameQuit"),()=>"Sair",()=>MODE==="host"?"Fechar a mesa?":"Sair mesmo?",()=>leave());
+armConfirm($("redo"),()=>"Refazer rodada",()=>"Apaga a rodada?",()=>dispatch({t:"redo"}));
+
+/* tocar no nome (quem abriu a mesa): tirar da roda ou pôr de volta */
+function openPlayer(id){
+  const p=V&&V.pl.find(x=>x.id===id);if(!p)return;
+  const nm=esc(p.name);
+  $("plbox").innerHTML=p.bench
+    ?`<div class="big win mid">${nm}</div><p>Está fora da roda. Pondo de volta, entra já na rodada que estiver rolando.</p><button class="btn" id="plgo" type="button">Pôr de volta na roda</button>`
+    :`<div class="big win mid">${nm}</div><p>A vez de ${nm} é pulada até você pôr de volta. Não bebe nem perde ponto.</p><button class="btn" id="plgo" type="button">Tirar da roda</button>`;
+  $("plbox").insertAdjacentHTML("beforeend",`<button class="btn ghost small" id="plcancel" type="button">Cancelar</button>`);
+  $("plov").hidden=false;
+  $("plgo").onclick=()=>{$("plov").hidden=true;dispatch({t:"bench",id,on:!p.bench})};
+  $("plcancel").onclick=()=>{$("plov").hidden=true};
+}
+$("plov").onclick=e=>{if(e.target===$("plov"))$("plov").hidden=true};
+$("plist").addEventListener("click",e=>{const b=e.target.closest("button.pl");if(b)openPlayer(b.dataset.id)});
 function renderOverlay(){
   const o=V.ov;
   if(!o){$("ov").hidden=true;lastOvKey=null;return}
@@ -173,9 +194,14 @@ function renderOverlay(){
     return;
   }
   const btn=o.kind==="win"?(o.last?"Ver ranking":"Próxima rodada"):o.kind==="few"?"Tentar de novo":"Continuar";
-  $("ovbox").innerHTML=html+`<button class="btn" id="ovgo">${btn}</button>`+quitBtn();
+  /* correções de quem abriu a mesa: devolver quem bebeu injustamente, ou refazer a rodada inteira */
+  const host=MODE!=="guest",who=o.kind==="drink"?o.name:o.loser;
+  const fix=host&&((slip&&V.canSpare)||V.canRedo)?`<div class="ovfix">${slip&&V.canSpare?`<button class="btn ghost small" id="ovspare" type="button">Não valeu: ${esc(who)} volta</button>`:""}${V.canRedo?`<button class="btn ghost small" id="ovredo" type="button">Refazer rodada</button>`:""}</div>`:"";
+  $("ovbox").innerHTML=html+`<button class="btn" id="ovgo">${btn}</button>`+fix+quitBtn();
   $("ov").hidden=false;wireQuit();
   $("ovgo").onclick=()=>{unlockAudio();dispatch({t:"continue"})};
+  if($("ovspare"))$("ovspare").onclick=()=>dispatch({t:"spare"});
+  if($("ovredo"))armConfirm($("ovredo"),()=>"Refazer rodada",()=>"Apaga a rodada?",()=>dispatch({t:"redo"}));
   if(o.kind==="drink"||o.kind==="win"&&o.loser){beep(140,.6,"sawtooth",.12);const b=$("ovbox");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake")}
 }
 

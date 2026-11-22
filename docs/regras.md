@@ -39,6 +39,9 @@ Por 2,2 s depois de tocar, quem tocou pode desfazer ("Errei a letra") e recupera
 - **Pausar / Voltar**.
 - **Outro tema** / **Escrever tema** (só antes do "Valendo").
 - **+ Jogador** (só no modo local, até 16): entra na rodada atual se ela ainda está aberta.
+- **Refazer rodada** (segundo toque confirma): do Valendo até alguém tocar "Próxima rodada", volta tudo pro momento antes do Valendo: letras, quem saiu, pontos, goles e vitória da rodada. O tema e quem começa ficam, e o número da rodada não avança. Dá pra trocar o tema em seguida. Funciona com a rodada rolando, pausada ou com a tela de "bebe"/"venceu" aberta. A foto do placar fica em `G.roundSnap`, tirada no `start`.
+- **Não valeu** (na tela de quem bebeu): quem acabou de estourar o tempo volta pra roda sem gole nem ponto e joga de novo com o tempo cheio. Se tinha encerrado a rodada, a vitória também é desfeita. Usa `G.lastOut`.
+- **Tirar da roda / Pôr de volta** (tocar no nome): a vez da pessoa é pulada até pôr de volta, sem gole nem ponto (`p.bench`). Se tirar alguém deixa só um na rodada, esse vence. Pondo de volta, entra na rodada atual se ela ainda está aberta.
 
 ### Provocações
 
@@ -76,6 +79,9 @@ Além dos pontos, conta `wins` (rodadas vencidas) e `drinks` (goles).
 | `tap` `{l}` | jogador da vez | Usa a letra e passa a vez |
 | `oops` `{l}` | quem acabou de tocar | Desfaz o próprio toque (2,2 s + folga) |
 | `undo` | juiz | Desfaz a última letra |
+| `redo` | juiz | Refaz a rodada (volta pro antes do Valendo) |
+| `spare` | juiz | "Não valeu": desfaz o último estouro de tempo |
+| `bench` `{id, on}` | juiz | Tira da roda (`on: true`) ou põe de volta |
 | `pause` / `resume` | juiz | Pausa e volta |
 | `newcat` / `setcat` `{cat}` | juiz | Sorteia outro tema / usa tema escrito (até 40 caracteres) |
 | `heckle` `{k}` | eliminado (online) | Provocação |
