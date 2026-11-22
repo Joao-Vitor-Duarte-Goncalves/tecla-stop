@@ -11,6 +11,8 @@ Como o motor em `js/jogo.js` funciona. Se o código mudar, atualize aqui.
 | Temas de molecagem | liga/desliga | ligado |
 | Letras difíceis (Q, X, Z) | liga/desliga | desligado |
 | Provocações de quem já saiu (só online) | liga/desliga | ligado |
+| Temas da galera | liga/desliga | desligado |
+| Sem bebida | liga/desliga | desligado |
 | Som | liga/desliga | ligado |
 
 Letras normais: `A B C D E F G H I J L M N O P R S T U V` (sem K, Q, W, X, Y, Z).
@@ -49,6 +51,19 @@ Por 2,2 s depois de tocar, quem tocou pode desfazer ("Errei a letra") e recupera
 ### Provocações
 
 Se estiverem ligadas (opção de quem abre a mesa, `G.heckle`), no online quem já saiu da rodada pode mandar "TIC-TAC!", "VAI BEBER!" ou "HAHAHA" pra quem está na vez (cada um a cada 2,5 s e a mesa toda no máximo uma a cada 1,5 s; o balão aparece embaixo da mesa, sem cobrir o cronômetro). O alvo sente vibração e som.
+
+## Temas da galera
+
+Com a opção ligada, a partida começa no estado `collect` (overlay `collect`), antes da 1ª rodada:
+
+- No online, cada celular manda o próprio tema (`theme {cat}`); ninguém vê os temas dos outros. Quando todo mundo conectado mandou, a rodada 1 começa sozinha. O juiz também pode começar antes (`crowdgo`), com os temas que já chegaram.
+- No "Um celular só", aparece um campo por pessoa; quem deixar em branco fica sem tema.
+- Os temas viram uma fila embaralhada (`G.queue`) que sai antes do baralho normal. A comanda mostra "tema de Bia" depois que o sorteio para. "Outro tema" pula pro próximo da fila (o pulado não volta).
+- "Nova partida" com a opção ligada pede os temas de novo.
+
+## Sem bebida
+
+Com a opção ligada (`G.dry`), as contas são as mesmas e só as palavras mudam: o carimbo diz "SAIU!", os risquinhos contam saídas, a Esponja vira "Mais saídas", "Menos goles" vira "Menos saídas" e a provocação "VAI BEBER!" vira "VAI SAIR!". Quem vence a rodada não escolhe quem leva gole (`give` é recusado).
 
 ## Pontos
 
@@ -90,6 +105,8 @@ Além dos pontos, conta `wins` (rodadas vencidas) e `drinks` (goles).
 | `spare` | juiz | "Não valeu": desfaz o último estouro de tempo |
 | `bench` `{id, on}` | juiz | Tira da roda (`on: true`) ou põe de volta |
 | `give` `{id}` | quem venceu ou juiz | Dá o gole da vitória pra `id` (ou `null` pra ninguém); uma vez por rodada; "Não valeu" desfaz |
+| `theme` `{cat}` (local: `{id, cat}`) | cada um (local: juiz) | Manda o tema da galera durante a coleta |
+| `crowdgo` | juiz | Fecha a coleta e começa a rodada 1 com os temas que chegaram |
 | `finish` | juiz | Encerra a partida e mostra o ranking final |
 | `pause` / `resume` | juiz | Pausa e volta |
 | `newcat` / `setcat` `{cat}` | juiz | Sorteia outro tema / usa tema escrito (até 40 caracteres) |
@@ -98,5 +115,5 @@ Além dos pontos, conta `wins` (rodadas vencidas) e `drinks` (goles).
 | `continue` | bebe e zerou: quem vem depois ou o juiz (no local, qualquer um); venceu e esperando: qualquer um | Fecha o overlay e segue. Em bebe/zerou o tempo de quem vem depois começa na hora, por isso só essa pessoa ("Tô pronto, valendo") ou o juiz dão o valendo |
 | `rematch` | juiz | Nova partida |
 
-Estados de `G.state`: `idle` (antes do Valendo), `run`, `pause`, `ov` (overlay na tela), `over` (fim da partida).
-Tipos de overlay `G.ov.kind`: `drink`, `win`, `reset`, `few`, `final`.
+Estados de `G.state`: `collect` (temas da galera, antes da 1ª rodada), `idle` (antes do Valendo), `run`, `pause`, `ov` (overlay na tela), `over` (fim da partida).
+Tipos de overlay `G.ov.kind`: `collect`, `drink`, `win`, `reset`, `few`, `final`.

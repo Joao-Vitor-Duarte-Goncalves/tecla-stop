@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ---------- prefs ---------- */
-let S={players:[],dur:10,rounds:10,molec:true,heckle:true,theme:"auto",hard:false,sound:true,name:"",key:""};
+let S={players:[],dur:10,rounds:10,molec:true,heckle:true,dry:false,crowd:false,theme:"auto",hard:false,sound:true,name:"",key:""};
 try{const s=JSON.parse(localStorage.getItem("tecla-stop")||"null");if(s)S=Object.assign(S,s)}catch(e){}
 /* ---------- identidade ----------
    S.key é o segredo do aparelho: só vai pro celular de quem abriu a mesa. O id que aparece pros outros
@@ -71,6 +71,8 @@ applyTheme();
 $("molec").checked=S.molec;$("molec").onchange=e=>{S.molec=e.target.checked;save()};
 $("face").checked=S.face!==false;$("face").onchange=e=>{S.face=e.target.checked;save()};
 $("heckle").checked=S.heckle!==false;$("heckle").onchange=e=>{S.heckle=e.target.checked;save()};
+$("dry").checked=!!S.dry;$("dry").onchange=e=>{S.dry=e.target.checked;save()};
+$("crowd").checked=!!S.crowd;$("crowd").onchange=e=>{S.crowd=e.target.checked;save()};
 $("hard").checked=S.hard;$("hard").onchange=e=>{S.hard=e.target.checked;save()};
 function renderSeg(){$("seg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.s===S.dur))}
 $("seg").onclick=e=>{const b=e.target.closest("button");if(b){S.dur=+b.dataset.s;save();renderSeg()}};

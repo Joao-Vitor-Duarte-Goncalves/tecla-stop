@@ -9,12 +9,28 @@ let peer=null, hostConn=null, conns=new Map(), lobbyPl=[], roomCode="";
 /* ---------- engine (local / host only) ---------- */
 function newMatch(players){
   G={hostId:MODE==="host"?ME:null,pl:players.map(p=>({id:p.id,name:p.name,drinks:0,wins:0,pts:0,alive:true,on:true})),round:0,maxRounds:S.rounds,starter:-1,
-     letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],molec:S.molec,heckle:S.heckle!==false,cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
+     letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],molec:S.molec,heckle:S.heckle!==false,dry:!!S.dry,cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
+  beginMatch();
+}
+/* começo de partida: com "Temas da galera", antes da 1ª rodada cada um escreve um tema (state "collect") */
+function beginMatch(){
+  G.queue=[];G.catAuthor=null;
+  if(S.crowd){G.state="collect";G.themes={};G.ov={kind:"collect"};G.seq++;return}
   newRound();
 }
+/* fim da coleta: os temas da galera viram uma fila embaralhada que sai antes do baralho normal */
+function startCrowd(){
+  const q=Object.keys(G.themes||{}).map(id=>{const p=G.pl.find(x=>x.id===id);return {cat:G.themes[id],by:p?p.name:""}});
+  for(let i=q.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[q[i],q[j]]=[q[j],q[i]]}
+  G.queue=q;q.forEach(x=>{if(!G.custom.includes(x.cat))G.custom.push(x.cat)});
+  G.themes=null;G.ov=null;G.state="idle";newRound();
+}
+function crowdDone(){return G.pl.filter(p=>p.on!==false&&!p.bench).every(p=>G.themes&&G.themes[p.id])}
 /* temas saem como cartas de um baralho: nenhum repete até todos terem saído.
    O baralho fica guardado no celular do juiz por 12 h, então vale entre partidas da mesma noite. */
 function pickCat(){
+  if(G.queue&&G.queue.length){const q=G.queue.shift();G.cat=q.cat;G.lastCat=q.cat;G.catBy="crowd";G.catAuthor=q.by;return}
+  G.catAuthor=null;
   const pool=CATS.concat(G.molec?MOLEC:[],G.custom);
   let deck=lsGet("tecla-deck");
   if(!deck||Date.now()-deck.t>12*3600e3)deck={t:Date.now(),seen:[]};
@@ -127,7 +143,7 @@ function act(from,a){
     case "setcat":{
       const c=String(a.cat||"").trim().slice(0,40);
       if(!c||!isHostish(from)||G.state!=="idle"||G.ov)break;
-      G.cat=c;G.lastCat=c;G.catBy="typed";if(!CATS.includes(c)&&!G.custom.includes(c))G.custom.push(c);break}
+      G.cat=c;G.lastCat=c;G.catBy="typed";G.catAuthor=null;if(!CATS.includes(c)&&!G.custom.includes(c))G.custom.push(c);break}
     case "addlocal":{
       const n=uniqueName(String(a.name||"").trim().slice(0,16),G.pl.map(p=>p.name));
       if(MODE!=="local"||!n||G.pl.length>=MAX_PLAYERS)break;
@@ -142,7 +158,7 @@ function act(from,a){
     case "give":{
       /* quem venceu a rodada escolhe quem leva o gole (ou ninguém): conta como gole, sem mexer nos pontos */
       const o=G.ov;
-      if(G.state!=="ov"||!o||o.kind!=="win"||o.given)break;
+      if(G.state!=="ov"||!o||o.kind!=="win"||o.given||G.dry)break;
       if(MODE!=="local"&&!isHostish(from)&&from!==o.winnerId)break;
       const p=a.id?G.pl.find(x=>x.id===a.id):null;
       if(a.id&&(!p||p.id===o.winnerId))break;
@@ -158,7 +174,16 @@ function act(from,a){
       if(!isHostish(from)||G.state!=="over")break;
       G.pl=G.pl.filter(p=>p.on);G.pl.forEach(p=>{p.wins=0;p.drinks=0;p.pts=0});G.round=0;G.maxRounds=S.rounds;G.starter=-1;
       /* "Nova partida" usa o que estiver escolhido agora (tempo, rodadas, molecagem, Q/X/Z) */
-      G.letters=BASE.concat(S.hard?HARD:[]);G.molec=S.molec;G.heckle=S.heckle!==false;G.seq++;newRound();break}
+      G.letters=BASE.concat(S.hard?HARD:[]);G.molec=S.molec;G.heckle=S.heckle!==false;G.dry=!!S.dry;G.seq++;beginMatch();break}
+    case "theme":{
+      /* tema da galera: no online cada um manda o seu; no local o juiz manda o de cada pessoa (id) */
+      if(G.state!=="collect")break;
+      const id=MODE==="local"?a.id:from,p=G.pl.find(x=>x.id===id),c=String(a.cat||"").trim().slice(0,40);
+      if(!p||!c)break;
+      G.themes[id]=c;G.seq++;
+      if(MODE!=="local"&&crowdDone())startCrowd();
+      break}
+    case "crowdgo": if(G.state==="collect"&&isHostish(from))startCrowd(); break;
     case "continue":{
       if(G.state!=="ov"&&!(G.ov&&G.ov.kind==="few"))break;
       const k=G.ov&&G.ov.kind;
@@ -186,7 +211,7 @@ function timeout(){
 /* ---------- sync ---------- */
 function snapshot(){
   const left=G.state==="run"?Math.max(0,G.end-performance.now()):G.state==="pause"?G.pausedLeft:null;
-  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,note:G.note||null,host:(G.pl.find(p=>p.id===G.hostId)||{}).name||"",hostAway:!!G.hostAway,heckle:G.heckle!==false,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,canRedo:canRedo(),canSpare:!!G.lastOut&&G.state==="ov",seq:G.seq,full:fullCopy()};
+  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,note:G.note||null,dry:!!G.dry,catAuthor:G.catAuthor||null,wrote:G.state==="collect"?Object.keys(G.themes||{}):null,host:(G.pl.find(p=>p.id===G.hostId)||{}).name||"",hostAway:!!G.hostAway,heckle:G.heckle!==false,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,canRedo:canRedo(),canSpare:!!G.lastOut&&G.state==="ov",seq:G.seq,full:fullCopy()};
 }
 /* a copy of the whole game (without device clocks) so a guest can take over the table */
 function fullCopy(){const c=JSON.parse(JSON.stringify(G));if(G.state==="run"){c.state="pause";c.pausedLeft=Math.max(1500,G.end-performance.now())}c.end=0;(c.hist||[]).forEach(h=>{h.at=0});return c}

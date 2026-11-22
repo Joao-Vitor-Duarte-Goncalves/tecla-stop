@@ -21,6 +21,8 @@ function buildKeys(letters){
 /* ---------- tapping the table: the whole wedge around each cap counts, so a near miss still picks the letter you aimed at ---------- */
 const OOPS_MS=2200;
 const HECKLES={tic:"TIC-TAC!",bebe:"VAI BEBER!",ri:"HAHAHA"};
+/* "Sem bebida": as mesmas contas, com outras palavras (quem estoura só sai da rodada) */
+const isDry=()=>!!(V&&V.dry);
 let lastHk=-1,lastNote=-1,wasAway=false,lastFx=null;
 /* aviso curto no topo, pra todo mundo ler sem tocar em nada */
 function showToast(text,ms){
@@ -28,7 +30,7 @@ function showToast(text,ms){
   clearTimeout(showToast.tm);showToast.tm=setTimeout(()=>{t.hidden=true},ms||3000);
 }
 function showHeckle(h){
-  const el=document.createElement("div");el.className="hkpop";el.innerHTML=`<b>${HECKLES[h.k]}</b><span>${esc(h.by)}</span>`;
+  const el=document.createElement("div");el.className="hkpop";el.innerHTML=`<b>${h.k==="bebe"&&isDry()?"VAI SAIR!":HECKLES[h.k]}</b><span>${esc(h.by)}</span>`;
   $("board").appendChild(el);setTimeout(()=>el.remove(),1700);
   if(h.to===ME){try{navigator.vibrate&&navigator.vibrate([70,50,70])}catch(e){};beep(1200,.06,"square",.06);setTimeout(()=>beep(900,.06,"square",.06),110);
     try{$("board").animate([{transform:"translateX(0)"},{transform:"translateX(-6px)"},{transform:"translateX(6px)"},{transform:"translateX(0)"}],{duration:260})}catch(e){}}
@@ -115,6 +117,32 @@ function faceHub(){
   const target=on?V.cur*360/V.pl.length:0,d=((target-faceAng)%360+540)%360-180;
   faceAng+=d;$("hubin").style.transform=faceAng%360?`rotate(${faceAng}deg)`:"";
 }
+/* Temas da galera: cada um escreve o seu antes da 1ª rodada. No online, cada celular manda o próprio;
+   no "Um celular só", uma lista com um campo por pessoa. O que está sendo digitado sobrevive aos redesenhos */
+function renderCollect(){
+  const keep=$("crowdIn")?$("crowdIn").value:"",focused=document.activeElement&&document.activeElement.id==="crowdIn";
+  const host=MODE!=="guest",wrote=V.wrote||[];
+  let body=`<div class="big win mid">Temas da galera</div><p>Cada um escreve um tema. Eles saem no sorteio antes dos temas do jogo, e ninguém vê os dos outros antes.</p>`;
+  if(MODE==="local"){
+    body+=`<form id="crowdLocal" class="crowdform">${V.pl.filter(p=>!p.bench).map(p=>`<label class="seatpick"><span class="lbl">Tema de ${esc(p.name)}</span><input type="text" maxlength="40" autocomplete="off" data-id="${esc(p.id)}"></label>`).join("")}<button class="btn" type="submit">Começar</button><p class="note">Quem deixar em branco fica sem tema; o resto sai do baralho normal.</p></form>`;
+  }else{
+    const mine=wrote.includes(ME),pend=V.pl.filter(p=>p.on!==false&&!p.bench&&!wrote.includes(p.id)).map(p=>p.name);
+    body+=mine?`<p class="given">Seu tema foi.</p>`:`<form id="crowdForm" class="crowdform"><input type="text" id="crowdIn" maxlength="40" autocomplete="off" placeholder="Ex.: Coisas que a gente fala bêbado" aria-label="Seu tema"><button class="btn" type="submit">Mandar meu tema</button></form>`;
+    body+=`<p class="note">${pend.length?"Faltam: "+esc(joinNames(pend))+".":"Todo mundo mandou."}</p>`;
+    if(host&&wrote.length)body+=`<button class="btn ghost small" id="crowdGo" type="button">Começar com ${wrote.length} tema${wrote.length===1?"":"s"}</button>`;
+  }
+  $("ovbox").innerHTML=body+quitBtn();$("ov").hidden=false;wireQuit();
+  if($("crowdLocal"))$("crowdLocal").onsubmit=e=>{
+    e.preventDefault();
+    $("crowdLocal").querySelectorAll("input").forEach(i=>{const c=i.value.trim();if(c)dispatch({t:"theme",id:i.dataset.id,cat:c})});
+    dispatch({t:"crowdgo"});
+  };
+  if($("crowdForm"))$("crowdForm").onsubmit=e=>{e.preventDefault();const c=$("crowdIn").value.trim();if(!c){$("crowdIn").focus();return}dispatch({t:"theme",cat:c})};
+  if($("crowdGo"))$("crowdGo").onclick=()=>dispatch({t:"crowdgo"});
+  const inp=$("crowdIn")||$("crowdLocal")&&$("crowdLocal").querySelector("input");
+  if($("crowdIn")){$("crowdIn").value=keep}
+  if(inp&&(focused||!keep))try{inp.focus({preventScroll:true})}catch(e){}
+}
 function nextUp(){const n=V.pl.length;for(let k=1;k<n;k++){const p=V.pl[(V.cur+k)%n];if(p.alive&&p.on!==false)return p}return null}
 function myTurn(){return V&&V.state==="run"&&(MODE==="local"||(V.pl[V.cur]&&V.pl[V.cur].id===ME))}
 function render(prev){
@@ -123,7 +151,8 @@ function render(prev){
   buildKeys(V.letters);
   const hostish=MODE!=="guest", mine=myTurn(), curP=V.pl[V.cur];
   $("board").querySelectorAll(".key").forEach(k=>{const u=V.used.includes(k.dataset.l);k.classList.toggle("used",u);k.disabled=u||!mine});
-  $("roundLbl").textContent="Rodada "+V.round+(V.maxRounds?"/"+V.maxRounds:"");
+  $("roundLbl").textContent=V.state==="collect"?"Temas da galera":"Rodada "+V.round+(V.maxRounds?"/"+V.maxRounds:"");
+  {const hb=$("heckles").querySelector('[data-k="bebe"]');if(hb)hb.textContent=isDry()?"😬 Vai sair":"🍺 Vai beber"}
   $("pips").innerHTML=V.maxRounds&&V.maxRounds<=10?Array.from({length:V.maxRounds},(_,i)=>`<span class="pip ${i+1<V.round?"done":i+1===V.round?"now":""}"></span>`).join(""):"";
   const hi=$("hubin");$("hub").classList.remove("danger");
   if(V.state==="idle"){
@@ -133,6 +162,8 @@ function render(prev){
     else if(V.hostAway)hi.innerHTML=`<span class="wait">${esc(V.host||"Quem abriu a mesa")} saiu do jogo. Esperando voltar</span>`;
     else{const st=curP,me=st&&st.id===ME;
       hi.innerHTML=st&&!V.ov?`<span class="wait">${me?`<b class="who">Você começa</b>`:`<b class="who">${esc(st.name)}</b> começa.`} Esperando o valendo</span>`:`<span class="wait">Esperando quem abriu a mesa dar o valendo</span>`}
+  }else if(V.state==="collect"){
+    hi.innerHTML=`<span class="wait">Escrevendo os temas…</span>`;
   }else if(V.state==="pause"){
     const online=V.pl.filter(p=>p.alive&&p.on!==false).length;
     if(hostish&&online<2)hi.innerHTML=`<span class="wait">Pausado: esperando a galera reconectar</span>`;
@@ -171,6 +202,8 @@ function render(prev){
   $("addOpen").hidden=MODE!=="local";
   $("roomTag").hidden=MODE==="local"||!roomCode;$("roomTagCode").textContent=roomCode;$("comandaLeft").hidden=!$("roomTag").hidden;
   const canEdit=hostish&&V.state==="idle"&&!V.ov&&!spinning;$("catOpen").hidden=!canEdit;$("comandaRight").hidden=canEdit;
+  /* tema da galera: a comanda diz de quem é (só depois do sorteio parar) */
+  $("comandaRight").textContent=V.catAuthor&&!spinning?"tema de "+V.catAuthor:"";
   maybeSpin();
   renderOverlay();
 }
@@ -208,7 +241,7 @@ $("plist").addEventListener("click",e=>{const b=e.target.closest("button.pl");if
 /* a janela é anunciada como aviso e o foco vai pro botão principal (no fim da partida, pra própria lousa) */
 function focusOv(){
   const b=$("ovbox"),t=b.querySelector(".slipname,.big"),go=$("ovgo");
-  b.setAttribute("aria-label",t?t.textContent+(b.querySelector(".stamp")?" bebe":""):"Aviso");
+  b.setAttribute("aria-label",t?t.textContent+(b.querySelector(".stamp")?(isDry()?" saiu":" bebe"):""):"Aviso");
   try{(V&&V.ov&&V.ov.kind!=="final"&&go?go:b).focus({preventScroll:true})}catch(e){}
 }
 /* o painel de configurações pode estar dentro da caixa do fim da partida: tira de lá antes de redesenhar a caixa */
@@ -224,13 +257,14 @@ function renderOverlay(){
   $("ovbox").classList.toggle("slip",slip);$("ovbox").classList.toggle("lousa",o.kind==="final");
   /* no celular de quem bebeu, o nome vira "Você" e o celular vibra forte */
   const meDrinks=MODE!=="local"&&((o.kind==="drink"&&o.id===ME)||(o.kind==="win"&&o.loserId===ME));
-  const drinker=n=>`<div class="slipname">${meDrinks?"Você":esc(n)}</div><div class="stamp">Bebe!</div>`;
+  const drinker=n=>`<div class="slipname">${meDrinks?"Você":esc(n)}</div><div class="stamp">${isDry()?"Saiu!":"Bebe!"}</div>`;
   if(o.kind==="drink")html=`${drinker(o.name)}${isLocked()?"":outLine(o.place,o.gain)}<p>Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
   else if(o.kind==="win"){
     /* fim da rodada na comanda: quem bebeu por último em cima, quem venceu escrito à mão embaixo, e a escolha do gole */
     const meWins=MODE!=="local"&&o.winnerId===ME,canGive=MODE==="local"||MODE==="host"||meWins,W=esc(o.winner);
     let give;
-    if(o.given)give=`<p class="given">${o.given.id?`${meWins?"Você deu":W+" deu"} o gole pra <span class="name">${o.given.id===ME&&MODE!=="local"?"você":esc(o.given.name)}</span>.`:"Ninguém leva o gole dessa vez."}</p>`;
+    if(isDry())give="";
+    else if(o.given)give=`<p class="given">${o.given.id?`${meWins?"Você deu":W+" deu"} o gole pra <span class="name">${o.given.id===ME&&MODE!=="local"?"você":esc(o.given.name)}</span>.`:"Ninguém leva o gole dessa vez."}</p>`;
     else if(canGive)give=`<div class="give"><span class="lbl">${meWins?"Quem leva o gole?":W+", quem leva o gole?"}</span><div class="chips" id="giveList">${V.pl.filter(p=>p.id!==o.winnerId).map(p=>`<button type="button" class="chip" data-id="${esc(p.id)}">${esc(p.name)}</button>`).join("")}<button type="button" class="chip none" data-id="">Ninguém</button></div></div>`;
     else give=`<p>${W} escolhe quem leva o gole.</p>`;
     html=(o.loser?`${drinker(o.loser)}${isLocked()?"":outLine(o.loserPlace,o.loserGain)}`:"")
@@ -238,6 +272,7 @@ function renderOverlay(){
   }
   else if(o.kind==="reset")html=`<div class="big win">Zerou o tabuleiro</div><p>As letras voltam e o tempo cai para <span class="name">${o.dur}s</span>. Mesmo tema.</p>${o.next?`<p>Próxima vez: <span class="name">${esc(o.next)}</span></p>`:""}`;
   else if(o.kind==="few")html=`<div class="big win mid">Esperando a galera</div><p>Precisa de pelo menos 2 pessoas conectadas. A rodada começa sozinha quando alguém voltar.</p>`;
+  if(o.kind==="collect"){renderCollect();return}
   if(o.kind==="final"){
     const host=MODE!=="guest";
     /* quem abriu a mesa pode mudar tempo, rodadas e temas antes da próxima, sem sair */
@@ -283,11 +318,11 @@ function outLine(place,gain){
   return `<p class="ptsline">${pos}º a sair: <b>${ptsTxt(gain)}</b>${pos===1?", quem sai primeiro perde 1":", 1 por cada um que saiu antes"}</p>`;
 }
 const RULE_LINE="Quanto mais você dura na rodada, mais ganha: +1 ponto por cada pessoa que sai antes de você. Quem sai primeiro perde 1.";
-const TIE_LINE="Empate: quem venceu mais rodadas, depois quem bebeu menos.";
+const TIE_TXT=()=>isDry()?"Empate: quem venceu mais rodadas, depois quem saiu menos.":"Empate: quem venceu mais rodadas, depois quem bebeu menos.";
 const num=n=>(n<0?"−":"")+Math.abs(n);
 /* goles em risquinhos de giz, como a conta do bar: 4 em pé e o 5º cortando */
 function tally(n){
-  if(!n)return `<span class="tally none">nenhum gole</span>`;
+  if(!n)return `<span class="tally none">${goles(0)}</span>`;
   let h="";
   for(let g=0;g<Math.ceil(n/5);g++){
     const k=Math.min(5,n-g*5),w=k===5?22:k*5+1;let l="";
@@ -295,7 +330,7 @@ function tally(n){
     if(k===5)l+=`<line x1="0" y1="12.5" x2="21" y2="4"/>`;
     h+=`<svg viewBox="0 0 ${w} 17" width="${w}" height="17" aria-hidden="true">${l}</svg>`;
   }
-  return `<span class="tally" role="img" aria-label="${n} gole${n===1?"":"s"}">${h}</span>`;
+  return `<span class="tally" role="img" aria-label="${goles(n)}">${h}</span>`;
 }
 /* ordem: pontos, depois mais vitórias, depois menos goles; empate total divide a posição */
 function ranked(){
@@ -333,7 +368,8 @@ function finalStats(){
   const sober=minD<maxD?V.pl.filter(p=>p.drinks===minD).map(p=>p.name):[];
   return {r,top,sponge,maxD,wins:wins.length<=2?wins:[],maxW,sober:sober.length<=2?sober:[],minD};
 }
-const goles=n=>n===0?"nenhum gole":n+" gole"+(n===1?"":"s");
+function goles(n){return isDry()?(n===0?"nenhuma saída":n+" saída"+(n===1?"":"s")):(n===0?"nenhum gole":n+" gole"+(n===1?"":"s"))}
+const spongeLbl=()=>isDry()?"Mais saídas":"Esponja da noite";
 function finalHtml(tail){
   const st=finalStats(),n=st.r.length,T=(n-1)*0.6+0.5,E=a=>a.map(esc);
   const rows=st.r.map((x,i)=>rowHtml(x,{reveal:true,ring:true,st:` style="animation-delay:${(n-1-i)*0.6}s"`})).join("");
@@ -342,10 +378,10 @@ function finalHtml(tail){
     <ol class="ranking">${rows}</ol>
     <div class="finaltail reveal" style="animation-delay:${T}s">
       <div class="big win mid">${champ}</div>
-      ${st.sponge.length?`<p>Esponja da noite: <span class="name">${joinNames(E(st.sponge))}</span>, com ${goles(st.maxD)}.</p>`:""}
+      ${st.sponge.length?`<p>${spongeLbl()}: <span class="name">${joinNames(E(st.sponge))}</span>, com ${goles(st.maxD)}.</p>`:""}
       ${st.wins.length?`<p>Mais rodadas vencidas: <span class="name">${joinNames(E(st.wins))}</span>, com ${st.maxW}.</p>`:""}
-      ${st.sober.length?`<p>Menos goles: <span class="name">${joinNames(E(st.sober))}</span>, com ${goles(st.minD)}.</p>`:""}
-      <p class="note">Ordem por pontos. ${TIE_LINE}</p>
+      ${st.sober.length?`<p>${isDry()?"Menos saídas":"Menos goles"}: <span class="name">${joinNames(E(st.sober))}</span>, com ${goles(st.minD)}.</p>`:""}
+      <p class="note">Ordem por pontos. ${TIE_TXT()}</p>
       ${tail||""}
     </div>`;
 }
@@ -370,7 +406,7 @@ async function shareResult(btn){
   const st=finalStats();
   const lines=st.r.map(x=>`${x.pos}º ${x.p.name}: ${num(x.p.pts||0)} pt${Math.abs(x.p.pts||0)===1?"":"s"}, ${goles(x.p.drinks)}`);
   const champ=st.top.length>1?`${joinNames(st.top)} empataram em primeiro.`:`${st.top[0]} levou a partida.`;
-  const text=[`Tecla Stop: fim da partida, ${V.round} rodada${V.round===1?"":"s"}`,"",...lines,"",champ,st.sponge.length?`Esponja da noite: ${joinNames(st.sponge)}, com ${goles(st.maxD)}.`:"","",location.origin+location.pathname].filter((l,i,a)=>l||a[i-1]).join("\n").trim();
+  const text=[`Tecla Stop: fim da partida, ${V.round} rodada${V.round===1?"":"s"}`,"",...lines,"",champ,st.sponge.length?`${spongeLbl()}: ${joinNames(st.sponge)}, com ${goles(st.maxD)}.`:"","",location.origin+location.pathname].filter((l,i,a)=>l||a[i-1]).join("\n").trim();
   if(navigator.share){try{await navigator.share({title:"Tecla Stop",text});return}catch(e){if(e&&e.name==="AbortError")return}}
   try{await navigator.clipboard.writeText(text);btn.textContent="Resultado copiado";setTimeout(()=>{if(btn.isConnected)btn.textContent="Compartilhar resultado"},2500)}catch(e){}
 }
@@ -386,7 +422,7 @@ function renderSheet(force){
   if(!force&&sig===sheetSig)return;sheetSig=sig;
   const body=lk
     ?`<div class="big win mid">Suspense</div><p>${lockMsg()}</p>${coveredList()}`
-    :`<span class="lbl">Placar até a rodada ${V.round}${V.maxRounds?" de "+V.maxRounds:""}</span>${rankList(false,V.round>=2).html}<details class="pointshow"><summary>Como os pontos contam</summary><p class="note">${RULE_LINE} ${TIE_LINE}</p></details>${V.maxRounds>3?`<p class="note">Nas últimas 3 rodadas a lousa fica coberta até o fim.</p>`:""}`;
+    :`<span class="lbl">Placar até a rodada ${V.round}${V.maxRounds?" de "+V.maxRounds:""}</span>${rankList(false,V.round>=2).html}<details class="pointshow"><summary>Como os pontos contam</summary><p class="note">${RULE_LINE} ${TIE_TXT()}</p></details>${V.maxRounds>3?`<p class="note">Nas últimas 3 rodadas a lousa fica coberta até o fim.</p>`:""}`;
   $("rkbox").innerHTML=body+`<button class="btn" id="rkclose" type="button">Voltar pro jogo</button>`+(canFinish?`<button class="btn ghost small" id="rkfinish" type="button">Encerrar partida</button>`:"")+(MODE==="host"?`<button class="btn ghost small" id="rklock" type="button">${tableLocked?"Destrancar a mesa":"Trancar a mesa"}</button>`:"");
   if($("rklock"))$("rklock").onclick=toggleLock;
   $("rkclose").onclick=()=>closeSheet();

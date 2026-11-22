@@ -303,6 +303,7 @@ button.pl::after{content:"";position:absolute;inset:-6px -2px}
 .give .chip{font-family:var(--body);cursor:pointer;background:#fff;color:var(--paper-ink);border-color:var(--paper-line);padding:7px 13px}
 .give .chip.none{background:transparent;border-style:dashed;color:var(--paper-muted)}
 .given{font-weight:700}
+.crowdform{display:flex;flex-direction:column;gap:10px}
 .waitnext{font-weight:700}
 .ovbox:focus{outline:none}
 .ovfix{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
