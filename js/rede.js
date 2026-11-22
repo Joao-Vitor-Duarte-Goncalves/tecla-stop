@@ -162,7 +162,7 @@ $("roomTag").onclick=()=>invite($("roomTagHint"),"copiado");
 
 /* guest */
 $("joinForm").onsubmit=e=>{e.preventDefault();const n=needName();if(!n||!peerOk())return;
-  const code=$("joinCode").value.trim().toUpperCase();if(!/^[A-Z]{4}$/.test(code)){homeErr("O número da mesa tem 4 letras.");return}
+  const code=$("joinCode").value.trim().toUpperCase();if(!/^[A-Z]{4}$/.test(code)){homeErr("O número da mesa tem 4 letras.","join");$("joinCode").focus();return}
   unlockAudio();keepAwake();startGuest(n,code,false)};
 const SUFFIXES=["","b","c"];let hostSuffix="",takingOver=false,seatIdx=0,seatMisses=0,lastFull=null;
 let guestName="",everConnected=false,rcTimer=null,rcStart=0,rcN=0,lastHostMsg=0;
@@ -232,7 +232,7 @@ function onGuestData(d){
 }
 function guestFail(msg){
   clearTimeout(rcTimer);lsDel(ROOM_KEY);
-  const code=roomCode;teardown();show("home");homeErr(msg);$("joinCode").value=code;
+  const code=roomCode;teardown();show("home");homeErr(msg,"join");$("joinCode").value=code;
 }
 
 /* heartbeat: guests ping, host drops silent phones, everyone retries when the screen wakes */
@@ -268,7 +268,7 @@ function teardown(){
   try{wake&&wake.release()}catch(e){}
   try{noSleep&&noSleep.isEnabled&&noSleep.disable()}catch(e){}
 }
-function leave(){lsDel(HOST_KEY);lsDel(ROOM_KEY);teardown();homeErr("");show("home")}
+function leave(){lsDel(HOST_KEY);lsDel(ROOM_KEY);teardown();homeErr("");clearInvite();show("home")}
 
 /* ---------- reopen after reload ---------- */
 (function restore(){

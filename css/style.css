@@ -65,7 +65,6 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--yellow)}
 .caps .cap:nth-child(odd){transform:rotate(-8deg)}
 .caps .cap:nth-child(even){transform:rotate(6deg) translateY(4px)}
 h1{font-family:var(--display);font-weight:400;font-size:2.4rem;line-height:.95;margin:0;letter-spacing:.01em}
-h1 span{color:var(--accent-text)}
 .sub{color:var(--muted);margin:0;line-height:1.5;max-width:34ch}
 .namebox{display:flex;flex-direction:column;gap:8px}
 .primary{display:flex;flex-direction:column;gap:4px;text-align:left;background:var(--yellow);color:var(--paper-ink);border-radius:16px;padding:16px;box-shadow:0 5px 0 var(--yellow-dk)}
@@ -75,16 +74,39 @@ h1 span{color:var(--accent-text)}
 .panel{background:var(--night-2);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .panel h2{font-family:var(--display);font-weight:400;font-size:1.1rem;margin:0}
 input.code{text-transform:uppercase;letter-spacing:.35em;font-family:var(--display);font-weight:400;text-align:center;font-size:1.2rem}
-.secondary{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;background:transparent;border:1px dashed var(--line);border-radius:16px;padding:14px}
-.secondary strong{display:block;font-weight:800}
+.secondary{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:transparent;border:1px dashed var(--line);border-radius:16px;padding:14px}
+.secondary strong{font-weight:800}
 .secondary span{color:var(--muted);font-size:.9rem}
-.secondary .arrow{font-family:var(--display);color:var(--yellow);font-size:1.3rem}
-.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:.95rem;font-weight:600}
+.toggle{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:.95rem;font-weight:600}
 details.how{border-top:1px solid var(--line);padding-top:12px}
 details.how summary{cursor:pointer;font-weight:800;list-style:none;display:flex;justify-content:space-between}
 details.how summary::after{content:"+";font-family:var(--display);color:var(--yellow)}
 details.how[open] summary::after{content:"−"}
+.rules li::marker{color:var(--yellow)}
 .rules{color:var(--muted);font-size:.92rem;line-height:1.5;margin:10px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+
+/* bloco online: o nome fica junto das duas formas de jogar online */
+.online{background:var(--night-2);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.online h2{font-family:var(--display);font-weight:400;font-size:1.1rem;line-height:1.15;margin:0}
+.online h2 b{font-weight:400;color:var(--accent-text);letter-spacing:.08em}
+.joinform{display:flex;flex-direction:column;gap:8px}
+.err:empty{display:none}
+.linkbtn{background:transparent;color:var(--muted);font-weight:700;font-size:.9rem;text-decoration:underline;text-underline-offset:3px;padding:6px 0;align-self:center}
+/* modo convite: só o nome e o botão de sentar na mesa do link */
+.inviteonly{display:none}
+.invited .inviteonly{display:block}
+.invited #onlineTitle,.invited #mCreate,.invited .joinform .lbl,.invited #joinCode,.invited #mLocal{display:none}
+.invited #joinBtn{flex:1;padding:16px;font-size:1.1rem;box-shadow:0 5px 0 var(--yellow-dk)}
+
+/* a mesa espiando na borda de baixo da home */
+.homemesa{position:relative;margin:auto -16px -28px;height:clamp(110px,32vw,160px);overflow:hidden;pointer-events:none}
+.mesa{position:absolute;left:50%;top:14px;width:min(118vw,540px);aspect-ratio:1;translate:-50% 0;border-radius:50%;container-type:inline-size;
+  background:repeating-conic-gradient(var(--yellow-hi) 0 4deg, var(--yellow-edge) 4deg 8deg);box-shadow:0 -8px 30px rgba(0,0,0,.35)}
+.mesa::before{content:"";position:absolute;inset:4.5%;border-radius:50%;background:radial-gradient(circle at 38% 30%, var(--yellow-hi) 0, var(--yellow) 42%, var(--yellow-dk) 100%);box-shadow:inset 0 0 0 6px rgba(255,255,255,.18)}
+.mesa .cap{position:absolute;left:50%;top:50%;width:13.5%;aspect-ratio:1;font-size:6cqw;pointer-events:auto;cursor:pointer;
+  transform:translate(-50%,-50%) rotate(var(--a)) translateY(-40.5cqw) rotate(calc(-1 * var(--a)));transition:scale .15s}
+.mesa .cap.hit{scale:1.2}
+@supports not (width:1cqw){.homemesa{display:none}}
 
 /* preparação / sala */
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:40px}

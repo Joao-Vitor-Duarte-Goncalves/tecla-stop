@@ -307,3 +307,10 @@ $("addOpen").onclick=()=>{$("addov").hidden=false;$("addMidIn").value="";$("addM
 $("addCancel").onclick=()=>{$("addov").hidden=true};
 $("addMid").onsubmit=e=>{e.preventDefault();const n=$("addMidIn").value.trim();if(!n){$("addMidIn").focus();return}$("addov").hidden=true;$("addMidIn").blur();dispatch({t:"addlocal",name:n})};
 
+
+/* tampinhas da mesa da home: tocar faz barulho de tampinha */
+$("homeMesa").addEventListener("pointerdown",e=>{
+  const c=e.target.closest(".cap");if(!c)return;
+  unlockAudio();beep(420+Math.random()*260,.06,"triangle",.06);
+  c.classList.remove("hit");void c.offsetWidth;c.classList.add("hit");setTimeout(()=>c.classList.remove("hit"),180);
+});

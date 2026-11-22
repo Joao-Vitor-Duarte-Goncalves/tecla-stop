@@ -19,7 +19,11 @@ function show(id){
   document.body.classList.toggle("ingame",id==="game");
   if(id==="game"&&from!=="game"&&(from==="local"||from==="lobby"))playIntro();
 }
-function homeErr(msg){$("homeErr").textContent=msg||"";$("homeErr").hidden=!msg}
+/* o erro aparece junto do campo que precisa de correção: "name", "join" ou, sem campo, embaixo do bloco online */
+function homeErr(msg,where){
+  const t={name:"nameErr",join:"joinErr"}[where]||"homeErr";
+  ["nameErr","joinErr","homeErr"].forEach(id=>{const e=$(id);e.textContent=id===t?msg||"":"";e.hidden=!(id===t&&msg)});
+}
 $("myName").value=S.name;
 $("myName").oninput=e=>{S.name=e.target.value.trim();save()};
 $("sound").checked=S.sound;$("sound").onchange=e=>{S.sound=e.target.checked;save()};
@@ -61,9 +65,13 @@ renderSeg();renderSegR();
 function mountSettings(where){$(where).appendChild($("settings"));$("settings").hidden=false}
 document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>leave());
 const hashCode=(location.hash||"").replace("#","").toUpperCase();
-if(/^[A-Z]{4}$/.test(hashCode))$("joinCode").value=hashCode;
+/* modo convite: quem chega pelo link vê só o nome e "Sentar na mesa ABCD", pra não abrir uma mesa própria sem querer */
+function setInvite(code){$("home").classList.toggle("invited",!!code);$("inviteCode").textContent=code||"";$("joinBtn").textContent=code?"Sentar na mesa "+code:"Sentar"}
+function clearInvite(){setInvite(null);try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
+if(/^[A-Z]{4}$/.test(hashCode)){$("joinCode").value=hashCode;setInvite(hashCode)}
+$("otherWays").onclick=()=>{clearInvite();$("myName").focus()};
 
-function needName(){const n=$("myName").value.trim();if(!n){homeErr("Coloca seu nome primeiro.");$("myName").focus();return null}homeErr("");S.name=n;save();return n}
+function needName(){const n=$("myName").value.trim();if(!n){homeErr("Coloca seu nome primeiro.","name");$("myName").focus();return null}homeErr("");S.name=n;save();return n}
 
 /* ---------- audio + wake lock ---------- */
 let ac=null, wake=null;

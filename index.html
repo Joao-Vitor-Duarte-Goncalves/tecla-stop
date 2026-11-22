@@ -16,24 +16,32 @@
 <div class="wrap" id="home">
   <div class="brand">
     <div class="caps" aria-hidden="true"><span class="cap">S</span><span class="cap">T</span><span class="cap">O</span><span class="cap">P</span></div>
-    <h1>Tecla <span>Stop</span><br>do Bar</h1>
+    <h1>Tecla Stop<br>do Bar</h1>
     <p class="sub">Sai um tema. Na sua vez, fale uma palavra e toque a tampinha da letra antes do tempo acabar. Estourou, bebe.</p>
   </div>
-  <div class="namebox">
-    <label class="lbl" for="myName">Seu nome na roda</label>
-    <input type="text" id="myName" placeholder="Como te chamam na roda" maxlength="16" autocomplete="off">
-  </div>
-  <button class="primary" id="mCreate"><strong>Abrir uma mesa</strong><span>Seu celular vira o juiz. A galera senta pelo número da mesa, cada um no seu.</span></button>
-  <div class="panel" id="joinBox">
-    <h2>Sentar numa mesa</h2>
-    <form class="row" id="joinForm"><input type="text" class="code" id="joinCode" placeholder="ABCD" maxlength="4" autocomplete="off" aria-label="Número da mesa"><button class="btn small" type="submit">Sentar</button></form>
-  </div>
-  <button class="secondary" id="mLocal"><span><strong>Um celular só</strong><span>Passa de mão em mão. Sem internet.</span></span><span class="arrow" aria-hidden="true">→</span></button>
+  <!-- online: o nome só vale aqui. Com #ABCD no link a home entra no modo convite (classe .invited) -->
+  <section class="online" aria-labelledby="onlineTitle">
+    <h2 id="onlineTitle">Cada um no seu celular</h2>
+    <h2 class="inviteonly">Te chamaram pra mesa <b id="inviteCode">····</b></h2>
+    <div class="namebox">
+      <label class="lbl" for="myName">Seu nome na roda</label>
+      <input type="text" id="myName" placeholder="Como te chamam na roda" maxlength="16" autocomplete="off" autocapitalize="words" aria-describedby="nameErr">
+      <p class="err" id="nameErr" hidden></p>
+    </div>
+    <button class="primary" id="mCreate"><strong>Abrir uma mesa</strong><span>Seu celular vira o juiz. A galera senta pelo número da mesa.</span></button>
+    <form class="joinform" id="joinForm">
+      <label class="lbl" for="joinCode">Ou sente numa mesa que já está aberta</label>
+      <div class="row"><input type="text" class="code" id="joinCode" placeholder="ABCD" maxlength="4" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" aria-describedby="joinErr"><button class="btn small" id="joinBtn" type="submit">Sentar</button></div>
+      <p class="err" id="joinErr" hidden></p>
+    </form>
+    <button class="linkbtn inviteonly" id="otherWays" type="button">Abrir outra mesa ou jogar num celular só</button>
+  </section>
   <p class="err" id="homeErr" hidden></p>
-  <div class="toggle"><span>Bipe nos últimos 3 segundos</span><input type="checkbox" id="sound" checked></div>
+  <button class="secondary" id="mLocal"><strong>Um celular só</strong><span>Passa de mão em mão. Sem internet.</span></button>
+  <label class="toggle" for="sound"><span>Som</span><input type="checkbox" id="sound" checked></label>
   <details class="how">
     <summary>Como funciona</summary>
-    <ol class="rules">
+    <ul class="rules">
       <li>Não pode repetir letra já tocada nem palavra já dita.</li>
       <li>Tempo acabou: bebe e sai da rodada.</li>
       <li>Último que sobrar ganha a rodada e escolhe quem bebe.</li>
@@ -41,8 +49,12 @@
       <li>Pontos: cada pessoa que sai antes de você vale +1. Ser o primeiro a sair tira 1 ponto.</li>
       <li>Chegou alguém? Entra na hora, na rodada que estiver rolando.</li>
       <li>No fim das rodadas sai o placar por pontos.</li>
-    </ol>
+    </ul>
   </details>
+  <!-- a mesa aparecendo na borda de baixo; as tampinhas fazem barulho quando tocadas -->
+  <div class="homemesa" aria-hidden="true"><div class="mesa" id="homeMesa">
+    <span class="cap" style="--a:-54deg">T</span><span class="cap" style="--a:-36deg">U</span><span class="cap" style="--a:-18deg">V</span><span class="cap" style="--a:0deg">A</span><span class="cap" style="--a:18deg">B</span><span class="cap" style="--a:36deg">C</span><span class="cap" style="--a:54deg">D</span>
+  </div></div>
 </div>
 
 <!-- SETTINGS (moved into local setup or lobby) -->

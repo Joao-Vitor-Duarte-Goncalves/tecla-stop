@@ -31,6 +31,7 @@ Depois de mexer, confira no celular:
 - [ ] Home abre sem erro no console; tema claro/escuro alterna.
 - [ ] **Um celular só**: adicionar/tirar jogador, começar, tocar letras, estourar o tempo, "Errei a letra", Desfazer, Pausar.
 - [ ] **Abrir mesa** num celular e **entrar** em outro pelo código e pelo link do convite.
+- [ ] Pelo link do convite, a home mostra só o nome e "Sentar na mesa ABCD"; "Abrir outra mesa ou jogar num celular só" volta pra home normal.
 - [ ] Botão Voltar/Sair em todas as telas.
 - [ ] Recarregar a página no meio da partida (host e convidado voltam).
 - [ ] Fim da partida: ranking revelado e "Nova partida".
