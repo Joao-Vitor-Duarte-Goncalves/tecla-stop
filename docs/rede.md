@@ -38,6 +38,7 @@ Host → convidado:
 |---|---|
 | `{t:"lobby", code, players, host, set}` | Na sala de espera, a cada entrada, saída, troca de ordem ou mudança de opção. `players` está na ordem da roda; `host` é o nome de quem abriu; `set` traz `dur`, `rounds`, `molec`, `hard` pro resumo |
 | `{t:"closed", by}` | Quem abriu a mesa tocou Sair/Fechar a mesa. Os convidados voltam pra home com "Ana fechou a mesa." em vez de ficar tentando reconectar; as conexões fecham 0,5 s depois, pra mensagem chegar |
+| `{t:"locked"}` | A mesa está trancada e a pessoa não estava nela. O convidado volta pra home com o aviso |
 | `{t:"kicked"}` | Quem abriu a mesa tirou a pessoa da sala. O convidado volta pra home com o aviso e pode sentar de novo |
 | `{t:"state", …snapshot, full}` | A cada mudança no jogo. `full` é a cópia inteira do jogo (sem relógios), usada na troca de juiz |
 | `{t:"pong"}` | Resposta ao ping |
@@ -63,3 +64,9 @@ Se o host some por mais de 15 s, os convidados veem a opção de **continuar com
 - **Quem abriu a mesa sai do app:** em qualquer tela os convidados veem "Ana saiu do jogo" (`G.hostAway`); se a rodada estava rolando, ela pausa. Ao voltar, o botão do centro diz "Continuar a rodada" e os convidados veem "Pausado. Esperando Ana continuar".
 - **Quem abriu a mesa sumiu de vez:** "Assumir a mesa" aparece primeiro só pra próxima pessoa da roda depois do juiz (15 s sem contato) e, 15 s depois, pra todo mundo (`takeoverRank`). O juiz é identificado por `G.hostId`.
 - **Faixa do topo:** vermelha quando atrapalha o jogo; neutra (`netBar(msg,"info")`) pra avisos como "Sem contato com o servidor de mesas" e "Reabrindo a mesa".
+
+## Identidade e mesa trancada
+
+- **Chave e id:** cada aparelho tem uma chave secreta (`S.key`, 128 bits) que só vai pro juiz no `join`. O id que aparece pros outros (`p.id`, `ME`) é `pubId(chave)`: os 16 primeiros hex do SHA-256 de `"teclastop:"+chave`. Como o estado do jogo mostra só os ids, ninguém consegue copiar o id de outra pessoa e entrar no lugar dela. Sem `crypto.subtle` (http na rede local), `pubId` cai num hash simples, só pra testes.
+- **Migração:** chaves antigas (8 letras) são trocadas quando o aparelho não está numa mesa. Mesas salvas antes da mudança têm os jogadores pela chave crua; o juiz converte na hora (`legacy`/`mig` em `rede.js`).
+- **Mesa trancada** (`tableLocked`, botão na sala e no Placar do juiz): quem já está na lista volta normalmente; gente nova recebe `{t:"locked"}` e volta pra home com o aviso.

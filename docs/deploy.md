@@ -14,7 +14,20 @@ Abra http://localhost:8000. Para testar o online com o celular na mesma rede, us
 ## Publicar
 
 A Vercel está ligada ao repositório: **todo push na `main` vai para produção** em https://tecla-stop.vercel.app.
-Não tem build nem configuração (`vercel.json`): a Vercel serve os arquivos como estão.
+Não tem build: a Vercel serve os arquivos como estão. O `vercel.json` só define cabeçalhos de segurança:
+
+- **Content-Security-Policy**: scripts só do próprio site, do unpkg e do cdnjs; conexões só com o servidor de mesas do PeerJS (`0.peerjs.com`). Se trocar de servidor de mesas ou adicionar um script de outro lugar, atualize essa linha, senão o navegador bloqueia (o erro aparece no console).
+- **X-Content-Type-Options** e **Referrer-Policy**.
+
+### Scripts de CDN com `integrity`
+
+PeerJS, NoSleep e qrcodejs são carregados com `integrity` (hash SHA-384). Se o CDN servir um arquivo diferente, o navegador não roda. Ao mudar a versão de um deles, gere o hash novo:
+
+```bash
+curl -sL URL_DO_SCRIPT | openssl dgst -sha384 -binary | openssl base64 -A
+```
+
+e ponha `sha384-<resultado>` no atributo `integrity` do `<script>`.
 
 ```bash
 git push origin main

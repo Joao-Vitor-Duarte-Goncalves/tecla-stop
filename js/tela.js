@@ -382,12 +382,13 @@ let sheetSig="",sheetPaused=false;
 function renderSheet(force){
   if($("rkov").hidden||!V)return;
   const lk=isLocked(),played=V.state==="idle"?V.round-1:V.round,canFinish=MODE!=="guest"&&V.state!=="over"&&played>=1;
-  const sig=JSON.stringify([lk,V.round,V.maxRounds,canFinish,played,V.pl.map(p=>[p.id,p.name,p.pts,p.wins,p.drinks])]);
+  const sig=JSON.stringify([MODE==="host"&&tableLocked,lk,V.round,V.maxRounds,canFinish,played,V.pl.map(p=>[p.id,p.name,p.pts,p.wins,p.drinks])]);
   if(!force&&sig===sheetSig)return;sheetSig=sig;
   const body=lk
     ?`<div class="big win mid">Suspense</div><p>${lockMsg()}</p>${coveredList()}`
     :`<span class="lbl">Placar até a rodada ${V.round}${V.maxRounds?" de "+V.maxRounds:""}</span>${rankList(false,V.round>=2).html}<details class="pointshow"><summary>Como os pontos contam</summary><p class="note">${RULE_LINE} ${TIE_LINE}</p></details>${V.maxRounds>3?`<p class="note">Nas últimas 3 rodadas a lousa fica coberta até o fim.</p>`:""}`;
-  $("rkbox").innerHTML=body+`<button class="btn" id="rkclose" type="button">Voltar pro jogo</button>`+(canFinish?`<button class="btn ghost small" id="rkfinish" type="button">Encerrar partida</button>`:"");
+  $("rkbox").innerHTML=body+`<button class="btn" id="rkclose" type="button">Voltar pro jogo</button>`+(canFinish?`<button class="btn ghost small" id="rkfinish" type="button">Encerrar partida</button>`:"")+(MODE==="host"?`<button class="btn ghost small" id="rklock" type="button">${tableLocked?"Destrancar a mesa":"Trancar a mesa"}</button>`:"");
+  if($("rklock"))$("rklock").onclick=toggleLock;
   $("rkclose").onclick=()=>closeSheet();
   if(canFinish)armConfirm($("rkfinish"),()=>"Encerrar partida",()=>`Encerrar com ${played} rodada${played===1?"":"s"}?`,()=>{closeSheet(true);dispatch({t:"finish"})});
 }

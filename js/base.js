@@ -6,9 +6,22 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 /* ---------- prefs ---------- */
 let S={players:[],dur:10,rounds:10,molec:true,heckle:true,theme:"auto",hard:false,sound:true,name:"",key:""};
 try{const s=JSON.parse(localStorage.getItem("tecla-stop")||"null");if(s)S=Object.assign(S,s)}catch(e){}
-if(!S.key)S.key=Math.random().toString(36).slice(2,10);
+/* ---------- identidade ----------
+   S.key é o segredo do aparelho: só vai pro celular de quem abriu a mesa. O id que aparece pros outros
+   (na lista de jogadores) é um hash dele, então ninguém consegue se passar por outra pessoa copiando o id.
+   Chaves antigas (8 letras) são trocadas por uma de 128 bits quando o aparelho não está numa mesa. */
+function randKey(){try{const a=new Uint8Array(16);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)}}
+{let busy=false;try{busy=!!(localStorage.getItem("tecla-stop-host")||localStorage.getItem("tecla-stop-room"))}catch(e){}
+ if(!S.key||(S.key.length<32&&!busy))S.key=randKey()}
 const save=()=>{try{localStorage.setItem("tecla-stop",JSON.stringify(S))}catch(e){}};
 save();
+/* id público = 16 primeiros hex do SHA-256 ("teclastop:"+chave). Sem crypto.subtle (http na rede local, testes), cai num hash simples */
+async function pubId(k){
+  const txt="teclastop:"+k;
+  try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(txt));return [...new Uint8Array(b)].slice(0,8).map(x=>x.toString(16).padStart(2,"0")).join("")}
+  catch(e){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<txt.length;i++){const c=txt.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (h2>>>0).toString(16).padStart(8,"0")+(h1>>>0).toString(16).padStart(8,"0")}
+}
+let PUB=null;const PUB_READY=pubId(S.key).then(id=>(PUB=id));
 
 /* ---------- screens ---------- */
 let curScreen="home";

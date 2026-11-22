@@ -37,6 +37,10 @@ $("localGo").onclick=()=>{
 };
 
 /* ---------- network ---------- */
+/* mesa trancada: quem já sentou volta, gente nova é recusada ({t:"locked"}) */
+let tableLocked=false;
+function toggleLock(){tableLocked=!tableLocked;saveHost();renderLock();if(typeof renderSheet==="function")renderSheet(true)}
+function renderLock(){const b=$("lockBtn");b.textContent=tableLocked?"Destrancar a mesa":"Trancar a mesa";b.setAttribute("aria-pressed",tableLocked?"true":"false");$("lockNote").hidden=!tableLocked}
 function randCode(){const A="ABCDEFGHJKLMNPRSTUVWXYZ";let s="";for(let i=0;i<4;i++)s+=A[Math.floor(Math.random()*A.length)];return s}
 function peerOk(){if(typeof Peer==="undefined"){homeErr("Não carregou a parte de rede. Confere a internet e recarrega a página.");return false}return true}
 let pickLobby=-1;
@@ -53,6 +57,7 @@ function lobbyView(){
   $("lobbyHint").hidden=!host||list.length<2;
   $("lobbyHint").textContent=pickLobby>=0?`Agora toque em quem vai trocar de lugar com ${list[pickLobby].name}.`:SEAT_HINT;
   $("lobbyShuffle").hidden=!host||list.length<3;
+  $("lockBtn").hidden=!host;if(host)renderLock();else $("lockNote").hidden=true;
   if(host){$("hostGo").hidden=false;$("hostGo").disabled=list.length<2;$("lobbyNote").textContent=list.length<2?"Esperando pelo menos mais 1 pessoa entrar.":""}
   else{
     const owner=V&&V.host;$("hostGo").hidden=true;
@@ -141,12 +146,15 @@ iceConfig();
 $("mCreate").onclick=()=>{const n=needName();if(!n||!peerOk())return;unlockAudio();keepAwake();startHost(n,null)};
 function startHost(name,restore,takeover){
   takingOver=!!takeover;if(!takeover)hostSuffix=(restore&&restore.suffix)||"";
-  MODE="host";ME=S.key;conns.clear();V=null;lastLetters="";
+  MODE="host";ME=PUB;conns.clear();V=null;lastLetters="";
   if(restore){
-    roomCode=restore.code;G=restore.G||null;if(G)G.hostId=ME;lobbyPl=(restore.lobby||[]).filter(p=>p.id===ME);
+    roomCode=restore.code;G=restore.G||null;tableLocked=!!restore.locked;
+    /* mesa salva antes da troca de identidade: o juiz era guardado pela chave crua */
+    const mig=p=>{if(p.id===S.key)p.id=ME};if(G){G.pl.forEach(mig)}(restore.lobby||[]).forEach(mig);
+    if(G)G.hostId=ME;lobbyPl=(restore.lobby||[]).filter(p=>p.id===ME);
     if(!lobbyPl.length)lobbyPl=[{id:ME,name}];
     if(G){G.pl.forEach(p=>{if(p.id!==ME)p.on=false});if(G.state==="run")G.state="pause";G.end=0}
-  }else{roomCode=randCode();lobbyPl=[{id:ME,name}];G=null}
+  }else{roomCode=randCode();lobbyPl=[{id:ME,name}];G=null;tableLocked=false}
   $("lobbyRole").textContent="Sua mesa";$("lobbyQuit").textContent="Sair";$("lobbyStatus").textContent=restore?"Reabrindo a mesa…":"Abrindo a mesa…";$("copyLink").hidden=true;
   mountSettings("hostSettings");
   if(G)sync();else{show("lobby");lobbyView()}
@@ -194,18 +202,27 @@ function saveHost(){
   if(MODE!=="host")return;
   let g=null;
   if(G){g=JSON.parse(JSON.stringify(G));if(G.state==="run"){g.state="pause";g.pausedLeft=Math.max(0,G.end-performance.now())}}
-  lsSet(HOST_KEY,{code:roomCode,suffix:hostSuffix||"",lobby:lobbyPl,G:g,name:S.name,t:Date.now()});
+  lsSet(HOST_KEY,{code:roomCode,suffix:hostSuffix||"",lobby:lobbyPl,G:g,name:S.name,locked:tableLocked,t:Date.now()});
 }
 function onHostData(c,d){
   if(!d||typeof d!=="object")return;
   c.lastSeen=Date.now();
   if(d.t==="ping"){try{c.send({t:"pong"})}catch(e){}return}
   if(d.t==="join"){
-    const id=String(d.key||"").slice(0,20)||Math.random().toString(36).slice(2),name=String(d.name||"Alguém").slice(0,16);
+    /* a chave é secreta; o jogador é identificado pelo hash dela (o mesmo que o convidado calcula pra si) */
+    const raw=String(d.key||"").slice(0,64),name=String(d.name||"Alguém").slice(0,16);
+    (raw?pubId(raw):Promise.resolve(Math.random().toString(36).slice(2))).then(id=>{
+    if(MODE!=="host"||id===ME)return;
+    /* migração: jogador salvo antes da troca de identidade, pela chave crua */
+    const legacy=p=>{if(raw&&p.id===raw)p.id=id};lobbyPl.forEach(legacy);if(G)G.pl.forEach(legacy);
+    const known=G?G.pl.some(p=>p.id===id):lobbyPl.some(p=>p.id===id);
+    /* mesa trancada: só quem já sentou volta */
+    if(tableLocked&&!known){try{c.send({t:"locked"})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400);return}
     const old=conns.get(id);if(old&&old!==c){old.pid=null;try{old.close()}catch(e){}}
     c.pid=id;conns.set(id,c);
     if(!G){const ex=lobbyPl.find(p=>p.id===id);if(ex)ex.name=name;else{lobbyPl.push({id,name});seatSound()}broadcastLobby()}
     else{const ex=G.pl.find(p=>p.id===id);if(ex){ex.on=true;ex.name=name;if(!ex.lost&&!ex.bench&&joinable())ex.alive=true}else{G.pl.push({id,name,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});seatSound()}if(G.ov&&G.ov.kind==="few")newRound();sync()}
+    });
     return;
   }
   if(c.pid)act(c.pid,d);
@@ -247,6 +264,7 @@ $("takeBtn").onclick=()=>{
 };
 $("copyLink").dataset.l="Chamar a galera";
 $("copyLink").onclick=()=>invite($("copyLink"),"Convite copiado");
+$("lockBtn").onclick=toggleLock;
 $("roomTag").onclick=()=>invite($("roomTagHint"),"copiado");
 
 /* guest */
@@ -257,7 +275,7 @@ const SUFFIXES=["","b","c"];let hostSuffix="",takingOver=false,seatIdx=0,seatMis
 let guestName="",everConnected=false,rcTimer=null,rcStart=0,rcN=0,lastHostMsg=0;
 function startGuest(name,code,auto){
   seatIdx=0;seatMisses=0;lastFull=null;$("takeover").hidden=true;
-  MODE="guest";ME=S.key;roomCode=code;guestName=name;G=null;V=null;lastLetters="";
+  MODE="guest";ME=PUB;roomCode=code;guestName=name;G=null;V=null;lastLetters="";
   everConnected=!!auto;rcStart=Date.now();rcN=0;
   $("lobbyRole").textContent="Entrando na mesa";$("qrWrap").hidden=true;$("lobbySummary").hidden=true;$("lobbyQuit").textContent="Cancelar";$("lobbyStatus").textContent=auto?"Voltando pra mesa…":"Entrando…";$("copyLink").hidden=true;$("hostSettings").innerHTML="";
   show("lobby");$("roomCode").textContent=code;$("lobbyPlayers").innerHTML=`<span class="note">Conectando…</span>`;$("lobbyHint").hidden=true;$("lobbyShuffle").hidden=true;$("hostGo").hidden=true;$("lobbyNote").textContent="";
@@ -330,6 +348,7 @@ function onGuestData(d){
   if(d.t==="closed"){guestFail(`${d.by||"Quem abriu a mesa"} fechou a mesa.`);return}
   /* a partida começou: vibra e toca, pra quem deixou o celular de lado */
   if(d.t==="state"&&curScreen==="lobby"){try{navigator.vibrate&&navigator.vibrate([90,60,90])}catch(e){}beep(660,.08,"triangle",.07);setTimeout(()=>beep(990,.12,"triangle",.07),90)}
+  if(d.t==="locked"){guestFail(`A mesa ${roomCode} está trancada. Peça pra quem abriu destrancar.`);return}
   if(d.t==="kicked"){guestFail("Quem abriu a mesa te tirou dela. Se foi engano, é só sentar de novo.");return}
   if(d.t==="lobby"){show("lobby");$("ov").hidden=true;V={lobby:d.players,host:d.host,set:d.set};lobbyView();V=null;return}
   if(d.t==="state"){if(d.full)lastFull=d.full;applyView(d)}
@@ -385,13 +404,14 @@ function leave(){
 }
 
 /* ---------- reopen after reload ---------- */
-(function restore(){
+/* espera o id público ficar pronto (é calculado com hash, de forma assíncrona) */
+PUB_READY.then(function restore(){
   if(typeof Peer==="undefined")return;
   const h=lsGet(HOST_KEY);
   if(h&&h.code&&Date.now()-h.t<MAX_AGE&&(!/^[A-Z]{4}$/.test(hashCode)||hashCode===h.code)){keepAwake();startHost(h.name||S.name||"Anfitrião",h);return}
   const r=lsGet(ROOM_KEY);
   if(r&&r.code&&r.name&&Date.now()-r.t<MAX_AGE&&(!/^[A-Z]{4}$/.test(hashCode)||hashCode===r.code)){keepAwake();startGuest(r.name,r.code,true)}
-})();
+});
 
 /* Sair da sala: quem abriu a mesa com gente sentada precisa confirmar, porque fecha a mesa de todo mundo */
 armConfirm($("lobbyQuit"),()=>"Sair",()=>"Fechar a mesa?",()=>leave());

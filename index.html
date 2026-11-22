@@ -6,9 +6,10 @@
 <title>Tecla Stop do Bar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Barlow:wght@500;600;700;800&family=Permanent+Marker&display=swap">
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="https://unpkg.com/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- integrity: se o CDN servir um arquivo diferente do que foi conferido, o navegador não roda. Ao trocar a versão, gere o hash de novo (docs/deploy.md) -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" integrity="sha384-nlUQ8ZqCbvStErob+biJNzSgltf6urV3VGqhfIfzhmg9RXmpeRm76ELw0pYnKlTR" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/nosleep.js@0.12.0/dist/NoSleep.min.js" integrity="sha384-lp0XiAMtqqqjyVLBYjAcDQzxc2XyGj3sGESoiWbccHdpXjNUPUjWrq5GMqaGHGp9" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -104,6 +105,8 @@
     <!-- QR code do link de convite: quem está na mesa aponta a câmera e cai direto no "Sentar na mesa" -->
     <div class="qrwrap" id="qrWrap" hidden><div class="qr" id="qr" role="img" aria-label="QR code do convite pra mesa"></div><p class="note">Aponta a câmera do celular pra sentar.</p></div>
     <button class="btn" id="copyLink" hidden>Chamar a galera</button>
+    <button class="btn ghost small" id="lockBtn" type="button" hidden>Trancar a mesa</button>
+    <p class="note" id="lockNote" hidden>Mesa trancada: quem já sentou volta, gente nova não entra.</p>
     <p class="note" id="lobbyStatus">Conectando…</p>
   </div>
   <div class="panel">
