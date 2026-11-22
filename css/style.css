@@ -43,7 +43,7 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--yellow)}
 .err{color:var(--red);font-weight:700;margin:0}
 
 /* botões */
-.btn{background:var(--yellow);color:var(--paper-ink);font-weight:800;font-size:1rem;border-radius:12px;padding:14px 16px;text-transform:uppercase;letter-spacing:.06em;box-shadow:0 4px 0 var(--yellow-dk)}
+.btn{background:var(--yellow);color:var(--paper-ink);font-weight:800;font-size:1rem;border-radius:12px;padding:14px 16px;box-shadow:0 4px 0 var(--yellow-dk)}
 .btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--yellow-dk)}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
 .btn.small{padding:9px 12px;font-size:.78rem}
@@ -221,7 +221,7 @@ button.pl::after{content:"";position:absolute;inset:-6px -2px}
 .tools{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .rkbtn{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:800}
 .rkbtn.locked{border-style:dashed;color:var(--muted)}
-.tools .btn,.tools .rkbtn{flex:0 1 auto;padding:7px 12px;min-width:0;font-size:.85rem;border-radius:999px;line-height:1.2;box-shadow:none;white-space:nowrap;text-transform:none;letter-spacing:0}
+.tools .btn,.tools .rkbtn{flex:0 1 auto;padding:7px 12px;min-width:0;font-size:.85rem;border-radius:999px;line-height:1.2;box-shadow:none;white-space:nowrap}
 .heckles{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;font-size:.82rem;font-weight:700;color:var(--muted)}
 .hkrow{display:flex;gap:6px}
 .hkrow button{background:var(--night-2);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-weight:800;font-size:.85rem}
