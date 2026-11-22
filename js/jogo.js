@@ -38,7 +38,7 @@ function curOk(){const c=G.pl[G.cur];return c&&c.alive&&c.on!==false}
 function resetTimer(){G.end=performance.now()+G.dur*1000}
 function aliveCount(){return G.pl.filter(p=>p.alive).length}
 function endIfLastStanding(){
-  if(aliveCount()<=1){const w=G.pl.find(p=>p.alive),gain=G.outs||0;if(w){w.wins++;w.pts+=gain}G.state="ov";G.ov={kind:"win",winner:w?w.name:"Ninguém",gain,last:isLastRound()};return true}
+  if(aliveCount()<=1){const w=G.pl.find(p=>p.alive),gain=G.outs||0;if(w){w.wins++;w.pts+=gain}G.state="ov";G.ovN=(G.ovN||0)+1;G.ov={kind:"win",n:G.ovN,winner:w?w.name:"Ninguém",winnerId:w?w.id:null,gain,last:isLastRound()};return true}
   return false;
 }
 function isLastRound(){return G.maxRounds>0&&G.round>=G.maxRounds}
@@ -71,6 +71,8 @@ function act(from,a){
       const L=G.lastOut;
       if(!isHostish(from)||!L||G.state!=="ov"||!G.ov||!(G.ov.kind==="drink"||(G.ov.kind==="win"&&G.ov.loser)))break;
       const p=G.pl[L.i];if(!p)break;
+      /* se o gole de quem venceu já tinha sido dado, ele também volta */
+      if(G.ov.given&&G.ov.given.id){const g=G.pl.find(x=>x.id===G.ov.given.id);if(g)g.drinks--}
       p.drinks--;p.pts-=L.gain;p.alive=!p.bench;p.lost=false;G.outs--;
       if(L.w!=null&&G.pl[L.w]){G.pl[L.w].wins--;G.pl[L.w].pts-=L.wg}
       G.cur=L.i;if(!curOk())G.cur=nextAliveFrom(G.cur);
@@ -137,6 +139,15 @@ function act(from,a){
       G.cur=sh(G.cur);G.starter=sh(G.starter);(G.hist||[]).forEach(h=>{h.who=sh(h.who)});
       if(G.lastOut){G.lastOut.i=sh(G.lastOut.i);if(G.lastOut.w!=null)G.lastOut.w=sh(G.lastOut.w)}
       break}
+    case "give":{
+      /* quem venceu a rodada escolhe quem leva o gole (ou ninguém): conta como gole, sem mexer nos pontos */
+      const o=G.ov;
+      if(G.state!=="ov"||!o||o.kind!=="win"||o.given)break;
+      if(MODE!=="local"&&!isHostish(from)&&from!==o.winnerId)break;
+      const p=a.id?G.pl.find(x=>x.id===a.id):null;
+      if(a.id&&(!p||p.id===o.winnerId))break;
+      if(p)p.drinks++;
+      o.given={id:p?p.id:null,name:p?p.name:""};G.seq++;break}
     case "finish":{
       /* Encerrar partida: vai direto pro ranking final (o único jeito de terminar o modo Livre).
          Uma rodada que ainda não teve Valendo não conta. */
@@ -153,6 +164,8 @@ function act(from,a){
       const k=G.ov&&G.ov.kind;
       /* bebe e zerou começam o tempo de quem vem depois: no online, só essa pessoa (ou o juiz) dá o "valendo" */
       if((k==="drink"||k==="reset")&&MODE!=="local"&&!isHostish(from)&&G.ov.nextId!==from)break;
+      /* fim da rodada: quem venceu (ou o juiz) passa pra próxima, depois de escolher quem leva o gole */
+      if(k==="win"&&MODE!=="local"&&!isHostish(from)&&G.ov.winnerId!==from)break;
       G.lastOut=null;
       if(k==="drink"){G.ov=null;G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()}
       else if(k==="reset"){G.ov=null;G.used=[];G.hist=[];G.cur=nextAliveFrom(G.cur);G.state="run";resetTimer()}
@@ -165,7 +178,7 @@ function act(from,a){
 function timeout(){
   const p=G.pl[G.cur],gain=G.outs?G.outs:-1;G.lastOut={i:G.cur,gain};p.drinks++;p.pts+=gain;G.outs++;p.alive=false;p.lost=true;G.state="ov";
   const place=G.outs-1;
-  if(!endIfLastStanding()){const nx=G.pl[nextAliveFrom(G.cur)];G.ov={kind:"drink",id:p.id,name:p.name,gain,place,next:nx.name,nextId:nx.id}}
+  if(!endIfLastStanding()){const nx=G.pl[nextAliveFrom(G.cur)];G.ovN=(G.ovN||0)+1;G.ov={kind:"drink",n:G.ovN,id:p.id,name:p.name,gain,place,next:nx.name,nextId:nx.id}}
   else{G.ov.loser=p.name;G.ov.loserId=p.id;G.ov.loserGain=gain;G.ov.loserPlace=place;const wi=G.pl.findIndex(x=>x.alive);if(wi>=0){G.lastOut.w=wi;G.lastOut.wg=G.ov.gain}}
   G.seq++;sync();
 }

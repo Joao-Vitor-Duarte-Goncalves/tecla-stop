@@ -21,7 +21,7 @@ function buildKeys(letters){
 /* ---------- tapping the table: the whole wedge around each cap counts, so a near miss still picks the letter you aimed at ---------- */
 const OOPS_MS=2200;
 const HECKLES={tic:"TIC-TAC!",bebe:"VAI BEBER!",ri:"HAHAHA"};
-let lastHk=-1,lastNote=-1,wasAway=false;
+let lastHk=-1,lastNote=-1,wasAway=false,lastFx=null;
 /* aviso curto no topo, pra todo mundo ler sem tocar em nada */
 function showToast(text,ms){
   const t=$("toast");t.textContent=text;t.hidden=false;t.classList.remove("in");void t.offsetWidth;t.classList.add("in");
@@ -220,13 +220,22 @@ function renderOverlay(){
   if(key===lastOvKey)return;lastOvKey=key;parkSettings();stopReveal();
   let html="";
   /* quem bebe sai numa comanda: o nome escrito à mão e o carimbo de "bebe" */
-  const slip=o.kind==="drink"||(o.kind==="win"&&!!o.loser);
+  const slip=o.kind==="drink"||o.kind==="win";
   $("ovbox").classList.toggle("slip",slip);$("ovbox").classList.toggle("lousa",o.kind==="final");
   /* no celular de quem bebeu, o nome vira "Você" e o celular vibra forte */
   const meDrinks=MODE!=="local"&&((o.kind==="drink"&&o.id===ME)||(o.kind==="win"&&o.loserId===ME));
   const drinker=n=>`<div class="slipname">${meDrinks?"Você":esc(n)}</div><div class="stamp">Bebe!</div>`;
   if(o.kind==="drink")html=`${drinker(o.name)}${isLocked()?"":outLine(o.place,o.gain)}<p>Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
-  else if(o.kind==="win")html=(o.loser?`${drinker(o.loser)}${isLocked()?"":outLine(o.loserPlace,o.loserGain)}`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div>${isLocked()?"":`<p class="ptsline"><b>${ptsTxt(o.gain)}</b> por ficar até o fim, 1 por cada um que saiu antes</p>`}<p>Escolhe alguém pra dar um gole.</p>`;
+  else if(o.kind==="win"){
+    /* fim da rodada na comanda: quem bebeu por último em cima, quem venceu escrito à mão embaixo, e a escolha do gole */
+    const meWins=MODE!=="local"&&o.winnerId===ME,canGive=MODE==="local"||MODE==="host"||meWins,W=esc(o.winner);
+    let give;
+    if(o.given)give=`<p class="given">${o.given.id?`${meWins?"Você deu":W+" deu"} o gole pra <span class="name">${o.given.id===ME&&MODE!=="local"?"você":esc(o.given.name)}</span>.`:"Ninguém leva o gole dessa vez."}</p>`;
+    else if(canGive)give=`<div class="give"><span class="lbl">${meWins?"Quem leva o gole?":W+", quem leva o gole?"}</span><div class="chips" id="giveList">${V.pl.filter(p=>p.id!==o.winnerId).map(p=>`<button type="button" class="chip" data-id="${esc(p.id)}">${esc(p.name)}</button>`).join("")}<button type="button" class="chip none" data-id="">Ninguém</button></div></div>`;
+    else give=`<p>${W} escolhe quem leva o gole.</p>`;
+    html=(o.loser?`${drinker(o.loser)}${isLocked()?"":outLine(o.loserPlace,o.loserGain)}`:"")
+      +`<div class="winline${o.loser?"":" solo"}">${meWins?"Você venceu a rodada!":W+" venceu a rodada"}</div>${isLocked()?"":`<p class="ptsline"><b>${ptsTxt(o.gain)}</b> por ficar até o fim, 1 por cada um que saiu antes</p>`}${give}`;
+  }
   else if(o.kind==="reset")html=`<div class="big win">Zerou o tabuleiro</div><p>As letras voltam e o tempo cai para <span class="name">${o.dur}s</span>. Mesmo tema.</p>${o.next?`<p>Próxima vez: <span class="name">${esc(o.next)}</span></p>`:""}`;
   else if(o.kind==="few")html=`<div class="big win mid">Esperando a galera</div><p>Precisa de pelo menos 2 pessoas conectadas. A rodada começa sozinha quando alguém voltar.</p>`;
   if(o.kind==="final"){
@@ -245,21 +254,26 @@ function renderOverlay(){
   const host=MODE!=="guest",who=o.kind==="drink"?o.name:o.loser;
   /* bebe e zerou começam o tempo de quem vem depois: no online só essa pessoa (ou o juiz) vê o botão */
   const starts=o.kind==="drink"||o.kind==="reset",imNext=MODE!=="local"&&o.nextId===ME;
-  const canGo=!starts||MODE==="local"||host||imNext;
+  const imWinner=MODE!=="local"&&o.kind==="win"&&o.winnerId===ME;
+  const canGo=o.kind==="win"?(MODE==="local"||host||imWinner):(!starts||MODE==="local"||host||imNext);
   const btn=o.kind==="win"?(o.last?"Ver ranking":"Próxima rodada"):o.kind==="few"?"Tentar de novo":imNext?"Tô pronto, valendo":starts&&o.next?`Valendo pra ${o.next}`:"Continuar";
   /* correções de quem abriu a mesa: devolver quem bebeu injustamente, ou refazer a rodada inteira */
   const fix=host&&((slip&&V.canSpare)||V.canRedo)?`<div class="ovfix">${slip&&V.canSpare?`<button class="btn ghost small" id="ovspare" type="button">Não valeu: ${esc(who)} volta</button>`:""}${V.canRedo?`<button class="btn ghost small" id="ovredo" type="button">Refazer rodada</button>`:""}</div>`:"";
   /* sair não fica nas telas que aparecem toda hora (bebe, zerou): o Sair do topo está a um toque depois */
-  const go=canGo?`<button class="btn" id="ovgo">${esc(btn)}</button>`:`<p class="waitnext">Esperando ${esc(o.next||"a próxima pessoa")} dar o valendo.</p>`;
+  const go=canGo?`<button class="btn" id="ovgo">${esc(btn)}</button>`:o.kind==="win"?`<p class="waitnext">Esperando ${esc(o.winner)}.</p>`:`<p class="waitnext">Esperando ${esc(o.next||"a próxima pessoa")} dar o valendo.</p>`;
   $("ovbox").innerHTML=html+go+fix+(starts?"":quitBtn());
   $("ov").hidden=false;wireQuit();
   if($("ovgo"))$("ovgo").onclick=()=>{unlockAudio();dispatch({t:"continue"})};
-  if(imNext){try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}}
-  if(meDrinks){try{navigator.vibrate&&navigator.vibrate([220,90,220])}catch(e){}}
+  if($("giveList"))$("giveList").onclick=e=>{const b=e.target.closest("button");if(b)dispatch({t:"give",id:b.dataset.id||null})};
+  /* som e vibração só na primeira vez que essa tela aparece (escolher o gole redesenha a comanda) */
+  const fresh=o.n!=null&&o.n!==lastFx;if(o.n!=null)lastFx=o.n;
+  if(fresh&&imNext){try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}}
+  if(fresh&&meDrinks){try{navigator.vibrate&&navigator.vibrate([220,90,220])}catch(e){}}
+  if(fresh&&imWinner){try{navigator.vibrate&&navigator.vibrate([60,40,60])}catch(e){}setTimeout(()=>{beep(523,.12,"triangle",.07);setTimeout(()=>beep(784,.2,"triangle",.07),120)},650)}
   focusOv();
   if($("ovspare"))$("ovspare").onclick=()=>dispatch({t:"spare"});
   if($("ovredo"))armConfirm($("ovredo"),()=>"Refazer rodada",()=>"Apaga a rodada?",()=>dispatch({t:"redo"}));
-  if(o.kind==="drink"||o.kind==="win"&&o.loser){beep(140,.6,"sawtooth",.12);const b=$("ovbox");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake")}
+  if(fresh&&(o.kind==="drink"||o.kind==="win"&&o.loser)){beep(140,.6,"sawtooth",.12);const b=$("ovbox");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake")}
 }
 
 function ptsTxt(n){n=n||0;return (n>0?"+":n<0?"−":"")+Math.abs(n)+" ponto"+(Math.abs(n)===1?"":"s")}

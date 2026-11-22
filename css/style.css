@@ -294,6 +294,14 @@ button.pl::after{content:"";position:absolute;inset:-6px -2px}
 .seatpick select{background:var(--night);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 12px;font:600 1rem var(--body)}
 .catrecent{display:flex;flex-direction:column;gap:6px;text-align:left}
 .catrecent .chip{font-family:var(--body);color:var(--ink);cursor:pointer;padding:7px 13px;text-align:left}
+/* quem venceu, escrito à mão na comanda, separado de quem bebeu por um pontilhado */
+.winline{font-family:var(--hand);font-size:1.6rem;line-height:1.15;text-wrap:balance;border-top:1px dashed var(--paper-line);padding-top:12px}
+.winline.solo{border-top:0;padding-top:0;font-size:2rem}
+.give{display:flex;flex-direction:column;gap:8px}
+.give .chips{justify-content:center}
+.give .chip{font-family:var(--body);cursor:pointer;background:#fff;color:var(--paper-ink);border-color:var(--paper-line);padding:7px 13px}
+.give .chip.none{background:transparent;border-style:dashed;color:var(--paper-muted)}
+.given{font-weight:700}
 .waitnext{font-weight:700}
 .ovbox:focus{outline:none}
 .ovfix{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
@@ -306,6 +314,7 @@ button.pl::after{content:"";position:absolute;inset:-6px -2px}
   background:linear-gradient(135deg,var(--paper) 50%,transparent 50%) 0 0/10px 8px repeat-x,linear-gradient(-135deg,var(--paper) 50%,transparent 50%) 0 0/10px 8px repeat-x}
 .slip p{color:var(--paper-muted)}
 .slip .name,.slip .ptsline b{color:var(--paper-ink)}
+.slip .lbl{color:var(--paper-muted)}
 .slip .big.win{color:var(--paper-ink)}
 .slip .btn.ghost{color:var(--paper-ink);border-color:var(--paper-line)}
 .slipname{font-family:var(--hand);font-size:2.3rem;line-height:1.05;text-wrap:balance;overflow-wrap:anywhere}
