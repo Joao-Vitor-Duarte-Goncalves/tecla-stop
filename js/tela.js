@@ -94,6 +94,7 @@ function spin(mode){
   };
   render();tick();
 }
+function nextUp(){const n=V.pl.length;for(let k=1;k<n;k++){const p=V.pl[(V.cur+k)%n];if(p.alive&&p.on!==false)return p}return null}
 function myTurn(){return V&&V.state==="run"&&(MODE==="local"||(V.pl[V.cur]&&V.pl[V.cur].id===ME))}
 function render(prev){
   if(!V)return;
@@ -107,21 +108,26 @@ function render(prev){
     $("prog").setAttribute("stroke-dashoffset",0);
     if((spinning||introPlaying)&&!V.ov)hi.innerHTML=`<span class="wait">Sorteando…</span>`;
     else if(hostish&&!V.ov){hi.innerHTML=`<button class="hubbtn" id="hubgo">Valendo</button>`;$("hubgo").onclick=()=>{unlockAudio();dispatch({t:"start"})};if(justSpun){$("hubgo").classList.add("pop");justSpun=false}}
-    else hi.innerHTML=`<span class="wait">Esperando quem abriu a mesa dar o valendo</span>`;
+    else{const st=curP,me=st&&st.id===ME;
+      hi.innerHTML=st&&!V.ov?`<span class="wait">${me?`<b class="who">Você começa</b>`:`<b class="who">${esc(st.name)}</b> começa.`} Esperando o valendo</span>`:`<span class="wait">Esperando quem abriu a mesa dar o valendo</span>`}
   }else if(V.state==="pause"){
     const online=V.pl.filter(p=>p.alive&&p.on!==false).length;
     if(hostish&&online<2)hi.innerHTML=`<span class="wait">Pausado: esperando a galera reconectar</span>`;
     else if(hostish){hi.innerHTML=`<button class="hubbtn" id="hubgo">Voltar</button>`;$("hubgo").onclick=()=>dispatch({t:"resume"})}
     else hi.innerHTML=`<span class="wait">${V.hostAway?"Quem abriu a mesa saiu do jogo. Esperando voltar":"Pausado"}</span>`;
   }else{
-    hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.ceil(Math.max(0,V.end-performance.now())/1000):0}</span><span class="who${mine&&MODE!=="local"?" mine":""}">${mine&&MODE!=="local"?"Sua vez!":curP?esc(curP.name):""}</span>`;
+    /* quem vem depois aparece pequeno, pra já ir pensando na palavra */
+    const nx=V.state==="run"?nextUp():null;
+    hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.ceil(Math.max(0,V.end-performance.now())/1000):0}</span><span class="who${mine&&MODE!=="local"?" mine":""}">${mine&&MODE!=="local"?"Sua vez!":curP?esc(curP.name):""}</span>${nx?`<span class="nextup">depois: ${nx.id===ME&&MODE!=="local"?"você":esc(nx.name)}</span>`:""}`;
   }
   if(mine&&!wasMyTurn&&MODE!=="local"){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){};beep(980,.08,"sine",.07)}
   wasMyTurn=mine;
   const tapNames=hostish&&V.state!=="over";
   $("plist").innerHTML=V.pl.map((p,i)=>{
-    const cls=`pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.bench?"bench":p.on===false?"off":p.alive?"":"out"}`;
-    const inner=`<span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.bench?" (fora)":p.on===false?" (caiu)":""}</span>`;
+    /* antes do Valendo, quem começa já fica marcado */
+    const starts=V.state==="idle"&&!V.ov&&i===V.cur&&p.alive;
+    const cls=`pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""}${starts?" starts":""} ${p.bench?"bench":p.on===false?"off":p.alive?"":"out"}`;
+    const inner=`<span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.bench?" (fora)":p.on===false?" (caiu)":""}</span>${starts?"<b>começa</b>":""}`;
     return tapNames?`<button type="button" class="${cls}" data-id="${esc(p.id)}" aria-label="${esc(p.name)}: opções">${inner}</button>`:`<span class="${cls}">${inner}</span>`}).join("");
   $("redo").hidden=!hostish||!V.canRedo;
   const lk=isLocked();$("rkBtn").textContent=lk?"🔒 Placar":"Placar";$("rkBtn").classList.toggle("locked",lk);
@@ -239,7 +245,9 @@ function renderSheet(){
   let body;
   if(isLocked())body=`<div class="lockbig" aria-hidden="true">🔒</div><div class="big win mid">Suspense</div><p>${lockMsg()}</p>`;
   else body=`<span class="lbl">Placar até a rodada ${V.round}${V.maxRounds?" de "+V.maxRounds:""}</span><p class="note">${RULE_LINE}</p>${rankList(false).html}${V.maxRounds>3?`<p class="note">Nas últimas 3 rodadas a lousa fica coberta até o fim.</p>`:""}`;
-  $("rkbox").innerHTML=body+`<button class="btn" id="rkclose">Voltar pro jogo</button>`;
+  const played=V.state==="idle"?V.round-1:V.round,canFinish=MODE!=="guest"&&V.state!=="over"&&played>=1;
+  $("rkbox").innerHTML=body+`<button class="btn" id="rkclose">Voltar pro jogo</button>`+(canFinish?`<button class="btn ghost small" id="rkfinish" type="button">Encerrar partida</button>`:"");
   $("rkclose").onclick=()=>{$("rkov").hidden=true};
+  if(canFinish)armConfirm($("rkfinish"),()=>"Encerrar partida",()=>`Encerrar com ${played} rodada${played===1?"":"s"}?`,()=>{$("rkov").hidden=true;dispatch({t:"finish"})});
 }
 

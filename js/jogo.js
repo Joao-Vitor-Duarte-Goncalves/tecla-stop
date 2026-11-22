@@ -122,6 +122,12 @@ function act(from,a){
       const n=String(a.name||"").trim().slice(0,16);
       if(MODE!=="local"||!n||G.pl.length>=16)break;
       G.pl.push({id:"p"+Date.now(),name:n,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});break}
+    case "finish":{
+      /* Encerrar partida: vai direto pro ranking final (o único jeito de terminar o modo Livre).
+         Uma rodada que ainda não teve Valendo não conta. */
+      if(!isHostish(from)||G.state==="over")break;
+      const played=G.state==="idle"?G.round-1:G.round;if(played<1)break;
+      G.round=played;G.state="over";G.ov={kind:"final"};G.roundSnap=null;G.lastOut=null;G.seq++;break}
     case "rematch":{
       if(!isHostish(from)||G.state!=="over")break;
       G.pl=G.pl.filter(p=>p.on);G.pl.forEach(p=>{p.wins=0;p.drinks=0;p.pts=0});G.round=0;G.maxRounds=S.rounds;G.starter=-1;G.seq++;newRound();break}
