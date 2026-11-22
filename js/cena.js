@@ -34,16 +34,34 @@ function introSound(){
     setTimeout(()=>beep(1250,.12,"triangle",.08),120);
   }catch(e){}
 }
+/* luzes do bar fora de foco: bolinhas com degradê radial (sem filter:blur, que pesa no celular) */
+function bokeh(el,n,minS,maxS,colors,minO,maxO){
+  let h="";
+  for(let i=0;i<n;i++){
+    const s=minS+Math.random()*(maxS-minS),c=colors[i%colors.length],o=(minO+Math.random()*(maxO-minO)).toFixed(2);
+    h+=`<i style="left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;width:${s|0}px;height:${s|0}px;opacity:${o};background:radial-gradient(circle,${c} 0 35%,transparent 70%)"></i>`;
+  }
+  el.innerHTML=h;
+}
 function playIntro(){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   introPlaying=true;
-  const ov=$("intro");ov.innerHTML=BOTTLE_SVG+`<div class="fallcap" id="fallcap"></div><span class="introskip">toque pra pular</span>`;ov.hidden=false;
+  const ov=$("intro");ov.innerHTML=`<div class="introbg"></div>`+BOTTLE_SVG+`<div class="introfg"></div><div class="fallcap" id="fallcap"></div><span class="introskip">toque pra pular</span>`;ov.hidden=false;
   const svg=ov.querySelector(".bottle"),cap=ov.querySelector(".capg"),foam=ov.querySelector(".foam"),fall=$("fallcap");
+  const bg=ov.querySelector(".introbg"),fg=ov.querySelector(".introfg");
   $("tilt").style.opacity="0";$("floor").style.opacity="0";
   const H=svg.getBoundingClientRect().height,vh=innerHeight,endY=0.875*H-0.62*vh;
   const T=(ms,fn)=>introTimers.push(setTimeout(fn,ms));
+  /* parallax: o fundo anda a 30% da garrafa e as bolhas da frente a 160%, então cada camada parece estar a uma distância */
+  const BG=.3,FG=1.6;
+  bg.style.height=(vh+endY*BG)+"px";fg.style.height=(vh+endY*FG)+"px";
+  bokeh(bg,22,40,130,["#ffd84a","#f6a91c","#e5402f","#6f9cff"],.18,.45);
+  bokeh(fg,7,60,150,["#fff","#ffd84a"],.08,.2);
   /* 1. a câmera sobe do rótulo até o gargalo */
-  svg.animate([{transform:"translateY(0)"},{transform:`translateY(${endY}px)`}],{duration:1200,easing:"cubic-bezier(.5,0,.2,1)",fill:"forwards"});
+  const cam={duration:1200,easing:"cubic-bezier(.5,0,.2,1)",fill:"forwards"};
+  svg.animate([{transform:"translateY(0)"},{transform:`translateY(${endY}px)`}],cam);
+  bg.animate([{transform:"translateY(0)"},{transform:`translateY(${endY*BG}px)`}],cam);
+  fg.animate([{transform:"translateY(0)"},{transform:`translateY(${endY*FG}px)`}],cam);
   /* 2. a tampa treme e estoura com espuma */
   T(1250,()=>cap.animate([{transform:"translate(0,0)"},{transform:"translate(-3px,-2px) rotate(-3deg)"},{transform:"translate(3px,-3px) rotate(3deg)"},{transform:"translate(0,-2px)"}],{duration:260,iterations:1}));
   T(1520,()=>{
@@ -57,6 +75,7 @@ function playIntro(){
     Object.assign(fall.style,{left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px"});
     fall.style.display="block";
     svg.animate([{opacity:1},{opacity:0}],{duration:450,fill:"forwards"});
+    fg.animate([{opacity:1},{opacity:0}],{duration:300,fill:"forwards"});
     fall.animate([{transform:"translateY(-110vh) rotate(-540deg) scale(.45)"},{transform:"translateY(0) rotate(0) scale(1.06)",offset:.8},{transform:"translateY(0) rotate(0) scale(1)"}],{duration:900,easing:"cubic-bezier(.35,0,.25,1)",fill:"forwards"});
   });
   T(2980,()=>endIntro());
@@ -225,6 +244,39 @@ function makeFloor(dark){
 function applyFloor(){
   try{document.body.style.setProperty("--floor",`url(${makeFloor(isDark())})`)}catch(e){}
 }
+
+/* ---------- parallax da mesa ----------
+   O giroscópio desloca o ponto de vista da mesa (perspective-origin), então as camadas que já
+   estão em profundidades diferentes (borda atrás, tampinhas e Valendo na frente) se mexem cada uma
+   num tanto. O tampo fica parado, então o toque nas letras continua certo.
+   Só vale com a mesa parada: quando o tempo corre (state "run"), volta suavemente pro centro. */
+const PX={x:0,y:0,tx:0,ty:0,b0:null,g0:null,raf:0,on:false,asked:false};
+function pxStep(){
+  const live=curScreen==="game"&&V&&V.state!=="run"&&!introPlaying,k=live?1:0,b=$("board");
+  PX.x+=(PX.tx*k-PX.x)*.12;PX.y+=(PX.ty*k-PX.y)*.12;
+  b.style.setProperty("--px",PX.x.toFixed(3));b.style.setProperty("--py",PX.y.toFixed(3));
+  PX.raf=(Math.abs(PX.tx*k-PX.x)>.002||Math.abs(PX.ty*k-PX.y)>.002)?requestAnimationFrame(pxStep):0;
+}
+function onOrient(e){
+  if(e.beta==null||e.gamma==null)return;
+  if(PX.b0===null){PX.b0=e.beta;PX.g0=e.gamma}
+  /* o "reto" acompanha devagar o jeito que a pessoa segura o celular: o efeito aparece no movimento */
+  PX.b0+=(e.beta-PX.b0)*.01;PX.g0+=(e.gamma-PX.g0)*.01;
+  const c=v=>Math.max(-1,Math.min(1,v/15));
+  PX.tx=c(e.gamma-PX.g0);PX.ty=c(e.beta-PX.b0);
+  if(!PX.raf)PX.raf=requestAnimationFrame(pxStep);
+}
+function startParallax(){
+  if(PX.on||PX.asked||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const D=window.DeviceOrientationEvent;if(!D)return;
+  const go=()=>{PX.on=true;addEventListener("deviceorientation",onOrient)};
+  /* iPhone pede permissão, e só a partir de um toque; Android e o resto liberam direto */
+  if(typeof D.requestPermission==="function"){PX.asked=true;D.requestPermission().then(r=>{if(r==="granted")go()}).catch(()=>{})}
+  else go();
+}
+if(!(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==="function"))startParallax();
+/* no iPhone, o pedido sai nos botões que levam pra partida, nunca no meio de uma vez */
+document.addEventListener("click",e=>{if(e.target.closest("#localGo,#hostGo,#joinForm button,#mCreate"))startParallax()},true);
 
 /* ---------- frame loop ---------- */
 function frame(){

@@ -138,8 +138,10 @@ details.how[open] summary::after{content:"−"}
 
 /* a mesa: o palco é um container e a mesa é o maior quadrado que cabe nele */
 .stage{flex:1 1 0;min-height:240px;margin-inline:-8px;container-type:size;display:grid;place-items:center}
-.board{--b:min(100cqw,100cqh,460px);position:relative;width:var(--b);aspect-ratio:1;
-  perspective:1100px;perspective-origin:50% 20%;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+/* --px e --py (de -1 a 1) vêm do giroscópio (parallax em cena.js) e deslocam o ponto de vista */
+.board{--b:min(100cqw,100cqh,460px);--px:0;--py:0;position:relative;width:var(--b);aspect-ratio:1;
+  perspective:1100px;perspective-origin:calc(50% - var(--px) * 90%) calc(20% - var(--py) * 90%);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .floor{position:absolute;left:4%;right:4%;bottom:-6%;height:20%;border-radius:50%;background:radial-gradient(closest-side, rgba(0,0,0,.45), rgba(0,0,0,.18) 60%, transparent);will-change:transform,opacity}
 .tilt,.spinner{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
 .edge{position:absolute;inset:0;border-radius:50%;background:var(--yellow-edge);transform:translateZ(var(--z))}
@@ -148,7 +150,9 @@ details.how[open] summary::after{content:"−"}
   background:radial-gradient(circle at 38% 30%, var(--yellow-hi) 0, var(--yellow) 42%, var(--yellow-dk) 100%);
   box-shadow:inset 0 0 0 6px rgba(255,255,255,.18), inset 0 -10px 24px rgba(0,0,0,.25), 0 14px 30px rgba(0,0,0,.55)}
 .table::after{content:"";position:absolute;inset:16%;border-radius:50%;border:2px solid rgba(120,85,0,.25)}
-.gloss{position:absolute;inset:2%;border-radius:50%;pointer-events:none;transform:translateZ(2px);background:radial-gradient(55% 38% at 32% 18%, rgba(255,255,255,.45), transparent 70%)}
+/* o brilho e a sombra deslizam ao contrário da inclinação; "translate" separado pra não brigar com as animações de transform */
+.floor{translate:calc(var(--px) * 3%) calc(var(--py) * 3%)}
+.gloss{position:absolute;inset:2%;border-radius:50%;pointer-events:none;transform:translateZ(2px);translate:calc(var(--px) * -7%) calc(var(--py) * -7%);background:radial-gradient(55% 38% at 32% 18%, rgba(255,255,255,.45), transparent 70%)}
 .ring{position:absolute;inset:0;transform-style:preserve-3d}
 /* o toque é lido pela fatia da mesa (letterAt), então as tampinhas não recebem clique */
 .key{position:absolute;transform:translate(-50%,-50%) translateZ(12px);font-size:calc(var(--b) * .06);pointer-events:none;transition:transform .12s, filter .2s, opacity .2s}
@@ -260,6 +264,9 @@ body.ingame .themebtn{display:none}
 /* abertura: a garrafa abrindo e a tampa caindo como a mesa */
 .opening{position:fixed;inset:0;z-index:26;overflow:hidden;background:radial-gradient(120% 60% at 50% 0%, var(--glow) 0, var(--night) 60%)}
 .opening .bottle{position:absolute;left:0;bottom:0;width:100%;height:400vw;will-change:transform}
+/* camadas do parallax da abertura: luzes do bar atrás da garrafa e bolhas fora de foco na frente */
+.introbg,.introfg{position:absolute;left:0;right:0;bottom:0;pointer-events:none;will-change:transform}
+.introbg i,.introfg i{position:absolute;border-radius:50%;transform:translate(-50%,-50%)}
 .opening .capg,.opening .foam{transform-box:fill-box;transform-origin:50% 100%}
 .opening .foam{opacity:0}
 .fallcap{position:fixed;display:none;border-radius:50%;will-change:transform;box-shadow:0 20px 40px rgba(0,0,0,.4)}
