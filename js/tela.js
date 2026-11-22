@@ -146,8 +146,12 @@ function renderOverlay(){
   const key=V.seq+":"+o.kind+":"+V.round;
   if(key===lastOvKey)return;lastOvKey=key;
   let html="";
-  if(o.kind==="drink")html=`<div class="big">${esc(o.name)} bebe!</div>${isLocked()?"":outLine(o.place,o.gain)}<p>Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
-  else if(o.kind==="win")html=(o.loser?`<div class="big">${esc(o.loser)} bebe!</div>${isLocked()?"":outLine(o.loserPlace,o.loserGain)}`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div>${isLocked()?"":`<p class="ptsline"><b>${ptsTxt(o.gain)}</b> por ficar até o fim, 1 por cada um que saiu antes</p>`}<p>Escolhe alguém pra dar um gole.</p>`;
+  /* quem bebe sai numa comanda: o nome escrito à mão e o carimbo de "bebe" */
+  const slip=o.kind==="drink"||(o.kind==="win"&&!!o.loser);
+  $("ovbox").classList.toggle("slip",slip);
+  const drinker=n=>`<div class="slipname">${esc(n)}</div><div class="stamp">Bebe!</div>`;
+  if(o.kind==="drink")html=`${drinker(o.name)}${isLocked()?"":outLine(o.place,o.gain)}<p>Próxima vez: <span class="name">${esc(o.next)}</span></p>`;
+  else if(o.kind==="win")html=(o.loser?`${drinker(o.loser)}${isLocked()?"":outLine(o.loserPlace,o.loserGain)}`:"")+`<div class="big win mid">${esc(o.winner)} venceu a rodada</div>${isLocked()?"":`<p class="ptsline"><b>${ptsTxt(o.gain)}</b> por ficar até o fim, 1 por cada um que saiu antes</p>`}<p>Escolhe alguém pra dar um gole.</p>`;
   else if(o.kind==="reset")html=`<div class="big win">Zerou o tabuleiro</div><p>As letras voltam e o tempo cai para <span class="name">${o.dur}s</span>. Mesmo tema.</p>`;
   else if(o.kind==="few")html=`<div class="big win mid">Esperando a galera</div><p>Precisa de pelo menos 2 pessoas conectadas. A rodada começa sozinha quando alguém voltar.</p>`;
   else if(o.kind==="final")html=finalHtml();

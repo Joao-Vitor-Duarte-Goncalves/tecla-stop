@@ -104,6 +104,7 @@ details.how[open] summary::after{content:"−"}
 .gbar #newCat{white-space:nowrap}
 .gbar .spacer{width:70px}
 .roundbox{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+.roundlbl{font-size:.85rem;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pips{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
 .pip{width:8px;height:8px;border-radius:50%;background:var(--line)}
 .pip.done{background:var(--yellow-dk)}
@@ -114,15 +115,17 @@ details.how[open] summary::after{content:"−"}
   transform:rotate(-1deg);box-shadow:0 8px 18px rgba(0,0,0,.45)}
 .comanda::before{content:"";position:absolute;left:0;right:0;top:-7px;height:8px;
   background:linear-gradient(135deg,var(--paper) 50%,transparent 50%) 0 0/10px 8px repeat-x,linear-gradient(-135deg,var(--paper) 50%,transparent 50%) 0 0/10px 8px repeat-x}
-.comanda .lbl{color:var(--paper-muted);display:flex;justify-content:space-between;align-items:center;height:28px;border-bottom:1px dashed var(--paper-line);padding-bottom:6px}
+/* cabeçalho da comanda: só o número da mesa (online) e, antes do Valendo, o lápis pra escrever o tema */
+.chead{display:flex;justify-content:space-between;align-items:center;height:28px;border-bottom:1px dashed var(--paper-line);padding-bottom:6px;color:var(--paper-muted)}
 .reel{height:3.3rem;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;contain:layout paint}
 #catTxt{font-family:var(--hand);font-weight:400;font-size:1.55rem;line-height:1.15;text-wrap:balance;display:block;max-width:100%}
 /* !important: setCat() deixa o tamanho da fonte inline, e durante o sorteio o texto tem que ficar numa linha */
 .reel.spinning #catTxt{color:var(--paper-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:1.35rem!important}
 .catedit,.roomtag{position:relative;background:transparent;border:1px dashed var(--paper-line);border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:700;color:var(--paper-muted);white-space:nowrap;line-height:1.1}
-.roomtag{display:flex;align-items:baseline;gap:5px}
-.roomtag b{font-family:var(--display);font-weight:400;font-size:.95rem;letter-spacing:.1em;color:var(--cap-ink)}
-.roomtag span{font-size:.7rem;text-transform:none;letter-spacing:0}
+/* o número da mesa vem escrito à mão, como o garçom anota na comanda */
+.roomtag{display:flex;align-items:baseline;gap:6px;border:0;padding:0;font-family:var(--hand);font-weight:400;font-size:1rem;color:var(--cap-ink)}
+.roomtag b{font-weight:400;font-size:1.15rem;letter-spacing:.06em}
+.roomtag span{font-family:var(--body);font-weight:700;font-size:.72rem;color:var(--paper-muted);text-decoration:underline dashed;text-underline-offset:3px}
 .catform{margin-top:8px}
 .catform input{background:#fff;color:var(--paper-ink);border-color:var(--paper-line)}
 .catform input::placeholder{color:var(--paper-muted)}
@@ -207,6 +210,21 @@ details.how[open] summary::after{content:"−"}
 #rkov{z-index:11}
 .ovbox{background:var(--night-2);border:1px solid var(--line);border-radius:18px;padding:24px 20px;max-width:360px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;max-height:100%;overflow:auto}
 #addov input,#catov input{text-align:center;font-size:1.05rem}
+/* quem bebe: a caixa vira uma comanda de papel, com o nome à mão e um carimbo.
+   rotate (e não transform) pra não brigar com a animação .shake */
+.ovbox.slip{background:var(--paper);color:var(--paper-ink);border:0;border-radius:4px 4px 10px 10px;padding-top:28px;
+  rotate:-1.5deg;overflow:visible;position:relative;box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.ovbox.slip::before{content:"";position:absolute;left:0;right:0;top:-7px;height:8px;
+  background:linear-gradient(135deg,var(--paper) 50%,transparent 50%) 0 0/10px 8px repeat-x,linear-gradient(-135deg,var(--paper) 50%,transparent 50%) 0 0/10px 8px repeat-x}
+.slip p{color:var(--paper-muted)}
+.slip .name,.slip .ptsline b{color:var(--paper-ink)}
+.slip .big.win{color:var(--paper-ink)}
+.slip .btn.ghost{color:var(--paper-ink);border-color:var(--paper-line)}
+.slipname{font-family:var(--hand);font-size:2.3rem;line-height:1.05;text-wrap:balance;overflow-wrap:anywhere}
+.stamp{align-self:center;margin:-4px 0 4px;font-family:var(--display);font-size:2.4rem;line-height:1;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--cap-ink);border:4px solid currentColor;border-radius:8px;padding:4px 16px 2px;rotate:-7deg;opacity:.9;mix-blend-mode:multiply;
+  animation:stamp .32s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes stamp{from{opacity:0;transform:scale(1.8)}to{opacity:.9;transform:scale(1)}}
 .big{font-family:var(--display);font-size:2.5rem;line-height:1;color:var(--red);text-wrap:balance}
 .big.win{color:var(--yellow)}
 .big.mid{font-size:1.75rem}
