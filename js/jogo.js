@@ -41,6 +41,9 @@ function endIfLastStanding(){
   return false;
 }
 function isLastRound(){return G.maxRounds>0&&G.round>=G.maxRounds}
+/* nome repetido ganha número ("João 2"), pra ninguém ficar em dúvida de quem é a vez */
+const MAX_PLAYERS=16;
+function uniqueName(n,names){const low=names.map(x=>x.toLowerCase());if(!low.includes(n.toLowerCase()))return n;let k=2;while(low.includes((n+" "+k).toLowerCase()))k++;return n+" "+k}
 function isHostish(from){return MODE==="local"||from===ME}
 /* dá pra refazer a rodada desde o Valendo até alguém tocar "Próxima rodada" */
 function canRedo(){return !!G.roundSnap&&(G.state==="run"||G.state==="pause"||(G.state==="ov"&&!!G.ov&&["drink","reset","win"].includes(G.ov.kind)))}
@@ -119,8 +122,8 @@ function act(from,a){
       if(!c||!isHostish(from)||G.state!=="idle"||G.ov)break;
       G.cat=c;G.lastCat=c;G.catBy="typed";if(!CATS.includes(c)&&!G.custom.includes(c))G.custom.push(c);break}
     case "addlocal":{
-      const n=String(a.name||"").trim().slice(0,16);
-      if(MODE!=="local"||!n||G.pl.length>=16)break;
+      const n=uniqueName(String(a.name||"").trim().slice(0,16),G.pl.map(p=>p.name));
+      if(MODE!=="local"||!n||G.pl.length>=MAX_PLAYERS)break;
       G.pl.push({id:"p"+Date.now(),name:n,drinks:0,wins:0,pts:0,alive:joinable(),on:true,lost:false});break}
     case "finish":{
       /* Encerrar partida: vai direto pro ranking final (o único jeito de terminar o modo Livre).

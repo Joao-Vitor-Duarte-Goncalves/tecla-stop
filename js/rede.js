@@ -11,17 +11,27 @@ function renderChips(){
   const L=S.players;if(pickLocal>=L.length)pickLocal=-1;
   $("chips").innerHTML=L.map((n,i)=>seatChip(n,i,i===pickLocal,"Tirar "+n)).join("");
   $("localHint").textContent=L.length<2?"Ponha os nomes na ordem em que vocês estão sentados na roda.":pickLocal>=0?`Agora toque em quem vai trocar de lugar com ${L[pickLocal]}.`:SEAT_HINT;
-  $("localShuffle").hidden=L.length<3;
+  $("localShuffle").hidden=L.length<3;$("localClear").hidden=L.length<3;
+  /* igual à sala online: sem 2 pessoas, o botão fica desligado e o texto acima diz o que falta */
+  $("localGo").disabled=L.length<2;
 }
 $("chips").onclick=e=>{
   const x=e.target.closest(".x");if(x){S.players.splice(+x.dataset.x,1);pickLocal=-1;save();renderChips();return}
   const b=e.target.closest(".seat");if(!b)return;pickLocal=seatTap(S.players,+b.dataset.i,pickLocal);save();renderChips();
 };
 $("localShuffle").onclick=()=>{shuffle(S.players);pickLocal=-1;save();renderChips()};
-$("addForm").onsubmit=e=>{e.preventDefault();const v=$("nameIn").value.trim();if(v&&S.players.length<12){S.players.push(v);save();renderChips()}$("nameIn").value="";$("nameIn").focus()};
-$("mLocal").onclick=()=>{homeErr("");MODE=null;pickLocal=-1;renderChips();mountSettings("localSettings");show("local");if(!S.players.length)$("nameIn").focus()};
+armConfirm($("localClear"),()=>"Limpar lista",()=>"Apagar todos?",()=>{S.players=[];pickLocal=-1;save();localMsg("");renderChips();$("nameIn").focus()});
+function localMsg(t){$("localMsg").textContent=t||"";$("localMsg").hidden=!t}
+$("addForm").onsubmit=e=>{
+  e.preventDefault();const v=$("nameIn").value.trim();$("nameIn").focus();if(!v)return;
+  if(S.players.length>=MAX_PLAYERS){localMsg(`A roda já tem ${MAX_PLAYERS} pessoas, o máximo.`);return}
+  const n=uniqueName(v,S.players);
+  localMsg(n!==v?`Já tinha ${v} na roda, então ficou ${n}.`:"");
+  S.players.push(n);save();renderChips();$("nameIn").value="";
+};
+$("mLocal").onclick=()=>{homeErr("");MODE=null;pickLocal=-1;localMsg("");renderChips();mountSettings("localSettings");show("local");if(!S.players.length)$("nameIn").focus()};
 $("localGo").onclick=()=>{
-  if(S.players.length<2){$("nameIn").placeholder="Precisa de pelo menos 2";$("nameIn").focus();return}
+  if(S.players.length<2){$("nameIn").focus();return}
   unlockAudio();keepAwake();MODE="local";ME=null;lastLetters="";
   newMatch(S.players.map((n,i)=>({id:"p"+i,name:n})));sync();
 };

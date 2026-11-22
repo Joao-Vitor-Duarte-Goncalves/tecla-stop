@@ -38,7 +38,7 @@
     <button class="linkbtn inviteonly" id="otherWays" type="button">Abrir outra mesa ou jogar num celular só</button>
   </section>
   <p class="err" id="homeErr" hidden></p>
-  <button class="secondary" id="mLocal"><strong>Um celular só</strong><span>Passa de mão em mão. Sem internet.</span></button>
+  <button class="secondary" id="mLocal"><strong>Um celular só</strong><span>O celular fica no meio da roda e todo mundo toca nele. Sem internet.</span></button>
   <label class="toggle" for="sound"><span>Som</span><input type="checkbox" id="sound" checked></label>
   <details class="how">
     <summary>Como funciona</summary>
@@ -80,12 +80,14 @@
   <div class="panel">
     <span class="lbl">Jogadores</span>
     <form class="row" id="addForm">
-      <input type="text" id="nameIn" placeholder="Nome de quem vai jogar" maxlength="16" autocomplete="off">
-      <button class="btn small" type="submit">Pôr</button>
+      <input type="text" id="nameIn" placeholder="Nome de quem vai jogar" maxlength="16" autocomplete="off" autocapitalize="words" aria-describedby="localMsg">
+      <button class="btn small" type="submit">Adicionar</button>
     </form>
+    <p class="note" id="localMsg" hidden></p>
     <div class="chips" id="chips"></div>
     <p class="note" id="localHint"></p>
-    <button class="btn ghost small shuffle" id="localShuffle" type="button">Embaralhar a ordem</button>
+    <div class="chipacts"><button class="btn ghost small" id="localShuffle" type="button">Embaralhar a ordem</button><button class="btn ghost small" id="localClear" type="button">Limpar lista</button></div>
+    <label class="toggle" for="face"><span>Virar o nome pra quem está na vez<small>Com o celular deitado no meio, o nome no centro da mesa gira pra pessoa da vez. Ponham os nomes em sentido horário, começando por quem fica na parte de baixo do celular.</small></span><input type="checkbox" id="face"></label>
   </div>
   <div id="localSettings"></div>
   <button class="btn stickygo" id="localGo">Começar a partida</button>
@@ -146,7 +148,7 @@
   </div>
   <div class="roda"><div class="players" id="plist"></div></div>
   <nav class="tools" id="tools">
-    <button class="btn ghost small" id="addOpen" hidden type="button">+ Jogador</button>
+    <button class="btn ghost small" id="addOpen" hidden type="button">+ Adicionar</button>
     <button class="btn ghost small" id="undo">Desfazer</button>
     <button class="btn ghost small" id="pause">Pausar</button>
     <button class="btn ghost small" id="redo" type="button" hidden>Refazer rodada</button>

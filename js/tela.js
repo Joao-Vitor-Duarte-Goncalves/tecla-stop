@@ -100,6 +100,14 @@ const SND_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 function renderSnd(){const b=$("sndBtn");b.innerHTML=S.sound?SND_ON:SND_OFF;b.setAttribute("aria-pressed",S.sound?"true":"false");b.classList.toggle("off",!S.sound)}
 $("sndBtn").onclick=()=>{S.sound=!S.sound;save();$("sound").checked=S.sound;if(S.sound){unlockAudio();beep(660,.08,"triangle",.06)}renderSnd()};
 renderSnd();
+/* um celular só, deitado no meio da roda: o centro da mesa gira pra quem está na vez.
+   Lugar i de n fica a i·360/n graus, no sentido horário a partir da base do celular; sempre gira pelo caminho mais curto */
+let faceAng=0;
+function faceHub(){
+  const on=MODE==="local"&&S.face!==false&&V&&V.pl.length>1&&V.state!=="over";
+  const target=on?V.cur*360/V.pl.length:0,d=((target-faceAng)%360+540)%360-180;
+  faceAng+=d;$("hubin").style.transform=faceAng%360?`rotate(${faceAng}deg)`:"";
+}
 function nextUp(){const n=V.pl.length;for(let k=1;k<n;k++){const p=V.pl[(V.cur+k)%n];if(p.alive&&p.on!==false)return p}return null}
 function myTurn(){return V&&V.state==="run"&&(MODE==="local"||(V.pl[V.cur]&&V.pl[V.cur].id===ME))}
 function render(prev){
@@ -126,6 +134,7 @@ function render(prev){
     const nx=V.state==="run"?nextUp():null;
     hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.ceil(Math.max(0,V.end-performance.now())/1000):0}</span><span class="who${mine&&MODE!=="local"?" mine":""}">${mine&&MODE!=="local"?"Sua vez!":curP?esc(curP.name):""}</span>${nx?`<span class="nextup">depois: ${nx.id===ME&&MODE!=="local"?"você":esc(nx.name)}</span>`:""}`;
   }
+  faceHub();
   if(mine&&!wasMyTurn&&MODE!=="local"){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){};beep(980,.08,"sine",.07)}
   wasMyTurn=mine;
   const tapNames=hostish&&V.state!=="over";

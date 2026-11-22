@@ -56,6 +56,7 @@ $("themeBtn").onclick=toggleTheme;
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(S.theme==="auto")applyTheme()});
 applyTheme();
 $("molec").checked=S.molec;$("molec").onchange=e=>{S.molec=e.target.checked;save()};
+$("face").checked=S.face!==false;$("face").onchange=e=>{S.face=e.target.checked;save()};
 $("hard").checked=S.hard;$("hard").onchange=e=>{S.hard=e.target.checked;save()};
 function renderSeg(){$("seg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.s===S.dur))}
 $("seg").onclick=e=>{const b=e.target.closest("button");if(b){S.dur=+b.dataset.s;save();renderSeg()}};
