@@ -11,6 +11,7 @@ Como o motor em `js/jogo.js` funciona. Se o código mudar, atualize aqui.
 | Temas de molecagem | liga/desliga | ligado |
 | Letras difíceis (Q, X, Z) | liga/desliga | desligado |
 | Provocações de quem já saiu (só online) | liga/desliga | ligado |
+| Valeu? (a roda vota, só online) | liga/desliga | ligado |
 | Temas da galera | liga/desliga | desligado |
 | Sem bebida | liga/desliga | desligado |
 | Som | liga/desliga | ligado |
@@ -51,6 +52,15 @@ Por 2,2 s depois de tocar, quem tocou pode desfazer ("Errei a letra") e recupera
 ### Provocações
 
 Se estiverem ligadas (opção de quem abre a mesa, `G.heckle`), no online quem já saiu da rodada pode mandar "TIC-TAC!", "VAI BEBER!" ou "HAHAHA" pra quem está na vez (cada um a cada 2,5 s e a mesa toda no máximo uma a cada 1,5 s; o balão aparece embaixo da mesa, sem cobrir o cronômetro). O alvo sente vibração e som.
+
+## Valeu? (a roda vota)
+
+Só no online, com a opção ligada (`G.voting`). Depois de cada letra tocada, abre uma votação de 5 s (`G.vote`, `VOTE_MS`):
+
+- Podem votar todos que estão conectados e na roda (inclusive quem já saiu da rodada), menos quem falou a palavra e quem está na vez agora.
+- Precisa de pelo menos 2 pessoas aptas a votar; com menos, não abre.
+- Se mais da metade de quem pode votar disser "não valeu", a letra volta, a vez volta pra quem falou com o tempo que tinha, e todo mundo recebe o aviso. Quem não vota conta como "valeu".
+- A votação fecha quando passa o tempo, quando outra letra é tocada, ou com "Errei a letra" e "Desfazer".
 
 ## Temas da galera
 
@@ -106,6 +116,7 @@ Além dos pontos, conta `wins` (rodadas vencidas) e `drinks` (goles).
 | `bench` `{id, on}` | juiz | Tira da roda (`on: true`) ou põe de volta |
 | `give` `{id}` | quem venceu ou juiz | Dá o gole da vitória pra `id` (ou `null` pra ninguém); uma vez por rodada; "Não valeu" desfaz |
 | `theme` `{cat}` (local: `{id, cat}`) | cada um (local: juiz) | Manda o tema da galera durante a coleta |
+| `vote` `{n, ok}` | quem pode votar | Voto no "Valeu?" da letra `n`; maioria de "não" desfaz a letra |
 | `crowdgo` | juiz | Fecha a coleta e começa a rodada 1 com os temas que chegaram |
 | `finish` | juiz | Encerra a partida e mostra o ranking final |
 | `pause` / `resume` | juiz | Pausa e volta |

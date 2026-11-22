@@ -304,6 +304,12 @@ button.pl::after{content:"";position:absolute;inset:-6px -2px}
 .give .chip.none{background:transparent;border-style:dashed;color:var(--paper-muted)}
 .given{font-weight:700}
 .crowdform{display:flex;flex-direction:column;gap:10px}
+/* "Valeu?" por cima da parte de baixo da mesa (quem vota não está jogando a vez) */
+.stage{position:relative}
+.votebar{position:absolute;left:50%;bottom:6px;translate:-50% 0;z-index:9;display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--night-2);border:1px solid var(--line);border-radius:16px;padding:10px 14px 12px;box-shadow:0 10px 24px rgba(0,0,0,.4);font-weight:700;text-align:center;overflow:hidden;max-width:calc(100% - 24px)}
+.voterow{display:flex;gap:8px}
+.voterow button{background:var(--night);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:800}
+.votetime{position:absolute;left:14px;right:14px;bottom:4px;height:2px;border-radius:2px;background:var(--accent-text);transform-origin:left}
 .waitnext{font-weight:700}
 .ovbox:focus{outline:none}
 .ovfix{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}

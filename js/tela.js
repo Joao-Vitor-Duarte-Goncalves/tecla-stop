@@ -143,6 +143,28 @@ function renderCollect(){
   if($("crowdIn")){$("crowdIn").value=keep}
   if(inp&&(focused||!keep))try{inp.focus({preventScroll:true})}catch(e){}
 }
+/* barra do "Valeu?": só pra quem pode votar (não quem falou, nem quem está na vez) */
+let voteN=null,voteEnd=0,voteTimer=null;
+function renderVote(){
+  const bar=$("voteBar"),v=V&&V.vote,me=V&&V.pl.find(p=>p.id===ME);
+  const show=MODE!=="local"&&!offline&&v&&me&&me.on!==false&&!me.bench&&v.whoId!==ME&&v.curId!==ME&&V.state==="run";
+  if(!show){bar.hidden=true;return}
+  if(voteN!==v.n){
+    voteN=v.n;voteEnd=performance.now()+v.left;
+    const t=$("voteTime");t.style.animation="none";void t.offsetWidth;t.style.animation=`oopsbar ${Math.max(0,v.left)}ms linear forwards`;
+  }
+  const left=voteEnd-performance.now();if(left<=0){bar.hidden=true;return}
+  const done=v.voted.includes(ME);
+  $("voteTxt").textContent=done?"Voto contado.":`Valeu a palavra de ${v.name} com ${v.l}?`;
+  bar.querySelectorAll("button").forEach(b=>{b.disabled=done;b.hidden=done});
+  bar.hidden=false;
+  clearTimeout(voteTimer);voteTimer=setTimeout(()=>{bar.hidden=true},left);
+}
+$("voteBar").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b||!V||!V.vote)return;
+  dispatch({t:"vote",n:V.vote.n,ok:b.dataset.v==="1"});
+  $("voteTxt").textContent="Voto contado.";$("voteBar").querySelectorAll("button").forEach(x=>{x.disabled=true;x.hidden=true});
+});
 function nextUp(){const n=V.pl.length;for(let k=1;k<n;k++){const p=V.pl[(V.cur+k)%n];if(p.alive&&p.on!==false)return p}return null}
 function myTurn(){return V&&V.state==="run"&&(MODE==="local"||(V.pl[V.cur]&&V.pl[V.cur].id===ME))}
 function render(prev){
@@ -174,7 +196,7 @@ function render(prev){
     const nx=V.state==="run"?nextUp():null;
     hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.min(V.dur,Math.ceil(Math.max(0,V.end-performance.now())/1000)):0}</span><span class="who${mine&&MODE!=="local"?" mine":""}">${mine&&MODE!=="local"?"Sua vez!":curP?esc(curP.name):""}</span>${nx?`<span class="nextup">depois: ${nx.id===ME&&MODE!=="local"?"você":esc(nx.name)}</span>`:""}`;
   }
-  faceHub();
+  faceHub();renderVote();
   if(mine&&!wasMyTurn&&MODE!=="local"){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){};beep(980,.08,"sine",.07)}
   wasMyTurn=mine;
   const tapNames=hostish&&V.state!=="over";

@@ -101,6 +101,7 @@
   <label class="toggle" for="hard"><span>Incluir Q, X e Z (modo sofrência)</span><input type="checkbox" id="hard"></label>
   <label class="toggle" for="crowd"><span>Temas da galera<small>Antes da 1ª rodada, cada um escreve um tema. Eles saem no sorteio antes dos temas do jogo.</small></span><input type="checkbox" id="crowd"></label>
   <label class="toggle" for="dry"><span>Sem bebida<small>Quem estoura o tempo só sai da rodada. Bom pra jogar com a família ou no trabalho.</small></span><input type="checkbox" id="dry"></label>
+  <label class="toggle" for="vote" id="voteRow"><span>Valeu? (a roda vota)<small>No online, depois de cada letra os outros têm 5 s pra dizer se a palavra valeu. Se a maioria disser que não, a letra volta e a vez volta pra quem falou.</small></span><input type="checkbox" id="vote"></label>
   <label class="toggle" for="heckle" id="heckleRow"><span>Provocações de quem já saiu<small>No online, quem saiu da rodada pode mandar "TIC-TAC!" e "VAI BEBER!" pra quem está na vez.</small></span><input type="checkbox" id="heckle"></label>
 </div>
 
@@ -178,6 +179,8 @@
     </div>
     <div class="offline" id="offline" hidden>Sem conexão, voltando…</div>
   </div>
+  <!-- "Valeu?": aparece por 5 s depois de cada letra, pra quem pode votar; fica por cima da mesa pra não mexer no layout -->
+  <div class="votebar" id="voteBar" role="group" aria-labelledby="voteTxt" hidden><span id="voteTxt"></span><div class="voterow"><button type="button" data-v="1">👍 Valeu</button><button type="button" data-v="0">👎 Não valeu</button></div><i class="votetime" id="voteTime" aria-hidden="true"></i></div>
   </div>
   <div class="roda"><div class="players" id="plist"></div></div>
   <nav class="tools" id="tools">

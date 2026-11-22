@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ---------- prefs ---------- */
-let S={players:[],dur:10,rounds:10,molec:true,heckle:true,dry:false,crowd:false,theme:"auto",hard:false,sound:true,name:"",key:""};
+let S={players:[],dur:10,rounds:10,molec:true,heckle:true,vote:true,dry:false,crowd:false,theme:"auto",hard:false,sound:true,name:"",key:""};
 try{const s=JSON.parse(localStorage.getItem("tecla-stop")||"null");if(s)S=Object.assign(S,s)}catch(e){}
 /* ---------- identidade ----------
    S.key é o segredo do aparelho: só vai pro celular de quem abriu a mesa. O id que aparece pros outros
@@ -73,6 +73,7 @@ $("face").checked=S.face!==false;$("face").onchange=e=>{S.face=e.target.checked;
 $("heckle").checked=S.heckle!==false;$("heckle").onchange=e=>{S.heckle=e.target.checked;save()};
 $("dry").checked=!!S.dry;$("dry").onchange=e=>{S.dry=e.target.checked;save()};
 $("crowd").checked=!!S.crowd;$("crowd").onchange=e=>{S.crowd=e.target.checked;save()};
+$("vote").checked=S.vote!==false;$("vote").onchange=e=>{S.vote=e.target.checked;save()};
 $("hard").checked=S.hard;$("hard").onchange=e=>{S.hard=e.target.checked;save()};
 function renderSeg(){$("seg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.s===S.dur))}
 $("seg").onclick=e=>{const b=e.target.closest("button");if(b){S.dur=+b.dataset.s;save();renderSeg()}};
@@ -80,7 +81,7 @@ function renderSegR(){$("segR").querySelectorAll("button").forEach(b=>b.setAttri
 $("segR").onclick=e=>{const b=e.target.closest("button");if(b){S.rounds=+b.dataset.r;save();renderSegR()}};
 renderSeg();renderSegR();
 /* provocações só existem no online: a chave some na preparação do "Um celular só" */
-function mountSettings(where){$(where).appendChild($("settings"));$("settings").hidden=false;$("heckleRow").hidden=where==="localSettings"||MODE==="local"}
+function mountSettings(where){$(where).appendChild($("settings"));$("settings").hidden=false;$("heckleRow").hidden=$("voteRow").hidden=where==="localSettings"||MODE==="local"}
 document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>leave());
 const hashCode=(location.hash||"").replace("#","").toUpperCase();
 /* modo convite: quem chega pelo link vê só o nome e "Sentar na mesa ABCD", pra não abrir uma mesa própria sem querer */

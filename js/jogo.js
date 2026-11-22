@@ -9,7 +9,7 @@ let peer=null, hostConn=null, conns=new Map(), lobbyPl=[], roomCode="";
 /* ---------- engine (local / host only) ---------- */
 function newMatch(players){
   G={hostId:MODE==="host"?ME:null,pl:players.map(p=>({id:p.id,name:p.name,drinks:0,wins:0,pts:0,alive:true,on:true})),round:0,maxRounds:S.rounds,starter:-1,
-     letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],molec:S.molec,heckle:S.heckle!==false,dry:!!S.dry,cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
+     letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],molec:S.molec,heckle:S.heckle!==false,voting:S.vote!==false,dry:!!S.dry,cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
   beginMatch();
 }
 /* começo de partida: com "Temas da galera", antes da 1ª rodada cada um escreve um tema (state "collect") */
@@ -60,6 +60,19 @@ function endIfLastStanding(){
 function isLastRound(){return G.maxRounds>0&&G.round>=G.maxRounds}
 /* nome repetido ganha número ("João 2"), pra ninguém ficar em dúvida de quem é a vez */
 const MAX_PLAYERS=16;
+/* "Valeu?": depois de cada letra, a roda tem 5 s pra contestar a palavra (só online) */
+const VOTE_MS=5000;
+function openVote(h){
+  G.vote=null;
+  if(MODE==="local"||G.voting===false)return;
+  const who=G.pl[h.who],cur=G.pl[G.cur];if(!who)return;
+  /* vota quem está conectado e na roda, menos quem falou e quem está na vez agora (está ocupado jogando) */
+  const n=G.pl.filter(p=>p.on!==false&&!p.bench&&p.id!==who.id&&(!cur||p.id!==cur.id)).length;
+  if(n<2)return;
+  G.voteN=(G.voteN||0)+1;
+  G.vote={n:G.voteN,l:h.l,who:h.who,whoId:who.id,name:who.name,curId:cur?cur.id:null,at:Date.now(),yes:[],no:[],need:Math.floor(n/2)+1};
+}
+function voteOpen(){const v=G.vote;return !!(v&&G.state==="run"&&Date.now()-v.at<VOTE_MS)}
 function uniqueName(n,names){const low=names.map(x=>x.toLowerCase());if(!low.includes(n.toLowerCase()))return n;let k=2;while(low.includes((n+" "+k).toLowerCase()))k++;return n+" "+k}
 function isHostish(from){return MODE==="local"||from===ME}
 /* dá pra refazer a rodada desde o Valendo até alguém tocar "Próxima rodada" */
@@ -113,7 +126,19 @@ function act(from,a){
       if(MODE!=="local"&&(!curP||from!==curP.id))break;
       G.used.push(a.l);G.hist.push({l:a.l,who:G.cur,at:performance.now(),left:Math.max(1500,G.end-performance.now())});G.seq++;
       if(G.used.length===G.letters.length){G.state="ov";G.dur=Math.max(4,G.dur-2);const nx=G.pl[nextAliveFrom(G.cur)];G.ov={kind:"reset",dur:G.dur,next:nx.name,nextId:nx.id};break}
-      G.cur=nextAliveFrom(G.cur);resetTimer();break;
+      G.cur=nextAliveFrom(G.cur);resetTimer();openVote(G.hist[G.hist.length-1]);break;
+    case "vote":{
+      /* maioria de quem pode votar dizendo "não valeu": a letra volta e a vez volta pra quem falou, com o tempo que tinha */
+      const v=G.vote;if(!voteOpen()||a.n!==v.n)break;
+      const h=G.hist[G.hist.length-1];if(!h||h.l!==v.l||h.who!==v.who)break;
+      const p=G.pl.find(x=>x.id===from);
+      if(!p||p.on===false||p.bench||from===v.whoId||from===v.curId||v.yes.includes(from)||v.no.includes(from))break;
+      (a.ok?v.yes:v.no).push(from);G.seq++;
+      if(v.no.length>=v.need){
+        G.hist.pop();G.used=G.used.filter(x=>x!==h.l);G.cur=h.who;G.end=performance.now()+h.left;G.vote=null;
+        G.note={text:`A roda não aceitou a palavra de ${v.name} com ${v.l}. A vez voltou.`,n:(G.note?G.note.n:0)+1};
+      }
+      break}
     case "heckle":{
       /* quem já saiu da rodada pode apressar quem está na vez */
       if(MODE==="local"||G.state!=="run"||G.heckle===false)break;
@@ -128,13 +153,13 @@ function act(from,a){
       if(!h||h.l!==a.l||G.state!=="run"||performance.now()-h.at>OOPS_MS+800)break;
       const p=G.pl[h.who];if(!p||!p.alive)break;
       if(MODE!=="local"&&from!==p.id)break;
-      G.hist.pop();G.used=G.used.filter(x=>x!==h.l);G.cur=h.who;G.end=performance.now()+h.left;G.seq++;
+      G.hist.pop();G.used=G.used.filter(x=>x!==h.l);G.cur=h.who;G.end=performance.now()+h.left;G.seq++;G.vote=null;
       /* no online, os outros veem a letra voltar: avisa o porquê */
       if(MODE!=="local")G.note={text:`${p.name} corrigiu a letra ${h.l}.`,n:(G.note?G.note.n:0)+1};
       break}
     case "undo":{
       if(!isHostish(from)||(G.state!=="run"&&G.state!=="pause"))break;
-      const h=G.hist.pop();if(!h)break;G.used=G.used.filter(x=>x!==h.l);
+      const h=G.hist.pop();if(!h)break;G.used=G.used.filter(x=>x!==h.l);G.vote=null;
       if(G.pl[h.who]&&G.pl[h.who].alive)G.cur=h.who;
       if(G.state==="run")resetTimer();else G.pausedLeft=G.dur*1000;break}
     case "pause": if(isHostish(from)&&G.state==="run"){G.pausedLeft=G.end-performance.now();G.state="pause"} break;
@@ -174,7 +199,7 @@ function act(from,a){
       if(!isHostish(from)||G.state!=="over")break;
       G.pl=G.pl.filter(p=>p.on);G.pl.forEach(p=>{p.wins=0;p.drinks=0;p.pts=0});G.round=0;G.maxRounds=S.rounds;G.starter=-1;
       /* "Nova partida" usa o que estiver escolhido agora (tempo, rodadas, molecagem, Q/X/Z) */
-      G.letters=BASE.concat(S.hard?HARD:[]);G.molec=S.molec;G.heckle=S.heckle!==false;G.dry=!!S.dry;G.seq++;beginMatch();break}
+      G.letters=BASE.concat(S.hard?HARD:[]);G.molec=S.molec;G.heckle=S.heckle!==false;G.voting=S.vote!==false;G.dry=!!S.dry;G.seq++;beginMatch();break}
     case "theme":{
       /* tema da galera: no online cada um manda o seu; no local o juiz manda o de cada pessoa (id) */
       if(G.state!=="collect")break;
@@ -211,7 +236,7 @@ function timeout(){
 /* ---------- sync ---------- */
 function snapshot(){
   const left=G.state==="run"?Math.max(0,G.end-performance.now()):G.state==="pause"?G.pausedLeft:null;
-  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,note:G.note||null,dry:!!G.dry,catAuthor:G.catAuthor||null,wrote:G.state==="collect"?Object.keys(G.themes||{}):null,host:(G.pl.find(p=>p.id===G.hostId)||{}).name||"",hostAway:!!G.hostAway,heckle:G.heckle!==false,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,canRedo:canRedo(),canSpare:!!G.lastOut&&G.state==="ov",seq:G.seq,full:fullCopy()};
+  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,note:G.note||null,dry:!!G.dry,vote:voteOpen()?{n:G.vote.n,l:G.vote.l,whoId:G.vote.whoId,name:G.vote.name,curId:G.vote.curId,left:VOTE_MS-(Date.now()-G.vote.at),voted:G.vote.yes.concat(G.vote.no)}:null,catAuthor:G.catAuthor||null,wrote:G.state==="collect"?Object.keys(G.themes||{}):null,host:(G.pl.find(p=>p.id===G.hostId)||{}).name||"",hostAway:!!G.hostAway,heckle:G.heckle!==false,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,canRedo:canRedo(),canSpare:!!G.lastOut&&G.state==="ov",seq:G.seq,full:fullCopy()};
 }
 /* a copy of the whole game (without device clocks) so a guest can take over the table */
 function fullCopy(){const c=JSON.parse(JSON.stringify(G));if(G.state==="run"){c.state="pause";c.pausedLeft=Math.max(1500,G.end-performance.now())}c.end=0;(c.hist||[]).forEach(h=>{h.at=0});return c}
