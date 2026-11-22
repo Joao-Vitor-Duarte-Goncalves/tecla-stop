@@ -102,6 +102,10 @@ details.how[open] summary::after{content:"−"}
 .game{height:100%;gap:10px}
 .gbar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;min-height:40px}
 .gbar #newCat{white-space:nowrap}
+/* Sair fica discreto ao lado de "Outro tema"; no primeiro toque vira um pedido de confirmação */
+.quit{position:relative;background:transparent;color:var(--muted);font-weight:700;font-size:.85rem;padding:9px 4px;white-space:nowrap;border-radius:999px}
+.quit::after{content:"";position:absolute;inset:-4px -8px}
+.quit.armed{color:#fff;background:var(--cap-ink);padding-inline:12px}
 .gbar .spacer{width:70px}
 .roundbox{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
 .roundlbl{font-size:.85rem;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -131,7 +135,6 @@ details.how[open] summary::after{content:"−"}
 .catform input::placeholder{color:var(--paper-muted)}
 .catform .btn{box-shadow:0 3px 0 var(--yellow-dk)}
 
-.turn{display:none}
 
 /* a mesa: o palco é um container e a mesa é o maior quadrado que cabe nele */
 .stage{flex:1 1 0;min-height:240px;margin-inline:-8px;container-type:size;display:grid;place-items:center}

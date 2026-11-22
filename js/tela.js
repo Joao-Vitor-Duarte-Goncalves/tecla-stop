@@ -116,7 +116,6 @@ function render(prev){
   }else{
     hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.ceil(Math.max(0,V.end-performance.now())/1000):0}</span><span class="who${mine&&MODE!=="local"?" mine":""}">${mine&&MODE!=="local"?"Sua vez!":curP?esc(curP.name):""}</span>`;
   }
-  $("turn").textContent="";
   if(mine&&!wasMyTurn&&MODE!=="local"){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){};beep(980,.08,"sine",.07)}
   wasMyTurn=mine;
   $("plist").innerHTML=V.pl.map((p,i)=>`<span class="pl ${i===V.cur&&V.state!=="ov"&&V.state!=="idle"?"cur":""} ${p.on===false?"off":p.alive?"":"out"}"><span class="nm">${esc(p.name)}${p.id===ME&&MODE!=="local"?" (você)":""}${p.on===false?" (caiu)":""}</span></span>`).join("");
@@ -136,10 +135,20 @@ function render(prev){
   renderOverlay();
 }
 function quitBtn(){return `<button class="btn ghost small" id="ovquit">${MODE==="host"?"Fechar a mesa":"Sair da partida"}</button>`}
-function wireQuit(){
-  const b=$("ovquit");if(!b)return;let armed=false;
-  b.onclick=()=>{if(armed){leave();return}armed=true;b.textContent="Toque de novo pra confirmar";setTimeout(()=>{armed=false;if(b.isConnected)b.textContent=MODE==="host"?"Fechar a mesa":"Sair da partida"},3000)};
+/* sair pede um segundo toque em até 3 s: quem abriu a mesa fecha a partida de todo mundo */
+function armQuit(b,label,armedLabel){
+  let armed=false,t=null;
+  b.onclick=()=>{
+    if(armed){clearTimeout(t);armed=false;b.classList.remove("armed");b.textContent=label();leave();return}
+    armed=true;b.classList.add("armed");b.textContent=armedLabel();
+    t=setTimeout(()=>{armed=false;b.classList.remove("armed");if(b.isConnected)b.textContent=label()},3000);
+  };
 }
+function wireQuit(){
+  const b=$("ovquit");if(!b)return;
+  armQuit(b,()=>MODE==="host"?"Fechar a mesa":"Sair da partida",()=>"Toque de novo pra confirmar");
+}
+armQuit($("gameQuit"),()=>"Sair",()=>MODE==="host"?"Fechar a mesa?":"Sair mesmo?");
 function renderOverlay(){
   const o=V.ov;
   if(!o){$("ov").hidden=true;lastOvKey=null;return}
