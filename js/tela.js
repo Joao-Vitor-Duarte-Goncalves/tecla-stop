@@ -94,6 +94,12 @@ function spin(mode){
   };
   render();tick();
 }
+/* som liga e desliga dentro do jogo; é a mesma preferência da caixinha da home */
+const SND_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const SND_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9.5l5 5M22 9.5l-5 5"/></svg>';
+function renderSnd(){const b=$("sndBtn");b.innerHTML=S.sound?SND_ON:SND_OFF;b.setAttribute("aria-pressed",S.sound?"true":"false");b.classList.toggle("off",!S.sound)}
+$("sndBtn").onclick=()=>{S.sound=!S.sound;save();$("sound").checked=S.sound;if(S.sound){unlockAudio();beep(660,.08,"triangle",.06)}renderSnd()};
+renderSnd();
 function nextUp(){const n=V.pl.length;for(let k=1;k<n;k++){const p=V.pl[(V.cur+k)%n];if(p.alive&&p.on!==false)return p}return null}
 function myTurn(){return V&&V.state==="run"&&(MODE==="local"||(V.pl[V.cur]&&V.pl[V.cur].id===ME))}
 function render(prev){
@@ -135,7 +141,7 @@ function render(prev){
   $("undo").hidden=!hostish;$("pause").hidden=!hostish;
   const meP=V.pl.find(p=>p.id===ME);$("heckles").hidden=!(MODE!=="local"&&V.state==="run"&&meP&&!meP.alive&&meP.on!==false);
   {const n=V.hk?V.hk.n:0;if(lastHk<0)lastHk=n;else if(n!==lastHk){lastHk=n;if(V.hk)showHeckle(V.hk)}}
-  $("game").classList.toggle("hk",!$("heckles").hidden);$("newCat").hidden=!hostish;$("catSpacer").hidden=hostish;
+  $("game").classList.toggle("hk",!$("heckles").hidden);$("newCat").hidden=!hostish;renderSnd();
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");
   $("newCat").disabled=V.state!=="idle";
@@ -176,11 +182,13 @@ function openPlayer(id){
 }
 $("plov").onclick=e=>{if(e.target===$("plov"))$("plov").hidden=true};
 $("plist").addEventListener("click",e=>{const b=e.target.closest("button.pl");if(b)openPlayer(b.dataset.id)});
+/* o painel de configurações pode estar dentro da caixa do fim da partida: tira de lá antes de redesenhar a caixa */
+function parkSettings(){const s=$("settings");if(s&&$("ovbox").contains(s)){s.hidden=true;document.body.appendChild(s)}}
 function renderOverlay(){
   const o=V.ov;
-  if(!o){$("ov").hidden=true;lastOvKey=null;return}
+  if(!o){$("ov").hidden=true;lastOvKey=null;parkSettings();return}
   const key=V.seq+":"+o.kind+":"+V.round;
-  if(key===lastOvKey)return;lastOvKey=key;
+  if(key===lastOvKey)return;lastOvKey=key;parkSettings();
   let html="";
   /* quem bebe sai numa comanda: o nome escrito à mão e o carimbo de "bebe" */
   const slip=o.kind==="drink"||(o.kind==="win"&&!!o.loser);
@@ -193,7 +201,10 @@ function renderOverlay(){
   else if(o.kind==="final")html=finalHtml();
   if(o.kind==="final"){
     const host=MODE!=="guest";
-    $("ovbox").innerHTML=html+(host?`<button class="btn" id="ovgo">Nova partida</button>`:`<p>Esperando quem abriu a mesa começar outra.</p>`)+quitBtn();
+    /* quem abriu a mesa pode mudar tempo, rodadas e temas antes da próxima, sem sair */
+    const opts=host?`<details class="ovset"><summary>Mudar tempo, rodadas e temas</summary><div id="ovSettings"></div></details>`:"";
+    $("ovbox").innerHTML=html+opts+(host?`<button class="btn" id="ovgo">Nova partida</button>`:`<p>Esperando quem abriu a mesa começar outra.</p>`)+quitBtn();
+    if(host)mountSettings("ovSettings");
     $("ov").hidden=false;wireQuit();
     if(host)$("ovgo").onclick=()=>{unlockAudio();dispatch({t:"rematch"})};
     beep(523,.15,"triangle",.08);setTimeout(()=>beep(659,.15,"triangle",.08),160);setTimeout(()=>beep(784,.3,"triangle",.08),320);

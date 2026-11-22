@@ -130,7 +130,9 @@ function act(from,a){
       G.round=played;G.state="over";G.ov={kind:"final"};G.roundSnap=null;G.lastOut=null;G.seq++;break}
     case "rematch":{
       if(!isHostish(from)||G.state!=="over")break;
-      G.pl=G.pl.filter(p=>p.on);G.pl.forEach(p=>{p.wins=0;p.drinks=0;p.pts=0});G.round=0;G.maxRounds=S.rounds;G.starter=-1;G.seq++;newRound();break}
+      G.pl=G.pl.filter(p=>p.on);G.pl.forEach(p=>{p.wins=0;p.drinks=0;p.pts=0});G.round=0;G.maxRounds=S.rounds;G.starter=-1;
+      /* "Nova partida" usa o que estiver escolhido agora (tempo, rodadas, molecagem, Q/X/Z) */
+      G.letters=BASE.concat(S.hard?HARD:[]);G.molec=S.molec;G.seq++;newRound();break}
     case "continue":{
       if(G.state!=="ov"&&!(G.ov&&G.ov.kind==="few"))break;
       const k=G.ov&&G.ov.kind;G.lastOut=null;

@@ -64,7 +64,9 @@ Além dos pontos, conta `wins` (rodadas vencidas) e `drinks` (goles).
 
 **Suspense:** nas últimas 3 rodadas o placar fica coberto e as telas de "bebe" não mostram pontos. Tudo é revelado no fim, do último para o campeão, com o título de **Esponja da noite** pra quem mais bebeu.
 
-**Nova partida:** zera pontos, vitórias e goles e remove quem estiver desconectado.
+**Nova partida:** zera pontos, vitórias e goles e remove quem estiver desconectado. Na tela do fim, quem abriu a mesa pode abrir "Mudar tempo, rodadas e temas" e a nova partida já usa o que estiver escolhido (tempo, rodadas, molecagem e Q/X/Z).
+
+**Som:** o alto-falante no topo do jogo liga e desliga o som; é a mesma preferência da home e vale só pro próprio celular.
 
 ## Temas
 

@@ -100,13 +100,18 @@ details.how[open] summary::after{content:"−"}
 
 /* JOGO: a tela tem altura fixa e a mesa ocupa o espaço que sobrar */
 .game{height:100%;gap:10px}
-.gbar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;min-height:40px}
+.gbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;min-height:40px}
+.gbar .quit{justify-self:start}
+.gright{justify-self:end;display:flex;align-items:center;gap:6px}
+.sndbtn{position:relative;width:36px;height:36px;border-radius:50%;background:transparent;border:1px solid var(--line);color:var(--ink);display:grid;place-items:center}
+.sndbtn svg{width:18px;height:18px}
+.sndbtn.off{color:var(--muted);border-style:dashed}
+.sndbtn::after{content:"";position:absolute;inset:-4px}
 .gbar #newCat{white-space:nowrap}
 /* Sair fica discreto ao lado de "Outro tema"; no primeiro toque vira um pedido de confirmação */
 .quit{position:relative;background:transparent;color:var(--muted);font-weight:700;font-size:.85rem;padding:9px 4px;white-space:nowrap;border-radius:999px}
 .quit::after{content:"";position:absolute;inset:-4px -8px}
 .quit.armed{color:#fff;background:var(--cap-ink);padding-inline:12px}
-.gbar .spacer{width:70px}
 .roundbox{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
 .roundlbl{font-size:.85rem;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pips{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
@@ -230,6 +235,11 @@ button.pl::after{content:"";position:absolute;inset:-6px -2px}
 #rkov{z-index:11}
 .ovbox{background:var(--night-2);border:1px solid var(--line);border-radius:18px;padding:24px 20px;max-width:360px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;max-height:100%;overflow:auto}
 #addov input,#catov input{text-align:center;font-size:1.05rem}
+.ovset{text-align:left;border-top:1px solid var(--line);padding-top:10px}
+.ovset summary{cursor:pointer;font-weight:800;list-style:none;display:flex;justify-content:space-between}
+.ovset summary::after{content:"+";font-family:var(--display);color:var(--yellow)}
+.ovset[open] summary::after{content:"−"}
+.ovset #settings{margin-top:10px;background:var(--night)}
 .ovfix{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .ovfix .btn{flex:1 1 auto}
 /* quem bebe: a caixa vira uma comanda de papel, com o nome à mão e um carimbo.
