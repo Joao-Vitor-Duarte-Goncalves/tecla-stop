@@ -28,7 +28,7 @@ Convidado → host:
 
 | Mensagem | Quando |
 |---|---|
-| `{t:"join", name, key}` | Logo que conecta. `key` é o id fixo do aparelho, então reconectar não duplica o jogador |
+| `{t:"join", name, key}` | Logo que conecta. `key` é o id fixo do aparelho, então reconectar não duplica o jogador. Mandar de novo com outro `name` troca o nome (é assim que o convidado se renomeia na sala) |
 | `{t:"ping"}` | A cada 4 s |
 | qualquer ação de [regras.md](regras.md#ações-act) | Toques e botões |
 
@@ -37,6 +37,7 @@ Host → convidado:
 | Mensagem | Quando |
 |---|---|
 | `{t:"lobby", code, players, host, set}` | Na sala de espera, a cada entrada, saída, troca de ordem ou mudança de opção. `players` está na ordem da roda; `host` é o nome de quem abriu; `set` traz `dur`, `rounds`, `molec`, `hard` pro resumo |
+| `{t:"closed", by}` | Quem abriu a mesa tocou Sair/Fechar a mesa. Os convidados voltam pra home com "Ana fechou a mesa." em vez de ficar tentando reconectar; as conexões fecham 0,5 s depois, pra mensagem chegar |
 | `{t:"kicked"}` | Quem abriu a mesa tirou a pessoa da sala. O convidado volta pra home com o aviso e pode sentar de novo |
 | `{t:"state", …snapshot, full}` | A cada mudança no jogo. `full` é a cópia inteira do jogo (sem relógios), usada na troca de juiz |
 | `{t:"pong"}` | Resposta ao ping |
