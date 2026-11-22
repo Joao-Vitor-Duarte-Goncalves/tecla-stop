@@ -3,11 +3,12 @@ let MODE=null;      // 'local' | 'host' | 'guest'
 let ME=null;        // my player id
 let G=null;         // authoritative game (local/host)
 let V=null;         // view being rendered
+let offline=false;  // convidado sem conexão com quem abriu a mesa: a mesa congela
 let peer=null, hostConn=null, conns=new Map(), lobbyPl=[], roomCode="";
 
 /* ---------- engine (local / host only) ---------- */
 function newMatch(players){
-  G={pl:players.map(p=>({id:p.id,name:p.name,drinks:0,wins:0,pts:0,alive:true,on:true})),round:0,maxRounds:S.rounds,starter:-1,
+  G={hostId:MODE==="host"?ME:null,pl:players.map(p=>({id:p.id,name:p.name,drinks:0,wins:0,pts:0,alive:true,on:true})),round:0,maxRounds:S.rounds,starter:-1,
      letters:BASE.concat(S.hard?HARD:[]),lastCat:null,custom:[],molec:S.molec,heckle:S.heckle!==false,cat:"",state:"idle",used:[],hist:[],cur:0,dur:S.dur,ov:null,end:0,pausedLeft:0,seq:0};
   newRound();
 }
@@ -161,7 +162,7 @@ function timeout(){
 /* ---------- sync ---------- */
 function snapshot(){
   const left=G.state==="run"?Math.max(0,G.end-performance.now()):G.state==="pause"?G.pausedLeft:null;
-  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,hostAway:!!G.hostAway,heckle:G.heckle!==false,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,canRedo:canRedo(),canSpare:!!G.lastOut&&G.state==="ov",seq:G.seq,full:fullCopy()};
+  return {t:"state",pl:G.pl,round:G.round,maxRounds:G.maxRounds,letters:G.letters,cat:G.cat,catBy:G.catBy,hk:G.hk||null,note:G.note||null,host:(G.pl.find(p=>p.id===G.hostId)||{}).name||"",hostAway:!!G.hostAway,heckle:G.heckle!==false,state:G.state,used:G.used,cur:G.cur,dur:G.dur,ov:G.ov,left,canUndo:G.hist.length>0,canRedo:canRedo(),canSpare:!!G.lastOut&&G.state==="ov",seq:G.seq,full:fullCopy()};
 }
 /* a copy of the whole game (without device clocks) so a guest can take over the table */
 function fullCopy(){const c=JSON.parse(JSON.stringify(G));if(G.state==="run"){c.state="pause";c.pausedLeft=Math.max(1500,G.end-performance.now())}c.end=0;(c.hist||[]).forEach(h=>{h.at=0});return c}

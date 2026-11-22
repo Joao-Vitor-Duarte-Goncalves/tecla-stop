@@ -142,12 +142,14 @@ document.addEventListener("click",e=>{if(e.target.closest("#localGo,#hostGo,#joi
 
 /* ---------- frame loop ---------- */
 function frame(){
-  if(V&&V.state==="run"){
+  /* convidado sem conexão: o tempo congela até voltar (o juiz é quem conta de verdade) */
+  if(V&&V.state==="run"&&!offline){
     const left=(V.end-performance.now())/1000;
     if(MODE!=="guest"&&G&&G.state==="run"&&G.end-performance.now()<=0){timeout()}
     else{
-      const s=Math.max(0,Math.ceil(left));
-      $("prog").setAttribute("stroke-dashoffset",(100-100*Math.max(0,left)/V.dur).toFixed(2));
+      /* o tempo pode ter 2 s de folga (quando alguém cai na própria vez); o mostrador nunca passa do tempo cheio */
+      const s=Math.min(V.dur,Math.max(0,Math.ceil(left)));
+      $("prog").setAttribute("stroke-dashoffset",(100-100*Math.min(1,Math.max(0,left)/V.dur)).toFixed(2));
       const el=$("secs");if(el)el.textContent=s;$("hub").classList.toggle("danger",left<=3);
       if(s<=3&&s>0&&lastBeep!==s){lastBeep=s;beep(s===1?880:660,.12)}
       if(s>3)lastBeep=null;

@@ -354,6 +354,15 @@ button.pl::after{content:"";position:absolute;inset:-6px -2px}
 .pointshow[open] summary::after{content:" −"}
 .pointshow p{margin-top:6px}
 .net{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 8px) 16px 8px;background:var(--cap-ink);color:#fff;text-align:center;font-weight:700;font-size:.9rem;z-index:20}
+/* aviso que não atrapalha o jogo: faixa neutra */
+.net.info{background:var(--night-3);color:var(--ink);border-bottom:1px solid var(--line)}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 58px);translate:-50% 0;z-index:22;max-width:calc(100% - 32px);background:var(--night-2);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:700;font-size:.9rem;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.toast.in{animation:toastin .25s ease-out}
+@keyframes toastin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+/* convidado sem conexão: a mesa congela e fica coberta */
+.board.frozen .tilt{filter:grayscale(.7) brightness(.75)}
+.offline{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateZ(30px);z-index:8;background:var(--night-2);color:var(--ink);border:2px solid var(--cap-ink);border-radius:999px;padding:8px 14px;font-weight:800;white-space:nowrap}
+.hubbtn.small{font-size:calc(var(--b) * .042);padding:0 8%}
 .takeover{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:21;background:var(--night-2);border:2px solid var(--red);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
 .takeover p{margin:0;font-size:.9rem;line-height:1.4}
 

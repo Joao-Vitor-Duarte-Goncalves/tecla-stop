@@ -55,3 +55,11 @@ O timer viaja como **tempo restante** (`left`), não como horário, porque o rel
 ## Troca de juiz
 
 Se o host some por mais de 15 s, os convidados veem a opção de **continuar com o próprio celular como juiz**. Esse convidado vira host com o último `full` recebido, usando o id com sufixo `b` (depois `c`). Os outros convidados, ao não achar o host no sufixo atual, testam os próximos sufixos e acabam nele. Se o sufixo já estiver ocupado (outro convidado foi mais rápido), ele tenta o próximo e, se não sobrar nenhum, volta a ser convidado.
+
+## O que cada um vê quando a conexão falha
+
+- **Convidado sem conexão:** a faixa vermelha mostra há quanto tempo está reconectando, a mesa fica cinza com "Sem conexão, voltando…", o tempo congela e os toques são ignorados (`offline` em `jogo.js`). Quando volta, aparece "Conectado de novo" e o estado do juiz corrige o tempo.
+- **Alguém cai na própria vez:** o juiz passa a vez, avisa todo mundo ("Bia caiu. A vez passou pra Caio.", via `G.note`) e dá 2 s de folga antes do tempo do próximo cair. O mostrador nunca passa do tempo cheio.
+- **Quem abriu a mesa sai do app:** em qualquer tela os convidados veem "Ana saiu do jogo" (`G.hostAway`); se a rodada estava rolando, ela pausa. Ao voltar, o botão do centro diz "Continuar a rodada" e os convidados veem "Pausado. Esperando Ana continuar".
+- **Quem abriu a mesa sumiu de vez:** "Assumir a mesa" aparece primeiro só pra próxima pessoa da roda depois do juiz (15 s sem contato) e, 15 s depois, pra todo mundo (`takeoverRank`). O juiz é identificado por `G.hostId`.
+- **Faixa do topo:** vermelha quando atrapalha o jogo; neutra (`netBar(msg,"info")`) pra avisos como "Sem contato com o servidor de mesas" e "Reabrindo a mesa".

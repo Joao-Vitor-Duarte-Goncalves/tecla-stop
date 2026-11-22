@@ -21,7 +21,12 @@ function buildKeys(letters){
 /* ---------- tapping the table: the whole wedge around each cap counts, so a near miss still picks the letter you aimed at ---------- */
 const OOPS_MS=2200;
 const HECKLES={tic:"TIC-TAC!",bebe:"VAI BEBER!",ri:"HAHAHA"};
-let lastHk=-1;
+let lastHk=-1,lastNote=-1,wasAway=false;
+/* aviso curto no topo, pra todo mundo ler sem tocar em nada */
+function showToast(text,ms){
+  const t=$("toast");t.textContent=text;t.hidden=false;t.classList.remove("in");void t.offsetWidth;t.classList.add("in");
+  clearTimeout(showToast.tm);showToast.tm=setTimeout(()=>{t.hidden=true},ms||3000);
+}
 function showHeckle(h){
   const el=document.createElement("div");el.className="hkpop";el.innerHTML=`<b>${HECKLES[h.k]}</b><span>${esc(h.by)}</span>`;
   $("board").appendChild(el);setTimeout(()=>el.remove(),1700);
@@ -36,7 +41,7 @@ function letterAt(cx,cy){
   return V.letters[Math.round(ang/(2*Math.PI/n))%n];
 }
 function pressLetter(l){
-  if(!l||!myTurn()||V.used.includes(l))return;
+  if(!l||offline||!myTurn()||V.used.includes(l))return;
   beep(520,.06,"triangle",.06);try{navigator.vibrate&&navigator.vibrate(18)}catch(e){}
   const k=$("ring").querySelector(`.key[data-l="${l}"]`);if(k){k.classList.add("hit");setTimeout(()=>k.classList.remove("hit"),220)}
   dispatch({t:"tap",l});showOops(l);
@@ -123,17 +128,18 @@ function render(prev){
     $("prog").setAttribute("stroke-dashoffset",0);
     if((spinning||introPlaying)&&!V.ov)hi.innerHTML=`<span class="wait">Sorteando…</span>`;
     else if(hostish&&!V.ov){hi.innerHTML=`<button class="hubbtn" id="hubgo">Valendo</button>`;$("hubgo").onclick=()=>{unlockAudio();dispatch({t:"start"})};if(justSpun){$("hubgo").classList.add("pop");justSpun=false}}
+    else if(V.hostAway)hi.innerHTML=`<span class="wait">${esc(V.host||"Quem abriu a mesa")} saiu do jogo. Esperando voltar</span>`;
     else{const st=curP,me=st&&st.id===ME;
       hi.innerHTML=st&&!V.ov?`<span class="wait">${me?`<b class="who">Você começa</b>`:`<b class="who">${esc(st.name)}</b> começa.`} Esperando o valendo</span>`:`<span class="wait">Esperando quem abriu a mesa dar o valendo</span>`}
   }else if(V.state==="pause"){
     const online=V.pl.filter(p=>p.alive&&p.on!==false).length;
     if(hostish&&online<2)hi.innerHTML=`<span class="wait">Pausado: esperando a galera reconectar</span>`;
-    else if(hostish){hi.innerHTML=`<button class="hubbtn" id="hubgo">Voltar</button>`;$("hubgo").onclick=()=>dispatch({t:"resume"})}
-    else hi.innerHTML=`<span class="wait">${V.hostAway?"Quem abriu a mesa saiu do jogo. Esperando voltar":"Pausado"}</span>`;
+    else if(hostish){hi.innerHTML=`<button class="hubbtn small" id="hubgo">Continuar a rodada</button>`;$("hubgo").onclick=()=>dispatch({t:"resume"})}
+    else{const h=esc(V.host||"quem abriu a mesa");hi.innerHTML=`<span class="wait">${V.hostAway?`${h} saiu do jogo. Esperando voltar`:`Pausado. Esperando ${h} continuar`}</span>`}
   }else{
     /* quem vem depois aparece pequeno, pra já ir pensando na palavra */
     const nx=V.state==="run"?nextUp():null;
-    hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.ceil(Math.max(0,V.end-performance.now())/1000):0}</span><span class="who${mine&&MODE!=="local"?" mine":""}">${mine&&MODE!=="local"?"Sua vez!":curP?esc(curP.name):""}</span>${nx?`<span class="nextup">depois: ${nx.id===ME&&MODE!=="local"?"você":esc(nx.name)}</span>`:""}`;
+    hi.innerHTML=`<span class="secs" id="secs">${V.state==="run"?Math.min(V.dur,Math.ceil(Math.max(0,V.end-performance.now())/1000)):0}</span><span class="who${mine&&MODE!=="local"?" mine":""}">${mine&&MODE!=="local"?"Sua vez!":curP?esc(curP.name):""}</span>${nx?`<span class="nextup">depois: ${nx.id===ME&&MODE!=="local"?"você":esc(nx.name)}</span>`:""}`;
   }
   faceHub();
   if(mine&&!wasMyTurn&&MODE!=="local"){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){};beep(980,.08,"sine",.07)}
@@ -151,6 +157,11 @@ function render(prev){
   $("undo").hidden=!hostish;$("pause").hidden=!hostish;
   const meP=V.pl.find(p=>p.id===ME);$("heckles").hidden=!(MODE!=="local"&&V.heckle!==false&&V.state==="run"&&meP&&!meP.alive&&meP.on!==false);
   {const n=V.hk?V.hk.n:0;if(lastHk<0)lastHk=n;else if(n!==lastHk){lastHk=n;if(V.hk)showHeckle(V.hk)}}
+  /* avisos do juiz pra todo mundo (ex.: alguém caiu na própria vez) */
+  {const n=V.note?V.note.n:0;if(lastNote<0)lastNote=n;else if(n!==lastNote){lastNote=n;if(V.note)showToast(V.note.text)}}
+  /* quem abriu a mesa saiu do app: avisa uma vez, em qualquer tela */
+  if(MODE==="guest"&&V.hostAway&&!wasAway)showToast(`${V.host||"Quem abriu a mesa"} saiu do jogo. A partida espera voltar.`,5000);
+  wasAway=MODE==="guest"&&!!V.hostAway;
   $("game").classList.toggle("hk",!$("heckles").hidden);$("newCat").hidden=!hostish;renderSnd();
   $("pause").textContent=V.state==="pause"?"Retomar":"Pausar";
   $("undo").disabled=!V.canUndo||(V.state!=="run"&&V.state!=="pause");

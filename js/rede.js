@@ -112,7 +112,9 @@ const HOST_KEY="tecla-stop-host", ROOM_KEY="tecla-stop-room", MAX_AGE=3*3600e3;
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
-function netBar(msg){$("net").textContent=msg||"";$("net").hidden=!msg;document.body.classList.toggle("has-net",!!msg)}
+/* faixa do topo: "warn" (vermelha) quando atrapalha o jogo, "info" (neutra) quando é só aviso */
+function netBar(msg,kind){$("net").textContent=msg||"";$("net").hidden=!msg;$("net").classList.toggle("info",kind==="info");document.body.classList.toggle("has-net",!!msg)}
+function setOffline(on){offline=!!on;$("offline").hidden=!on;$("board").classList.toggle("frozen",!!on);if(on){const n=$("tapnote");if(n)n.remove()}}
 
 /* ---------- ICE: STUN finds a direct path; TURN relays when both phones are behind carrier NAT (different houses / 4G) ---------- */
 const TURN_HOST="staticauth.openrelay.metered.ca",TURN_SECRET="openrelayprojectsecret";
@@ -141,14 +143,14 @@ function startHost(name,restore,takeover){
   takingOver=!!takeover;if(!takeover)hostSuffix=(restore&&restore.suffix)||"";
   MODE="host";ME=S.key;conns.clear();V=null;lastLetters="";
   if(restore){
-    roomCode=restore.code;G=restore.G||null;lobbyPl=(restore.lobby||[]).filter(p=>p.id===ME);
+    roomCode=restore.code;G=restore.G||null;if(G)G.hostId=ME;lobbyPl=(restore.lobby||[]).filter(p=>p.id===ME);
     if(!lobbyPl.length)lobbyPl=[{id:ME,name}];
     if(G){G.pl.forEach(p=>{if(p.id!==ME)p.on=false});if(G.state==="run")G.state="pause";G.end=0}
   }else{roomCode=randCode();lobbyPl=[{id:ME,name}];G=null}
   $("lobbyRole").textContent="Sua mesa";$("lobbyQuit").textContent="Sair";$("lobbyStatus").textContent=restore?"Reabrindo a mesa…":"Abrindo a mesa…";$("copyLink").hidden=true;
   mountSettings("hostSettings");
   if(G)sync();else{show("lobby");lobbyView()}
-  if(restore)netBar("Reabrindo a mesa "+roomCode+"… a galera volta sozinha");
+  if(restore)netBar("Reabrindo a mesa "+roomCode+"… a galera volta sozinha","info");
   openHostPeer(0,!!restore);
 }
 async function openHostPeer(tries,keepCode){
@@ -162,7 +164,7 @@ async function openHostPeer(tries,keepCode){
   });
   p.on("disconnected",()=>{
     if(peer!==p||p.destroyed||MODE!=="host")return;
-    netBar("Sem contato com o servidor de mesas. Quem já está conectado continua jogando.");
+    netBar("Sem contato com o servidor de mesas. Quem já está conectado continua jogando.","info");
     setTimeout(()=>{try{if(peer===p&&!p.destroyed&&p.disconnected)p.reconnect()}catch(e){}},2000);
   });
   p.on("error",e=>{
@@ -177,13 +179,13 @@ async function openHostPeer(tries,keepCode){
         return;
       }
       if(keepCode){
-        if(tries<20){netBar("Reabrindo a mesa "+roomCode+"…");setTimeout(()=>{if(MODE==="host"&&peer===p)openHostPeer(tries+1,true)},2000)}
+        if(tries<20){netBar("Reabrindo a mesa "+roomCode+"…","info");setTimeout(()=>{if(MODE==="host"&&peer===p)openHostPeer(tries+1,true)},2000)}
         else netBar("Não consegui reabrir a mesa "+roomCode+". Toque em Sair e abra outra.");
       }else if(tries<4){roomCode=randCode();lobbyView();openHostPeer(tries+1,false)}
       return;
     }
     if(["network","server-error","socket-error","socket-closed"].includes(e.type)){
-      netBar("Sem contato com o servidor de mesas. Tentando de novo…");
+      netBar("Sem contato com o servidor de mesas. Tentando de novo…","info");
       setTimeout(()=>{try{if(peer===p&&!p.destroyed&&p.disconnected)p.reconnect()}catch(_){}},3000);
     }
   });
@@ -217,7 +219,11 @@ function onLeave(c){
   G.pl[i].on=false;
   if(G.state==="run"){
     if(onlineAlive()<2){G.pausedLeft=i===G.cur?G.dur*1000:Math.max(0,G.end-performance.now());if(i===G.cur)G.cur=nextAliveFrom(G.cur);G.state="pause"}
-    else if(i===G.cur){G.cur=nextAliveFrom(G.cur);resetTimer()}
+    else if(i===G.cur){
+      /* caiu na própria vez: avisa todo mundo e dá 2 s de folga pro próximo antes do tempo começar a cair */
+      G.cur=nextAliveFrom(G.cur);G.end=performance.now()+G.dur*1000+2000;
+      G.note={text:`${G.pl[i].name} caiu. A vez passou pra ${G.pl[G.cur].name}.`,n:(G.note?G.note.n:0)+1};
+    }
   }else if(G.state==="pause"&&i===G.cur&&onlineAlive()>=1){G.cur=nextAliveFrom(G.cur);G.pausedLeft=G.dur*1000}
   sync();
 }
@@ -255,7 +261,7 @@ function startGuest(name,code,auto){
   everConnected=!!auto;rcStart=Date.now();rcN=0;
   $("lobbyRole").textContent="Entrando na mesa";$("qrWrap").hidden=true;$("lobbySummary").hidden=true;$("lobbyQuit").textContent="Cancelar";$("lobbyStatus").textContent=auto?"Voltando pra mesa…":"Entrando…";$("copyLink").hidden=true;$("hostSettings").innerHTML="";
   show("lobby");$("roomCode").textContent=code;$("lobbyPlayers").innerHTML=`<span class="note">Conectando…</span>`;$("lobbyHint").hidden=true;$("lobbyShuffle").hidden=true;$("hostGo").hidden=true;$("lobbyNote").textContent="";
-  if(auto)netBar("Voltando pra mesa "+code+"…");
+  if(auto)netBar("Voltando pra mesa "+code+"…","info");
   attempt();
 }
 async function attempt(){
@@ -271,7 +277,9 @@ async function attempt(){
     const c=p.connect(PREFIX+roomCode+SUFFIXES[seatIdx],{reliable:true});
     c.on("open",()=>{
       if(peer!==p||MODE!=="guest")return;
+      const back=everConnected&&rcN>0;
       clearTimeout(guard);hostConn=c;lastHostMsg=Date.now();everConnected=true;rcStart=0;rcN=0;seatMisses=0;netBar("");$("takeover").hidden=true;
+      setOffline(false);if(back)showToast("Conectado de novo");
       $("lobbyStatus").textContent="Você entrou.";
       c.send({t:"join",name:guestName,key:S.key});
       lsSet(ROOM_KEY,{code:roomCode,name:guestName,t:Date.now()});
@@ -291,6 +299,13 @@ async function attempt(){
     retryLater();
   });
 }
+/* 0 = próxima pessoa da roda depois de quem abriu a mesa (e conectada); 1 = qualquer outra */
+function takeoverRank(){
+  const f=lastFull;if(!f||!f.pl)return 1;
+  const n=f.pl.length,h=Math.max(0,f.pl.findIndex(p=>p.id===f.hostId));
+  for(let k=1;k<n;k++){const p=f.pl[(h+k)%n];if(p.on!==false)return p.id===ME?0:1}
+  return 1;
+}
 function lost(){if(MODE!=="guest")return;if(!rcStart)rcStart=Date.now();retryLater(300)}
 function retryLater(ms){
   if(MODE!=="guest")return;
@@ -302,9 +317,11 @@ function retryLater(ms){
     return;
   }
   rcN++;
-  /* the table phone has been gone a while: offer to take over with the last game state */
-  if(everConnected&&lastFull&&Date.now()-rcStart>15000)$("takeover").hidden=false;
-  netBar(everConnected?"Conexão caiu. Reconectando… (tentativa "+rcN+")":"Procurando a mesa "+roomCode+"… (tentativa "+rcN+")");
+  if(everConnected&&curScreen==="game")setOffline(true);
+  /* quem abriu a mesa sumiu: oferece virar juiz primeiro pra próxima pessoa da roda (15 s) e, 15 s depois, pra todo mundo */
+  if(everConnected&&lastFull&&Date.now()-rcStart>15000+15000*takeoverRank())$("takeover").hidden=false;
+  const secs=Math.round((Date.now()-rcStart)/1000);
+  netBar(everConnected?`Conexão caiu. Reconectando… (há ${secs} s)`:`Procurando a mesa ${roomCode}… (há ${secs} s)`);
   if(!everConnected)$("lobbyStatus").textContent="Ainda tentando. Pode levar uns segundos quando vocês estão em redes diferentes.";
   rcTimer=setTimeout(attempt,ms!=null?ms:Math.min(1000*rcN,5000));
 }
@@ -335,7 +352,8 @@ setInterval(()=>{
   }
 },4000);
 document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState==="hidden"&&MODE==="host"&&G&&G.state==="run"){G.hostAway=true;act(ME,{t:"pause"})}
+  /* quem abriu a mesa saiu do app: a rodada pausa se estiver rolando, e todo mundo fica sabendo em qualquer tela */
+  if(document.visibilityState==="hidden"&&MODE==="host"&&G&&G.state!=="over"){G.hostAway=true;if(G.state==="run")act(ME,{t:"pause"});else sync()}
   if(document.visibilityState!=="visible")return;
   if(MODE==="host"&&G&&G.hostAway){G.hostAway=false;sync()}
   if(MODE==="guest"&&!(hostConn&&hostConn.open)){rcN=0;if(!rcStart)rcStart=Date.now();attempt()}
@@ -351,7 +369,7 @@ function teardown(){
   peer=null;hostConn=null;G=null;V=null;lastOvKey=null;wasMyTurn=false;
   lastHk=-1;spinning=false;clearTimeout(spinTimer);spunRound=-1;shownCat=null;$("reel").classList.remove("spinning");
   if(introPlaying){introTimers.forEach(clearTimeout);introTimers=[];introPlaying=false;$("intro").hidden=true;$("intro").innerHTML="";$("tilt").style.opacity="";$("floor").style.opacity=""}
-  $("ov").hidden=true;$("rkov").hidden=true;$("addov").hidden=true;$("catov").hidden=true;netBar("");
+  $("ov").hidden=true;$("rkov").hidden=true;$("addov").hidden=true;$("catov").hidden=true;netBar("");setOffline(false);$("toast").hidden=true;
   try{wake&&wake.release()}catch(e){}
   try{noSleep&&noSleep.isEnabled&&noSleep.disable()}catch(e){}
 }
