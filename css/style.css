@@ -35,7 +35,9 @@ button:disabled{cursor:default}
 input:focus-visible,button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
 input[type=text]{flex:1;min-width:0;background:var(--night);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:12px;font:600 1rem var(--body)}
 input[type=checkbox]{width:22px;height:22px;accent-color:var(--yellow)}
-.lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:700}
+/* rótulos em caixa normal: maiúsculas espaçadas deixavam tudo com cara de formulário */
+.lbl{font-size:.85rem;color:var(--muted);font-weight:700}
+.toptitle{font-weight:800;font-size:.95rem;color:var(--ink);text-align:center}
 .row{display:flex;gap:8px;align-items:center}
 .note{color:var(--muted);font-size:.85rem;margin:0;line-height:1.45}
 .err{color:var(--red);font-weight:700;margin:0}

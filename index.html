@@ -63,7 +63,7 @@
 
 <!-- LOCAL SETUP -->
 <div class="wrap" id="local" hidden>
-  <div class="top"><button class="btn ghost small" data-home>Voltar</button><span class="lbl">Um celular só</span><span style="width:64px"></span></div>
+  <div class="top"><button class="btn ghost small" data-home>Voltar</button><span class="toptitle">Um celular só</span><span style="width:64px"></span></div>
   <div class="panel">
     <span class="lbl">Jogadores</span>
     <form class="row" id="addForm">
@@ -78,7 +78,7 @@
 
 <!-- LOBBY -->
 <div class="wrap" id="lobby" hidden>
-  <div class="top"><button class="btn ghost small" data-home>Sair</button><span class="lbl" id="lobbyRole">Mesa</span><span style="width:52px"></span></div>
+  <div class="top"><button class="btn ghost small" data-home>Sair</button><span class="toptitle" id="lobbyRole">Mesa</span><span style="width:52px"></span></div>
   <div class="panel" style="align-items:center;text-align:center">
     <span class="lbl">Número da mesa</span>
     <div class="roomcode" id="roomCode">····</div>
@@ -141,8 +141,8 @@
 <div class="net" id="net" role="status" hidden></div>
 <div class="takeover" id="takeover" hidden><p><b>Quem abriu a mesa sumiu.</b> Dá pra continuar a partida com o seu celular como juiz, com o placar como estava.</p><button class="btn" id="takeBtn" type="button">Assumir a mesa</button></div>
 <div class="ov" id="ov" hidden><div class="ovbox" id="ovbox"></div></div>
-<div class="ov" id="addov" hidden><form class="ovbox" id="addMid"><span class="lbl">Chegou alguém?</span><div class="big win mid">Pôr na roda</div><p>A pessoa entra na rodada que está rolando.</p><input type="text" id="addMidIn" placeholder="Nome" maxlength="16" autocomplete="off" aria-label="Nome do novo jogador"><button class="btn" type="submit">Adicionar</button><button class="btn ghost small" type="button" id="addCancel">Cancelar</button></form></div>
-<div class="ov" id="catov" hidden><form class="ovbox" id="catForm"><span class="lbl">Tema de vocês</span><div class="big win mid">Escrever tema</div><input type="text" id="catIn" placeholder="Ex.: Coisas que o João fala bêbado" maxlength="40" autocomplete="off" aria-label="Tema personalizado"><button class="btn" type="submit">Usar esse tema</button><button class="btn ghost small" type="button" id="catCancel">Cancelar</button></form></div>
+<div class="ov" id="addov" hidden><form class="ovbox" id="addMid"><div class="big win mid">Chegou alguém?</div><p>A pessoa entra na rodada que está rolando.</p><input type="text" id="addMidIn" placeholder="Nome" maxlength="16" autocomplete="off" aria-label="Nome do novo jogador"><button class="btn" type="submit">Adicionar</button><button class="btn ghost small" type="button" id="addCancel">Cancelar</button></form></div>
+<div class="ov" id="catov" hidden><form class="ovbox" id="catForm"><div class="big win mid">Escrever tema</div><input type="text" id="catIn" placeholder="Ex.: Coisas que o João fala bêbado" maxlength="40" autocomplete="off" aria-label="Tema personalizado"><button class="btn" type="submit">Usar esse tema</button><button class="btn ghost small" type="button" id="catCancel">Cancelar</button></form></div>
 <div class="ov" id="plov" hidden><div class="ovbox" id="plbox" role="dialog" aria-label="Jogador"></div></div>
 <div class="ov" id="rkov" hidden><div class="ovbox" id="rkbox" role="dialog" aria-label="Placar"></div></div>
 
